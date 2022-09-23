@@ -1,0 +1,3 @@
+[submodule "WhitelistDAPP"]
+	path = WhitelistDAPP
+	url = https://github.com/oscar88leonardo/WhitelistDAPP.git
