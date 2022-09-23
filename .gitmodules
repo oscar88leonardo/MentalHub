@@ -1,3 +1,6 @@
 [submodule "WhitelistDAPP"]
 	path = WhitelistDAPP
 	url = https://github.com/oscar88leonardo/WhitelistDAPP.git
+[submodule "NFT_Collection"]
+	path = NFT_Collection
+	url = https://github.com/oscar88leonardo/NFT_Collection
