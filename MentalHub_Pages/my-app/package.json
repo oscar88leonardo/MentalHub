@@ -10,11 +10,14 @@
   },
   "dependencies": {
     "ethers": "^5.7.1",
-    "materialize-css": "^1.0.0-rc.2",
     "next": "12.3.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "web3modal": "^1.9.9"
+    "web3modal": "^1.9.9",
+    "bootstrap": "4.6.0",
+    "prop-types": "15.7.2",
+    "reactstrap": "8.10.0",
+    "sass": "^1.29.0"
   },
   "devDependencies": {
     "eslint": "8.24.0",
