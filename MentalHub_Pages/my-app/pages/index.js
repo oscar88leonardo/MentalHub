@@ -1,18 +1,19 @@
 import Head from "next/head";
-import CustomComponents from "../components/custom/Custom-components";
+import RoadMapComponent from "../MentalComponents/RoadMap";
+import FAQsComponent from "../MentalComponents/FAQs";
 
 export default function Home() {
   return (
     <div>
       <Head>
-        <title>NextJs UI kit | Free UI kit built with bootstrap</title>
+        <title>Mental Hub | A platform to help you with the mental health care</title>
         <meta
-          name="description"
-          content="NextJs UI kit | Free UI kit built with bootstrap"
+          name="Mental Hub"
+          content="A platform to help you with the mental health care"
         />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <CustomComponents />
+      <RoadMapComponent />
+      <FAQsComponent />
     </div>
   );
 }
