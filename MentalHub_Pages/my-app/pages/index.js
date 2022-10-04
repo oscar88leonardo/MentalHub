@@ -1,6 +1,8 @@
 import Head from "next/head";
 import RoadMapComponent from "../MentalComponents/RoadMap";
 import FAQsComponent from "../MentalComponents/FAQs";
+import NFTcoList from "../MentalComponents/NFTcoList";
+import Partners from "../MentalComponents/Partners";
 
 export default function Home() {
   return (
@@ -12,6 +14,8 @@ export default function Home() {
           content="A platform to help you with the mental health care"
         />
       </Head>
+      <NFTcoList />
+      <Partners />
       <RoadMapComponent />
       <FAQsComponent />
     </div>
