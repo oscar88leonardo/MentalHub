@@ -1,4 +1,7 @@
- import Head from "next/head";
+import Head from "next/head";
+import { Row, Col, Container } from "reactstrap";
+import Image from "next/image";
+import herobanner from "../assets/images/staticslider/slider/hero-banner.jpg";
 import styles from "../styles/Home.module.css";
 import Web3Modal from "web3modal";
 import { providers, Contract } from "ethers";
@@ -155,19 +158,35 @@ export default function Home() {
           </div>
         );
       } else if (loading) {
-        return <button className={styles.button}>Loading...</button>;
+        return (<a
+                className="btn btn-light btn-rounded btn-md m-t-20"
+                data-toggle="collapse"
+                href="#"
+              >
+                <span>Loading...</span>
+              </a>);
       } else {
         return (
-          <button onClick={addAddressToWhitelist} className={styles.button}>
-            Join the Whitelist
-          </button>
+          <a
+            className="btn btn-light btn-rounded btn-md m-t-20"
+            data-toggle="collapse"
+            href="#"
+            onClick={addAddressToWhitelist}
+          >
+            <span>Join the Whitelist</span>
+          </a>
         );
       }
     } else {
       return (
-        <button onClick={connectWallet} className={styles.button}>
-          Connect your wallet
-        </button>
+        <a
+          className="btn btn-light btn-rounded btn-md m-t-20"
+          data-toggle="collapse"
+          href="#"
+          onClick={connectWallet}
+        >
+          <span>Connect your wallet</span>
+        </a>
       );
     }
   };
@@ -192,30 +211,31 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Whitelist Dapp</title>
+        <title>Mental Hub | Whitelist</title>
         <meta name="description" content="Whitelist-Dapp" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className={styles.main}>
-        <div>
-          <h1 className={styles.title}>Welcome to Mental Hub!</h1>
-          <div className={styles.description}>
-            Some NFT collections to help with your mental health <br />
-            Provided by the best healthcare professionals.
-          </div>
-          <div className={styles.description}>
-            {numberOfWhitelisted} have already joined the Whitelist
-          </div>
-          {renderButton()}
-        </div>
-        <div>
-          <img className={styles.image} src="./mind.jpg" />
-        </div>
+      <div className="static-slider10">
+        <Container>
+          <Row className="">
+            <Col md="6" className="align-self-center ">
+              <span className="label label-rounded label-inverse">
+                Whitelist Mental Hub
+              </span>
+              <h1 className="title">Welcome to the whitelist</h1>
+              <h6 className="subtitle op-8">
+                Some NFT collections to help with your mental health <br />
+                Provided by the best healthcare professionals. <br />
+                {numberOfWhitelisted} have already joined the Whitelist.
+              </h6>
+              {renderButton()}
+            </Col>
+            <Col md="6">
+              <Image src={herobanner} alt="herobanner"></Image>
+            </Col>
+          </Row>
+        </Container>
       </div>
-
-      <footer className={styles.footer}>
-        Made with &#10084; by Crypto Devs
-      </footer>
     </div>
   );
 }

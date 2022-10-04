@@ -21,7 +21,7 @@ const RoadMapComponent = () => {
       </div>
       <div className="spacer ">
         <Container className="feature30">
-          <Row>
+          <Row className="justify-content-md-center row">
             <Col lg="10">
               <Image
                 src={img5}
