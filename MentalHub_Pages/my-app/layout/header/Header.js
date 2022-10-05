@@ -12,19 +12,24 @@ import {
   Container,
   NavLink,
 } from "reactstrap";
-import logo from "../../assets/images/logos/white-text.png";
+import logo from "../../public/LogoMentalHub.png";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const toggle = () => setIsOpen(!isOpen);
   return (
-    <div className="topbar" id="top">
+    <div className="topbar text-white" style={{
+        backgroundColor: '#6521ff'
+      }} id="top">
       <div className="header6">
         <Container className="po-relative">
           <Navbar className="navbar-expand-lg h6-nav-bar">
             <NavbarBrand href="/">
-              <Image src={logo} alt="wrapkit" />
+              <Image
+              width={140}
+              height={70}
+              src={logo} alt="wrapkit" />
             </NavbarBrand>
             <NavbarToggler onClick={toggle}>
               <span className="ti-menu"></span>
