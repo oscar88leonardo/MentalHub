@@ -44,7 +44,7 @@ const FAQsComponent = (props) => {
     setModal9(!modal9);
   };
   return (
-    <div>
+    <div id="FAQsSection">
       <div className="spacer bg-light">
         <Container>
           <Row className="justify-content-center">
@@ -63,16 +63,13 @@ const FAQsComponent = (props) => {
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    What is an NFT?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle1.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    What is an NFT?
                   </Button>
                   <Modal
                     size="sm"
@@ -96,16 +93,13 @@ const FAQsComponent = (props) => {
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    What makes an NFT valuable?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle2.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    What makes an NFT valuable?
                   </Button>
                   <Modal
                     size="sm"
@@ -129,16 +123,13 @@ const FAQsComponent = (props) => {
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    How do NFTs work?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle3.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    How do NFTs work?
                   </Button>
                   <Modal
                     size="sm"
@@ -166,16 +157,13 @@ The records cannot be forged because the ledger is maintained by thousands of co
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    What’s the connection between NFTs and cryptocurrency?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle4.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    What’s the connection between NFTs and cryptocurrency?
                   </Button>
                   <Modal
                     size="sm"
@@ -199,16 +187,13 @@ The records cannot be forged because the ledger is maintained by thousands of co
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    How to make an NFT?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle5.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    How to make an NFT?
                   </Button>
                   <Modal
                     size="sm"
@@ -234,16 +219,13 @@ It should be noted that some platforms accept USD as well as crypto, some platfo
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    How to validate the authencity of an NFT?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle5.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    How to validate the authencity of an NFT?
                   </Button>
                   <Modal
                     size="sm"
@@ -267,16 +249,13 @@ It should be noted that some platforms accept USD as well as crypto, some platfo
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    How is an NFT valued? What are the most expensive NFTs?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle7.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    How is an NFT valued? What are the most expensive NFTs?
                   </Button>
                   <Modal
                     size="sm"
@@ -302,16 +281,13 @@ Dragon the CryptoKitty continues to be one of the most expensive NFTs in the spa
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    Are NFTs the future of art and collectibles?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle8.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    Are NFTs the future of art and collectibles?
                   </Button>
                   <Modal
                     size="sm"
@@ -335,16 +311,13 @@ Dragon the CryptoKitty continues to be one of the most expensive NFTs in the spa
             <Col md="4">
               <Card className="card-shadow">
                 <CardBody className="m-auto">
-                  <h5 className="font-medium m-b-0">
-                    Can NFTs be used as an investment?
-                  </h5>
                   <Button
                     color="info"
                     type="button"
                     onClick={toggle9.bind(null)}
                     className="btn waves-effect waves-light btn-outline-primary"
                   >
-                    Response
+                    Can NFTs be used as an investment?
                   </Button>
                   <Modal
                     size="sm"

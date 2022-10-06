@@ -4,7 +4,7 @@ import { Row, Col, Container } from 'reactstrap';
 
 const NFTcoList = () => {
     return (
-        <div>
+        <div id="NTFCollectSection">
             <div className="spacer bg-light">
                 <Container>
                     <Row className="justify-content-center">

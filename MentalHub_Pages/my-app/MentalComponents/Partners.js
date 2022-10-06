@@ -4,7 +4,7 @@ import { Row, Col, Container } from 'reactstrap';
 
 const Partners = () => {
     return (
-        <div>
+        <div id="PartnersSection">
             <div className="spacer bg-light">
                 <Container>
                     <Row className="justify-content-center">
