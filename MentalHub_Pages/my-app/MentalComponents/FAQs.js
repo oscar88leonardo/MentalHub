@@ -81,11 +81,6 @@ const FAQsComponent = (props) => {
                     <ModalBody>
                       <p className="m-b-0 font-14">NFTs or non-fungible tokens, are cryptographic assets on blockchain with unique identification codes and metadata that distinguish them from each other. NFTs are unique and not mutually interchangeable, which means no two NFTs are the same. NFTs can be a unique digital artwork, sneaker in a limited-run fashion line, in-game item, digital collectible etc.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle1.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -111,11 +106,6 @@ const FAQsComponent = (props) => {
                     <ModalBody>
                       <p className="m-b-0 font-14">The value of an NFT comes from the property it represents, which is generally something that exists in the digital world like an original piece of art or digital memorabilia. The NFT itself doesn’t necessarily contain the digital property, but points to its location on the blockchain. Like a concert ticket or a deed to a physical property, an NFT reflects the value of the thing it represents.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle2.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -145,11 +135,6 @@ With NFTs, artwork can be “tokenised” to create a digital certificate of own
 <br/><br/>
 The records cannot be forged because the ledger is maintained by thousands of computers around the world. NFTs can also contain smart contracts that may give the artist, for example, a cut of any future sale of the token.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle3.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -175,11 +160,6 @@ The records cannot be forged because the ledger is maintained by thousands of co
                     <ModalBody>
                       <p className="m-b-0 font-14">NFTs aren’t cryptocurrencies, but they are built using technology similar to Ethereum and Bitcoin. Also, like cryptocurrencies, NFTs exist on a blockchain, which verifies their unique identity and ownership. The blockchain also keeps a record of all the transactions connected to the NFT and the property it represents. Many NFTs are held on the Ethereum blockchain.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle4.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -207,11 +187,6 @@ The records cannot be forged because the ledger is maintained by thousands of co
 <br/><br/>
 It should be noted that some platforms accept USD as well as crypto, some platforms only accept cryptocurrencies, like OpenSea.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle5.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -237,11 +212,6 @@ It should be noted that some platforms accept USD as well as crypto, some platfo
                     <ModalBody>
                       <p className="m-b-0 font-14">NFT ownership is recorded on the blockchain, and that entry acts as a digital pink slip.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle6.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -269,11 +239,6 @@ It should be noted that some platforms accept USD as well as crypto, some platfo
 <br/><br/>
 Dragon the CryptoKitty continues to be one of the most expensive NFTs in the space, valued at 600 ETH.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle7.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -299,11 +264,6 @@ Dragon the CryptoKitty continues to be one of the most expensive NFTs in the spa
                     <ModalBody>
                       <p className="m-b-0 font-14">It depends on whom you ask. Artists, musicians, athletes, celebrities, and others find NFTs attractive because they offer a new and unique way to sell their wares — including things like GIFs, memes, and tweets — directly to fans. NFTs also provide artists an opportunity to program in continued royalties if it is sold to a new owner. Galleries see potential for reaching a new generation of collectors.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle8.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
@@ -329,11 +289,6 @@ Dragon the CryptoKitty continues to be one of the most expensive NFTs in the spa
                     <ModalBody>
                       <p className="m-b-0 font-14">Under the current circumstances, NFTs can be used as an investment. One can purchase an NFT and resell it with profits. Certain NFT marketplaces even allow NFT sellers to gain royalties for the sold assets.</p>
                     </ModalBody>
-                    <ModalFooter className="justify-content-center">
-                      <Button color="info" onClick={toggle9.bind(null)}>
-                        Cancel
-                      </Button>
-                    </ModalFooter>
                   </Modal>
                 </CardBody>
               </Card>
