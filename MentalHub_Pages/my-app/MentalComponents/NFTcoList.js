@@ -35,7 +35,7 @@ const NFTcoList = () => {
     }
 
     return (
-        <div className="grid">
+        <div id="NTFCollectSection" className="grid">
             <div className="spacer bg-light">
                 <Container>
                     <Row className="justify-content-center">
