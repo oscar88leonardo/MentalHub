@@ -14,7 +14,7 @@ const NFTColAnsiedad = () => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1MmvXVr6LZwkbOMn9iJ8boB3MMp_twOLj",
                          id:'Anxiety 01',
-                         usecase:"-Consulta de valoración y derivación gratuita <br/>"+ 
+                         usecase:"-Consulta de valoración y derivación gratuita /n"+ 
                                  "-1 Pack de 4 sesiones en un mes <br/>"+
                                  "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb <br/>"+ 
                                  "-Pase libre a webinar y worshops por 6 meses"
@@ -89,8 +89,8 @@ const NFTColAnsiedad = () => {
         <div className='player-wrapper'>
           <video controls
               src={NFTitem.animation}
-              width='100%'
-              height='100%'
+              width='300'
+              height='300'
               >
           </video>
           </div>

@@ -1,32 +1,42 @@
 /* eslint-disable */
 import React from 'react';
 import { Row, Col, Container } from 'reactstrap';
-
+import Link from 'next/link';
 
 
 const NFTcoList = () => {
 
     const  NFTColInfo = [
-        {animation:"/NFT_CollPreview/AnsiedadPreview.mp4", title:"No eres tú, es tu ansiedad", 
-         Author_url:"https://www.instagram.com/pila_mental_/", Author_id:"@pila_mental_"},
-        
+
         {animation:"/NFT_CollPreview/MembersPreview.mp4", title:"Mental Hub Member", 
-        Author_url:'"https://www.instagram.com/pila_mental_/"', Author_id:"@m3ntal_hub"}
+        Author_url:'"https://www.instagram.com/pila_mental_/"', Author_id:"@m3ntal_hub",
+        Link:"/NFTCol0"},
+
+        {animation:"/NFT_CollPreview/AnsiedadPreview.mp4", title:"It's not you, it's your anxiety", 
+         Author_url:"https://www.instagram.com/pila_mental_/", Author_id:"@pila_mental_",
+         Link:"/NFTCol1"}
     ]
+
+    const handleClick =() => {
+        return "hi"
+     }
 
     const renderNFTgals = (NFTcol, index) => {
         return(
-            <div className="col-lg-6" key={index}>
-                <div className='player-wrapper'>
-                    <video autoPlay muted loop
+            <div className="col-lg-6" key={index} >
+                <div className='player-wrapper' onClick={handleClick}>
+
+                    <video autoPlay muted loop 
                     src={NFTcol.animation}
                     width='100%'
-                    height='100%'
-                    ></video>
+                    height='100%'                    
+                    >
+                    <Link href={NFTcol.Link}>{NFTcol.title}</Link>
+                    </video>
                 </div>
                     <Col md="12">
                                 <div className="p-t-10">
-                                    <h5 className="title font-medium">{NFTcol.title}</h5>
+                                    <h5 className="title font-medium"> <Link href={NFTcol.Link}>{NFTcol.title}</Link>  </h5>
                                     <h6 className="subtitle">By <a href={NFTcol.Author_url}>{NFTcol.Author_id}</a> </h6>
                                 </div>
                     </Col>                    

@@ -48,8 +48,8 @@ const NFTColMembers = () => {
         <div className='player-wrapper'>
           <video controls
               src={NFTitem.animation}
-              width='100%'
-              height='100%'
+              width='300'
+              height='300'
               >
           </video>
           </div>
