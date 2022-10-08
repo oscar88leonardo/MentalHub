@@ -10,7 +10,7 @@ export default function Home() {
           name="description"
           content="NextJs UI kit | Free UI kit built with bootstrap"
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.png" />
       </Head>
       <CustomComponents />
     </div>

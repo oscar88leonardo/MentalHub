@@ -213,7 +213,7 @@ export default function Home() {
       <Head>
         <title>Mental Hub | Whitelist</title>
         <meta name="description" content="Whitelist-Dapp" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.png" />
       </Head>
       <div className="static-slider10">
         <Container>
