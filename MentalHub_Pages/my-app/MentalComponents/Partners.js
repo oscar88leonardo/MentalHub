@@ -17,7 +17,7 @@ const Partners = () => {
             </div>
             <div className="spacer team2">
                 <Container>                    
-                    <Row className="m-t-30">
+                    <Row className="m-t-30 justify-content-center">
                         <Col lg="3" md="6" className="m-b-30">
                             <Row className="no-gutters">
                                 <Col md="12" className="pro-pic t2">

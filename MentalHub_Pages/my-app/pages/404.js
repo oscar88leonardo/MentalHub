@@ -8,8 +8,8 @@ const ErrorPage = () => {
       <Head>
         <title>404 - Page not Found</title>
         <meta
-          name="description"
-          content="The page you are looking for is not found go back to the homepage"
+          name="Mental Hub"
+          content="A platform to help you with the mental health care"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
