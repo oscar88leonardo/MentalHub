@@ -14,71 +14,71 @@ const NFTColAnsiedad = () => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1MmvXVr6LZwkbOMn9iJ8boB3MMp_twOLj",
                          id:'Anxiety 01',
-                         usecase:"-Consulta de valoración y derivación gratuita /n"+ 
-                                 "-1 Pack de 4 sesiones en un mes <br/>"+
-                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb <br/>"+ 
+                         usecase:"-Consulta de valoración y derivación gratuita \n"+ 
+                                 '-1 Pack de 4 sesiones en un mes \n'+
+                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb \n"+ 
                                  "-Pase libre a webinar y worshops por 6 meses"
                                 },
 
                         {animation:"https://drive.google.com/uc?export=download&id=1YkQEsrsQ7aStXpdyLwxlmqkIap8_4DCa",
                          id:'Anxiety 02', 
-                         usecase:"-Consulta de valoración y derivación gratuita <br/>"+ 
-                                 "-1 Pack de 4 sesiones en un mes <br/>"+
-                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb <br/>"+ 
+                         usecase:"-Consulta de valoración y derivación gratuita\n"+ 
+                                 "-1 Pack de 4 sesiones en un mes\n"+
+                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb\n"+ 
                                  "-Pase libre a webinar y worshops por 6 meses"
                                 },
                         
                          {animation:"https://drive.google.com/uc?export=download&id=1aiOrh2Xk0m1BjDLVxFL7Y7_bBlg3Fn2P", 
                          id:'Anxiety 03',
-                         usecase:"-Consulta de valoración y derivación gratuita <br/>"+ 
-                                 "-1 Pack de 4 sesiones en un mes <br/>"+
-                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb <br/>"+ 
+                         usecase:"-Consulta de valoración y derivación gratuita\n"+ 
+                                 "-1 Pack de 4 sesiones en un mes\n"+
+                                 "-Acceso vitalicio al repositorio: banco de recursos y biblioteca virtual de MentalHUb\n"+ 
                                  "-Pase libre a webinar y worshops por 6 meses"
                                 },
                          
                          {animation:"https://drive.google.com/uc?export=download&id=1QOGouzQ6ahSrOYWKcGDF-D104pDDYogU", 
                          id:'Anxiety 04',
-                         usecase:"-Consulta de valoración psicologica"+
-                                 "-1 pack de 4 sesiones en un mes"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"+
+                         usecase:"-Consulta de valoración psicologica\n"+
+                                 "-1 pack de 4 sesiones en un mes\n"+
+                                 "-Acceso vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"+
                                  "-Pase libre a webinar y woorkshops por 3 meses"
                                 },
                          
                          {animation:"https://drive.google.com/uc?export=download&id=15joe5MOkPoteURfPHq1_CCGPVW-TKilH", 
                          id:'Anxiety 05',
-                         usecase:"-Consulta de valoración psicologica"+
-                                 "-1 pack de 4 sesiones en un mes"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"+
-                                 "-Pase libre a webinar y woorkshops por 3 meses"
+                         usecase:"-Consulta de valoración psicologica\n"+
+                                 "-1 pack de 4 sesiones en un mes\n"+
+                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"+
+                                 "-Pase libre a webinar y woorkshops por 3 meses\n"
                                 },
                         
                          {animation:"https://drive.google.com/uc?export=download&id=1UGb_W5A5v6RzAbvYh-enJZYxhL5Zuy4Y", 
                          id:'Anxiety 06',
-                         usecase:"-Consulta de valoración psicologica"+
-                                 "-1 pack de 4 sesiones en un mes"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"+
-                                 "-Pase libre a webinar y woorkshops por 3 meses"
+                         usecase:"-Consulta de valoración psicologica\n"+
+                                 "-1 pack de 4 sesiones en un mes\n"+
+                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"+
+                                 "-Pase libre a webinar y woorkshops por 3 meses\n"
                                 },
                          
                          {animation:"https://drive.google.com/uc?export=download&id=1HMnejhXbWhRwiPX1d9eXYzNJ-C3yMT5W", 
                          id:'Anxiety 07',
-                         usecase:"-Consulta de valoración psicológica"+
-                                 "-Ebook y 3 toolkit premium"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"
+                         usecase:"-Consulta de valoración psicológica\n"+
+                                 "-Ebook y 3 toolkit premium\n"+
+                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"
                                 },
                                 
                          {animation:"https://drive.google.com/uc?export=download&id=1bgIscnEimAzBflf6YnhV8cTslPqdasu_", 
                          id:'Anxiety 08',
-                         usecase:"-Consulta de valoración psicológica"+
-                                 "-Ebook y 3 toolkit premium"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"
+                         usecase:"-Consulta de valoración psicológica\n"+
+                                 "-Ebook y 3 toolkit premium\n"+
+                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"
                                 },
 
                          {animation:"https://drive.google.com/uc?export=download&id=1HMnejhXbWhRwiPX1d9eXYzNJ-C3yMT5W", 
                          id:'Anxiety 09',
-                         usecase:"-Consulta de valoración psicológica"+
-                                 "-Ebook y 3 toolkit premium"+
-                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub"
+                         usecase:"-Consulta de valoración psicológica\n"+
+                                 "-Ebook y 3 toolkit premium\n"+
+                                 "-Accesp vitalicio al repositiorio: banco de recursos y biblioteca virtual de MentalHub\n"
                                 }
                         ]
   

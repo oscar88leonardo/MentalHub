@@ -1,5 +1,6 @@
 import Head from "next/head";
 import NFTColMembers from "../MentalComponents/NFTColMembers";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   return (

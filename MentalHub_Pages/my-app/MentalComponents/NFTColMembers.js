@@ -3,8 +3,14 @@ import React from "react";
 import ReactPlayer from "react-player";
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
+import ImgAuthor from "../public/LogoMentalHub.png";
 
-import ImgAuthor from "../public/NFT_Authors/pilamental.png";
+
+// imports to interact with the smart contract
+// imports to interact with the contract
+import { Contract, providers, utils } from "ethers";
+import Web3Modal from "web3modal";
+import { abi, NFT_CONTRACT_ADDRESS } from "../constants/NFTCol_MHMembers";
 
 
 const NFTColMembers = () => {
@@ -17,27 +23,7 @@ const NFTColMembers = () => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
                          id:'Member 01', 
-                         usecase:"Freemium acces"},
-
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                        id:'Member 02', 
-                        usecase:"Freemium acces"},
-                         
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                         id:'Member 03',
-                         usecase:"Freemium acces"},
-                         
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                         id:'Member 04', 
-                         usecase:"Freemium acces"},
-                         
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                         id:'Member 05', 
-                         usecase:"Freemium acces"},
-                        
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                         id:'Member 06', 
-                         usecase:"Freemium acces"} 
+                         usecase:"Freemium acces"}
                         ]
                       
   
@@ -81,7 +67,7 @@ const NFTColMembers = () => {
             <br /><h2 className="title font-bold">{NFTGeneralData.title}</h2><br />
               <div className="d-flex no-block align-items-center">
                     <span className="thumb-img">
-                      <Image src={ImgAuthor}  alt="wrapkit" className="circle" /> <br />
+                      <Image src={ImgAuthor}  alt="wrapkit" className="circle" width='300' height='300'/> <br />
                     </span>
                     <div className="text-left font-18">
                     <h3 className="subtitle ">An NFT collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a> </h3><br /> 
@@ -99,7 +85,7 @@ const NFTColMembers = () => {
                   </div>             
             </Col>
           </Row>
-          <Row className="m-t-40">
+          <Row className="justify-content-center">
           {NFTItemsInfo.map(renderNFTItems)}
           </Row>
         </Container>

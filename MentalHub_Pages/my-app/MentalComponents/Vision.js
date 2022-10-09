@@ -2,7 +2,7 @@
 import React from "react";
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
-import img5 from "../assets/images/features/feature30/feature-img.jpg";
+import img5 from "../public/banner1.jpg";
 
 const FeatureComponent = () => {
   return (
