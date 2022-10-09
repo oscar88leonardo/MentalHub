@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IWhitelist.sol";
 
-contract NFTCol_MHMembers is ERC721Enumerable, Ownable {
+contract MembersAirdrop is ERC721Enumerable, Ownable {
     /**
      * @dev _baseTokenURI for computing {tokenURI}. If set, the resulting URI for each
      * token will be the concatenation of the `baseURI` and the `tokenId`.
@@ -28,10 +28,10 @@ contract NFTCol_MHMembers is ERC721Enumerable, Ownable {
     IWhitelist whitelist;
 
     // boolean to keep track of whether presale started or not
-    bool public AirdropStarted;
+    bool public airdropStarted;
 
     // timestamp for when presale would end
-    uint256 public AirdropEnded;
+    uint256 public airdropEnded;
 
     modifier onlyWhenNotPaused() {
         require(!_paused, "Contract currently paused");
@@ -54,18 +54,18 @@ contract NFTCol_MHMembers is ERC721Enumerable, Ownable {
      * @dev startPresale starts a presale for the whitelisted addresses
      */
     function StartAirdrop() public onlyOwner {
-        AirdropStarted = true;
+        airdropStarted = true;
         // Set presaleEnded time as current timestamp + 5 minutes
         // Solidity has cool syntax for timestamps (seconds, minutes, hours, days, years)
-        AirdropEnded = block.timestamp + 7 days;
+        airdropEnded = block.timestamp + 7 days;
     }
 
     /**
-     * @dev presaleMint allows a user to mint one NFT per transaction during the presale.
+     * @dev AirdropMint allows a user to mint one NFT per transaction during the airdrop at $0 mint cost.
      */
-    function AirdropMint() public payable onlyWhenNotPaused {
+    function airdropMint() public payable onlyWhenNotPaused {
         require(
-            AirdropStarted && block.timestamp < AirdropEnded,
+            airdropStarted && block.timestamp < airdropEnded,
             "Airdrop Running!"
         );
         require(
@@ -90,7 +90,7 @@ contract NFTCol_MHMembers is ERC721Enumerable, Ownable {
      */
     function mint() public payable onlyWhenNotPaused {
         require(
-            AirdropStarted && block.timestamp >= AirdropEnded,
+            airdropStarted && block.timestamp >= airdropEnded,
             "Airdrop period has not ended yet"
         );
         require(
