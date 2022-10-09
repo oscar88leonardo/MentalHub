@@ -15,6 +15,7 @@ export default function Home() {
           name="Mental Hub"
           content="A platform to help you with the mental health care"
         />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <Vision />
       <Description />

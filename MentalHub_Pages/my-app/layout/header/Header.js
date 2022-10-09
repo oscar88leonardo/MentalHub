@@ -164,15 +164,15 @@ const checkConnect = async () => {
   
   return (
     <div className="fixed-top" style={{
-        backgroundColor: '#6521ff'
+        backgroundColor: '#407af3'
       }} id="top">
       <div className="header6">
         <Container className="po-relative">
           <Navbar className="navbar-expand-sm h6-nav-bar">
             <NavbarBrand href="/">
               <Image
-              width={140}
-              height={70}
+              width={98}
+              height={81}
               src={logo} alt="wrapkit" />
             </NavbarBrand>
             <NavbarToggler onClick={toggle}>
