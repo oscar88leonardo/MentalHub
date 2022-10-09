@@ -35,7 +35,6 @@ const NFTColMembers = () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       const signer = await getProviderOrSigner(true);
-      const provider = await getProviderOrSigner(false);
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
@@ -370,7 +369,7 @@ const renderButton = () => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
                          id:'Member 01', 
-                         usecase:"Freemium acces"}
+                         usecase:"Freemium access"}
                         ]
                       
   
