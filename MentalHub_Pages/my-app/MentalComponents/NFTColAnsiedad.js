@@ -148,5 +148,4 @@ const NFTColAnsiedad = () => {
     </div>
   );
 };
-
 export default NFTColAnsiedad;
