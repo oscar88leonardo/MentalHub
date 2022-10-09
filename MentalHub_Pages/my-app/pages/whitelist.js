@@ -40,9 +40,9 @@ export default function Home() {
 
     // If user is not connected to the Rinkeby network, let them know and throw an error
     const { chainId } = await web3Provider.getNetwork();
-    if (chainId !== 4) {
-      window.alert("Change the network to Rinkeby");
-      throw new Error("Change network to Rinkeby");
+    if (chainId !== 5) {
+      window.alert("Change network to Metis Startdust TestNet");
+      throw new Error("Change network to Metis Startdust TestNet");
     }
 
     if (needSigner) {
@@ -139,6 +139,10 @@ export default function Home() {
       await getProviderOrSigner();
       setWalletConnected(true);
 
+      if(typeof window !== 'undefined'){
+           window.localStorage.setItem("IsConnectWallet",true);
+      }
+
       checkIfAddressInWhitelist();
       getNumberOfWhitelisted();
     } catch (err) {
@@ -177,7 +181,7 @@ export default function Home() {
           </a>
         );
       }
-    } else {
+    } /*else {
       return (
         <a
           className="btn btn-light btn-rounded btn-md m-t-20"
@@ -188,24 +192,39 @@ export default function Home() {
           <span>Connect your wallet</span>
         </a>
       );
-    }
+    }*/
   };
+
+const checkConnect = async () => {
+  const {ethereum} = window;
+  const accounts = await ethereum.request({method: 'eth_accounts'});
+  console.log(accounts);
+  console.log(accounts.length);
+  if(accounts && accounts.length){
+    console.log("setWalletConnected:true");
+    setWalletConnected(true);
+  } else {
+    console.log("setWalletConnected:false");
+    setWalletConnected(false);
+  }
+};
 
   // useEffects are used to react to changes in state of the website
   // The array at the end of function call represents what state changes will trigger this effect
   // In this case, whenever the value of `walletConnected` changes - this effect will be called
   useEffect(() => {
+    checkConnect();
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
     if (!walletConnected) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
       // The `current` value is persisted throughout as long as this page is open
       web3ModalRef.current = new Web3Modal({
-        network: "rinkeby",
+        network: "goerli",
         providerOptions: {},
         disableInjectedProvider: false,
       });
-      connectWallet();
     }
+    connectWallet();
   }, [walletConnected]);
 
   return (
