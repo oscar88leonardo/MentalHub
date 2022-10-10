@@ -23,9 +23,7 @@ export default function Profile() {
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   const web3ModalRef = useRef();
 
-  const  NFTItemsInfo = [
-    {name: 'Member 9', pathImage: 'https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk', contSessions: '1'},
-  ];
+  const  NFTItemsInfo = [];
 
   /**
    * Returns a Provider or Signer object representing the Ethereum RPC with or without the
