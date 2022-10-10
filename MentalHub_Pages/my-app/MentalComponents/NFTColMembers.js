@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
-import ImgAuthor from "../public/LogoMentalHub.png";
+import ImgAuthor from "../public/NFT_Authors/MentalHubAuthor.png";
 import React, { useEffect, useRef, useState } from "react";
 // imports to interact with the smart contract
 // imports to interact with the contract
@@ -393,7 +393,9 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
                          id:'Members', 
-                         usecase:"Freemium access",
+                         usecase:"This NFT includes one psychology assessment consultation, one Ebook"+
+                                  "and 3 premium toolkits, lifetime access to the MentalHUb repository: resource bank and virtual library,"+
+                                  "This NFT identify you as a community member , more surprises are coming along the way!",
                          name:"Member",
                          pathTypeContDig:"url",
                          pathContDigi:"Members",
@@ -408,7 +410,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
     return(   
       <Col md="4">
         <Card className="card-shadow" key={index}>              
-        <div className='player-wrapper'>
+        <div className='player-wrapper center'>
           <video controls
               src={NFTitem.animation}
               width='300'
@@ -417,10 +419,10 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
           </video>
           </div>
           <CardBody>
-            <h5 className="font-medium m-b-0">
+            <h5 className="font-medium m-b-0 text-center">
               {NFTitem.id}
             </h5>
-            <p className="m-b-0 font-14">{NFTitem.usecase}</p> 
+            <p className="m-b-0 font-14 text-center">{NFTitem.usecase}</p> 
             {RenderButtonStr}
           </CardBody>
         </Card>
@@ -440,14 +442,16 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
                       <Image src={ImgAuthor}  alt="wrapkit" className="circle" width='300' height='300'/> <br />
                     </span>
                     <div className="text-left font-18">
-                    <h3 className="subtitle ">An NFT collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a> </h3><br /> 
-                    <p> El espíritu de esta colección parte del supuesto de que “comprender” es “aliviar” 
-                        Por eso cada NFT trae una pregunta sobre “trampas mentales” que nos creamos 
-                        las historias que nos contamos y hacen tanto daño, aquello que nos afecta 
-                        e ignoramos o evitamos repetidamente.<br /><br />
-                        Cada NFT nos ayuda a entender porqué muchas veces hacemos las cosas 
-                        equivocadas por los motivos correctos. <br /><br />
-                        Have fun collecting and take care of your mental health!
+                    <h3 className="subtitle text-center">An NFT collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a> </h3><br /> 
+                    <p className="text-center font-16"> Do you find it hard to enjoy your daily life often?, Do you experience intense and constant episodes of stress, anguish 
+                        or anxiety without really understanding why?. MentalHub is a collaborative environment where professionals and users connect on healthy networks and build 
+                        health-conscious communities. <br />
+                        We know that psychological disorders being an intense and disconcerting confrontation with pain cause havoc that completely
+                        exhausts you, and even if they are asphyxiating and inevitable, it is possible to treat them. Learn from them and turn such distress into personal growth.
+                        <br />  
+                        Be part of our community, empower yourself from your mental health and support others to achieve it through NFTs, 
+                        <br />
+                        have fun collecting and take care of your mental health!
                         </p>
                       <div className="font-14">                        
                       </div>

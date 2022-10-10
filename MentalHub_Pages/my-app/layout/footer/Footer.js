@@ -10,7 +10,7 @@ const Footer = () => {
         <Row>
           <Col lg="3" md="6" className="m-b-30">
             <h5 className="m-b-20">Address</h5>
-            <p>71 Amsteroum Avenue Cronish Night, NY 35098</p>
+            <p>25 steet # 4 - 20, Colombia, Neiva - Huila</p>
           </Col>
           <Col lg="3" md="6" className="m-b-30">
             <h5 className="m-b-20">Phone</h5>
@@ -24,12 +24,12 @@ const Footer = () => {
             <p>
               Office :
               <Link href="#">
-                <a className="link">info@wrappixel.com</a>
+                <a className="link">info@mentalhub.com</a>
               </Link>
               <br />
               Site :
-              <Link href="https://www.wrappixel.com">
-                <a className="link">wrappixel.com</a>
+              <Link href="">
+                <a className="link">mental.hub</a>
               </Link>
             </p>
           </Col>
@@ -63,32 +63,7 @@ const Footer = () => {
               </Link>
             </div>
           </Col>
-        </Row>
-        <div className="f4-bottom-bar">
-          <Row>
-            <Col md="12">
-              <div className="d-flex font-14">
-                <div className="m-t-10 m-b-10 copyright">
-                  All Rights Reserved by{" "}
-                  <Link href="https://www.wrappixel.com">
-                    <a className="link">wrappixel.com</a>
-                  </Link>
-                </div>
-                <div className="links ml-auto m-t-10 m-b-10">
-                  <Link href="#">
-                    <a className="p-10 p-l-0">Terms of Use</a>
-                  </Link>
-                  <Link href="#">
-                    <a className="p-10">Legal Disclaimer</a>
-                  </Link>
-                  <Link href="#">
-                    <a className="p-10">Privacy Policy</a>
-                  </Link>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </div>
+        </Row>        
       </Container>
     </div>
   );

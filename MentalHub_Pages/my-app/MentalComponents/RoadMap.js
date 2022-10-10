@@ -2,7 +2,7 @@
 import React from "react";
 import { Row, Col, Container } from "reactstrap";
 import Image from "next/image";
-import img5 from "../assets/images/RoadMap.png";
+import img5 from "../public/MentalHubRoadmap.png";
 
 const RoadMapComponent = () => {
   return (
@@ -12,8 +12,8 @@ const RoadMapComponent = () => {
           <Row className="justify-content-center">
             <Col md="7" className="text-center">
               <h1 className="title font-bold">RoadMap</h1>
-              <h6 className="subtitle">
-                In order to deliver a great product roadmap, it must be: easy to understand, clear, abstracted from detail, and flexible. No matter what type of roadmap you create, it should be centered around the big picture and problems to solve, not solutions to those problems.
+              <h6 className="subtitle font-bold">
+              MentalHub is a collaborative environment where professionals and users connect on healthy networks and build health-conscious communities.                               
               </h6>
             </Col>
           </Row>

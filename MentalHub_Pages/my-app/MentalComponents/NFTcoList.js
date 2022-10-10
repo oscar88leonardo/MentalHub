@@ -51,10 +51,9 @@ const NFTcoList = () => {
                     <Row className="justify-content-center">
                         <Col md="7" className="text-center">
                             <h1 className="title font-bold">NFT Collections</h1>
-                            <h6 className="subtitle font-18" >Al adquirir un NFT de nuestras colecciones, contribuyes en la <br/>
-                                                             visibilización del cuidado psicológico, también podrás acceder<br/>
-                                                            a las herramientas, consultas y demás beneficios que los<br/> 
-                                                            profesionales de MentalHub diseñan constantemente para ti.                                              
+                            <h6 className="subtitle font-18 font-bold" >By purchasing an NFT from our collections, you contribute to<br/>
+                                                            the visibility of psychological care, you can also access the tools,<br/>
+                                                            consultations and other benefits that MentalHub professionals constantly design for you.   
                                                             </h6>
                         </Col>
                     </Row>

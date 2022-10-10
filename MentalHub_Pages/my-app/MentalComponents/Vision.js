@@ -21,12 +21,11 @@ const FeatureComponent = () => {
               <Card className="card-shadow">
                 <CardBody>
                   <div className="p-20">
-                    <h3 className="title">
+                    <h3 className="title font-bold">
                       Vision
                     </h3>
-                    <p>
-                      Mental Hub se propone como una comunidad digital construida en torno a los NFTs, orientada al cuidado de la salud mental a través de tratamiento psicológico específico sobre ansiedad, depresión, rupturas y duelos.
-
+                    <p className="font-bold">
+                    Mental Hub is proposed as a digital community built around NFTs, aimed at mental health care through specific psychological treatment for anxiety, depression, breakups and grief.
                     </p>
                   </div>
                 </CardBody>

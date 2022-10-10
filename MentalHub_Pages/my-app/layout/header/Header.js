@@ -164,7 +164,7 @@ const checkConnect = async () => {
   
   return (
     <div className="fixed-top" style={{
-        backgroundColor: '#407af3'
+        backgroundColor: '#0faba5' 
       }} id="top">
       <div className="header6">
         <Container className="po-relative">

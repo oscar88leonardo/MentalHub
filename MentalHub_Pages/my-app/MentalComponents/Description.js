@@ -9,7 +9,7 @@ const FeatureComponent = () => {
         <Container>
           <Row className="justify-content-center">
             <Col md="7" className="text-center">
-              <h2 className="title">¡Forma parte de nuestra comunidad, empoderate de tu salud mental y apoya a otros para que lo logren a través de los NFTs!</h2>
+              <h2 className="title">Be part of our community, empower yourself from your mental health and support others to achieve it through NFTs!</h2>
             </Col>
           </Row>
           <Row className="m-t-40">
@@ -21,9 +21,9 @@ const FeatureComponent = () => {
                   </div>
                   <h5 className="font-medium">The purpose of Mental Hub</h5>
                   <p className="m-t-20">
-                    MentalHub es una plataforma digital orientada al cuidado de la salud mental creando comunidad por medio de los NFT, a través de los cuales el acceso a un tratamiento adecuado se facilita y agiliza.
- <br/><br/>
-Tal propósito permite a su vez contribuir a la desmitificación de la salud mental al brindar contenido psicoeducativo y la posibilidad de acceder a consulta especializada acorde a las necesidades de los usuarios, así como a la diversificación del mercado de los NFT expandiendo los servicios de salud mental a la comunidad de la  cryptoindustria.
+                  MentalHub is a digital platform focused on mental health care creating community through NFTs, through which access to adequate treatment is facilitated and expedited.
+                  <br/><br/>
+                  Such purpose allows in turn contribute to the demystification of mental health by providing psychoeducational content and the possibility of accessing specialized consultation according to the needs of users, as well as diversifying the NFT market by expanding mental health services to the crypto industry community.
                   </p>
                 </CardBody>
               </Card>
@@ -36,10 +36,9 @@ Tal propósito permite a su vez contribuir a la desmitificación de la salud men
                   </div>
                   <h5 className="font-medium">Why Mental Hub?</h5>
                   <p className="m-t-20">
-                    ¿Sabías que, según la organización mundial de la salud (OMS) más de 300 millones de personas en el mundo sufren de algún tipo de trastorno de ansiedad y a partir de la pandemia se incrementaron un 25% los casos? (OMS, 2022).<br/>
-Aunque son datos alarmantes, casi 2 tercios de las personas con síntomas nunca buscan tratamiento, esto ocurre por múltiples causas, sin embargo, las características comunes son la desinformación, los prejuicios y estigmatizaciones en torno a las “enfermedades mentales” y atención psicológica frecuentemente asociadas a la locura e  incapacidad (OPS & OMS 2022). <br/>
-Conscientes de esta realidad y guiados por el genuino propósito de ayudar a aliviar el sufrimiento de las personas, proponemos un entorno digital saludable que se configura a partir de los NFT.
-
+                  Did you know that, according to the World Health Organization (WHO), more than 300 million people in the world suffer from some kind of anxiety disorder and since the pandemic the cases have increased by 25%? (WHO, 2022). <br/><br/>
+                  Almost 2-thirds of people with symptoms never seek treatment, this happens for multiple causes, however, the common features are misinformation, prejudice, and stigma around "mental illness" and psychological care often associated with insanity and disability (PHO & WHO, 2022) <br/><br/>
+                  Aware of this reality and guided by the genuine purpose of helping heal people’s suffering, we propose a healthy digital environment that is configured from NFTs.
                   </p>
                 </CardBody>
               </Card>
