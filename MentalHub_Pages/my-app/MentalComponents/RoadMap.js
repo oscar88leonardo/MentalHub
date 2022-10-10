@@ -2,7 +2,7 @@
 import React from "react";
 import { Row, Col, Container } from "reactstrap";
 import Image from "next/image";
-import img5 from "../assets/images/RoadMap.png";
+import img5 from "../public/RoadMap.png";
 
 const RoadMapComponent = () => {
   return (
