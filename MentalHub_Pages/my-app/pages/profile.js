@@ -76,8 +76,6 @@ export default function Profile() {
     }
   };
 
-
-
   const getNFTsOwner = async () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
@@ -101,7 +99,36 @@ export default function Profile() {
           console.error(err);
         }
       }
-      console.log(NFTItemsInfo);
+      for(const itemNFT of NFTItemsInfo) {
+        console.log(itemNFT.name);
+        const row = document.getElementById('NFTList');
+        const col = document.createElement('div');
+        const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
+          <Card className="card-shadow" key={index}>              
+            <div className='player-wrapper'>
+              <video controls
+                  src="`+itemNFT.pathImage+`"
+                  width='300'
+                  height='300'
+                  >
+              </video>
+            </div>
+            <CardBody>
+              <h5 className="font-medium m-b-0">
+                `+itemNFT.name+`
+              </h5>
+              <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
+            </CardBody>
+          </Card>
+        </Col>`;
+        col.innerHTML = str;
+        const element =  document.getElementById(itemNFT.name);
+        console.log(element);
+        if (!element)
+        {
+          row.appendChild(col);
+        }
+      }
       /*try {
         const res = await fetch(
           'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
@@ -117,7 +144,19 @@ export default function Profile() {
   };
 
  useEffect(() => {
+  if (typeof window !== "undefined") {
+    web3ModalRef.current = new Web3Modal({
+        network: "goerli",
+        providerOptions: {},
+        //disableInjectedProvider: false,
+        cacheProvider: true,
+      });
     getNFTsOwner();
+  }
+  }, []);
+
+ useEffect(() => {
+    //getNFTsOwner();
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
     if (!walletConnected) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
@@ -137,6 +176,7 @@ export default function Profile() {
   
   const renderNFTItems = (NFTitem, index) => {  
     console.log(NFTitem);
+    console.log(NFTItemsInfo);
     return(   
       <Col md="4">
         <Card className="card-shadow" key={index}>              
@@ -195,8 +235,8 @@ export default function Profile() {
               <h2 className="title">My NTFs</h2>
             </Col>
           </Row>
-          <Row className="m-t-40">
-            {NFTItemsInfo.map(renderNFTItems)}
+          <Row id="NFTList" className="m-t-40 justify-content-center">
+            
           </Row>
         </Container>
       </div>
