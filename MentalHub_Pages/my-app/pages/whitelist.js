@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { Row, Col, Container } from "reactstrap";
 import Image from "next/image";
-import herobanner from "../assets/images/staticslider/slider/hero-banner.jpg";
+import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
 import Web3Modal from "web3modal";
 import { providers, Contract } from "ethers";
@@ -157,7 +157,7 @@ export default function Home() {
     if (walletConnected) {
       if (joinedWhitelist) {
         return (
-          <div className={styles.description}>
+          <div className="subtitle op-10">
             Thanks for joining the Whitelist!
           </div>
         );
