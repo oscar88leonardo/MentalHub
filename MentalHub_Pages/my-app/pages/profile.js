@@ -14,6 +14,7 @@ import img3 from "../assets/images/portfolio/img3.jpg";
 import img4 from "../assets/images/portfolio/img4.jpg";
 import img5 from "../assets/images/portfolio/img5.jpg";
 import img6 from "../assets/images/portfolio/img6.jpg";
+import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 
 export default function Profile() {
 
@@ -21,6 +22,10 @@ export default function Profile() {
   const [walletConnected, setWalletConnected] = useState(false);
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   const web3ModalRef = useRef();
+
+  const  NFTItemsInfo = [
+    {name: 'Member 9', pathImage: 'https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk', contSessions: '1'},
+  ];
 
   /**
    * Returns a Provider or Signer object representing the Ethereum RPC with or without the
@@ -71,39 +76,48 @@ export default function Profile() {
     }
   };
 
-  /*
-    renderButton: Returns a button based on the state of the dapp
-  */
-  const renderButton = () => {
-    if (walletConnected) {
-      return (
-        <Card className="card-shadow">
-          <CardBody>
-            <div className="d-flex no-block align-items-center">
-              <span className="thumb-img">
-                <Image src={img0} alt="wrapkit" className="circle" />
-              </span>
-            </div>
-            <div className="m-l-20">
-              <h6 className="m-b-0 customer">Michelle Anderson</h6>
-            </div>
-          </CardBody>
-        </Card>
-      );
-    } else {
-      return (
-        <NavLink
-          href="#"
-          className="btn btn-light font-14"
-          onClick={connectWallet}
-        >
-          Connect wallet
-        </NavLink>
-      );
+
+
+  const getNFTsOwner = async () => {
+    try {
+      // We need a Signer here since this is a 'write' transaction.
+      const signer = await getProviderOrSigner(true);
+      // Create a new instance of the Contract with a Signer, which allows
+      // update methods
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+      // call the mint from the contract to mint the MentalHub NFT
+      let ArrTokenIds = await nftContract.walletOfOwner(signer.getAddress()); 
+      console.log(ArrTokenIds.length);
+      for (const TkId of ArrTokenIds) {
+        try {
+          const response = await fetch(
+            'http://localhost:3000/api/'+ TkId.toNumber()
+          );
+          const todo = await response.json(); 
+          console.log(todo);
+          const jsonContent = JSON.parse(todo);
+          NFTItemsInfo.push(jsonContent);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      console.log(NFTItemsInfo);
+      /*try {
+        const res = await fetch(
+          'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
+        );
+        const data = await res.json();
+        console.log(data);
+      } catch (err) {
+        console.log(err);
+      }*/
+    } catch (err) {
+      console.error(err);
     }
   };
 
  useEffect(() => {
+    getNFTsOwner();
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
     if (!walletConnected) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
@@ -119,6 +133,32 @@ export default function Profile() {
     }
   }, [walletConnected]);
   
+  
+  
+  const renderNFTItems = (NFTitem, index) => {  
+    console.log(NFTitem);
+    return(   
+      <Col md="4">
+        <Card className="card-shadow" key={index}>              
+        <div className='player-wrapper'>
+          <video controls
+              src={NFTitem.pathImage}
+              width='300'
+              height='300'
+              >
+          </video>
+          </div>
+          <CardBody>
+            <h5 className="font-medium m-b-0">
+              {NFTitem.name}
+            </h5>
+            <p className="m-b-0 font-14">Sessions:{NFTitem.contSessions}</p> 
+          </CardBody>
+        </Card>
+        </Col>
+        )  
+  }
+
   return (
     <div>
       <Head>
@@ -156,98 +196,7 @@ export default function Profile() {
             </Col>
           </Row>
           <Row className="m-t-40">
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img1}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">
-                    Branding for Theme Designer
-                  </h5>
-                  <p className="m-b-0 font-14">Digital Marketing</p>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img2}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">Button Designs Free</h5>
-                  <p className="m-b-0 font-14">Search Engine</p>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img3}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">Branding & Co Agency</h5>
-                  <p className="m-b-0 font-14">Admin templates</p>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img4}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">Zukandre Phoniex</h5>
-                  <p className="m-b-0 font-14">Branding</p>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img5}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">Sionage Mokcup</h5>
-                  <p className="m-b-0 font-14">Wll Mockup</p>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="4">
-              <Card className="card-shadow">
-                <a href="#" className="img-ho">
-                  <Image
-                    className="card-img-top"
-                    src={img6}
-                    alt="wrappixel kit"
-                  />
-                </a>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">Hard Cover Book Mock</h5>
-                  <p className="m-b-0 font-14">Book Covers</p>
-                </CardBody>
-              </Card>
-            </Col>
+            {NFTItemsInfo.map(renderNFTItems)}
           </Row>
         </Container>
       </div>

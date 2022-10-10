@@ -1,5 +1,5 @@
-export const NFT_CONTRACT_ADDRESS = "0xd46E388A82feBb8FbbE8AE78A4f2BEEFC679218b" //Metis stardust address
-export const abi =  [
+export const NFT_CONTRACT_ADDRESS = "0xe5075BD3b6401da79E03Efe848cb2bf6eB6C28F4" //Metis stardust address
+export const abi = [
   {
     "inputs": [
       {
@@ -231,6 +231,19 @@ export const abi =  [
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTokenIds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -571,6 +584,25 @@ export const abi =  [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      }
+    ],
+    "name": "walletOfOwner",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "withdraw",
     "outputs": [],
@@ -581,4 +613,4 @@ export const abi =  [
     "stateMutability": "payable",
     "type": "receive"
   }
-]
+]  
