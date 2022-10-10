@@ -31,7 +31,7 @@ const NFTColMembers = () => {
   /**
    * presaleMint: Mint an NFT during the presale
    */
-   const airdropMint = async () => {
+   const airdropMint = async (name, pathTypeContDig,pathContDigi,contSessions) => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       const signer = await getProviderOrSigner(true);
@@ -54,6 +54,19 @@ const NFTColMembers = () => {
         // wait for the transaction to get mined
         await tx.wait();
         setLoading(false);
+        //console.log(tx);
+        let tokenIdsCurrent = await nftContract.getTokenIds(); 
+        //console.log(tokenIdsCurrent.toNumber());
+        //console.log(pathTypeContDig,pathContDigi,contSessions);
+        try {
+          const res = await fetch(
+            'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
+          );
+          const data = await res.json();
+          console.log(data);
+        } catch (err) {
+          console.log(err);
+        }
         window.alert("You successfully minted a community member NFT!");
       } else {
         window.alert("Sorry friend, you're not whitelisted");
@@ -63,7 +76,7 @@ const NFTColMembers = () => {
     }
   };
 
-  const publicMint = async () => {
+  const publicMint = async (name, pathTypeContDig,pathContDigi,contSessions) => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       const signer = await getProviderOrSigner(true);
@@ -80,6 +93,17 @@ const NFTColMembers = () => {
       // wait for the transaction to get mined
       await tx.wait();
       setLoading(false);
+      let tokenIdsCurrent = await nftContract.getTokenIds(); 
+      try {
+        const res = await fetch(
+          'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
+        );
+        const data = await res.json();
+        console.log(data);
+      } catch (err) {
+        console.log(err);
+      }
+
       window.alert("You successfully minted a community member NFT!");
     } catch (err) {
       console.error(err);
@@ -309,8 +333,8 @@ const variables_state = () => {
   console.log(airdropEnded);
 } 
 
-const renderButton = () => {
-    
+const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
+  console.log(name, pathTypeContDig, pathContDigi, contSessions);  
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
     if (walletConnected) {         
@@ -344,7 +368,7 @@ const renderButton = () => {
             <h6>
               Airdrop has started for whitelisted addresses!
             </h6>
-            <button className="btn btn-light font-14" onClick={airdropMint}>
+            <button className="btn btn-light font-14" onClick={() =>airdropMint(name, pathTypeContDig,pathContDigi,contSessions)}>
               Claim 🚀!
             </button>
           </div>
@@ -354,7 +378,7 @@ const renderButton = () => {
       // If presale started and has ended, its time for public minting
       if (airdropStarted && airdropEnded) {
         return (
-          <button className="btn btn-light font-14" onClick={publicMint}>
+          <button className="btn btn-light font-14" onClick={() => publicMint(name, pathTypeContDig,pathContDigi,contSessions)}>
             Public Mint 🚀!
           </button>
         );
@@ -368,14 +392,18 @@ const renderButton = () => {
                                                     
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
-                         id:'Member 01', 
-                         usecase:"Freemium access"}
+                         id:'Members', 
+                         usecase:"Freemium access",
+                         name:"Member",
+                         pathTypeContDig:"url",
+                         pathContDigi:"Members",
+                         contSessions:1
+                        }
                         ]
                       
   
-  const renderNFTItems = (NFTitem, index) => {
-
-    const RenderButtonStr = renderButton();
+  const renderNFTItems = (NFTitem, index) => {  
+    const RenderButtonStr = renderButton(NFTitem.name, NFTitem.pathTypeContDig, NFTitem.pathContDigi, NFTitem.contSessions);
 
     return(   
       <Col md="4">

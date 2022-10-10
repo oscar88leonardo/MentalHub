@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     pathDigContent = 'NFT_CollPreview/'+nftmint[3];
   
   let dataJson = {
-    'address':nftmint[1],
+    'name':nftmint[1],
     'pathImage':pathDigContent,
     'contSessions':nftmint[4]
   }
