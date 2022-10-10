@@ -3,7 +3,7 @@ import React from "react";
 import ReactPlayer from "react-player";
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
-import imgAuthor from "../public/NFT_Authors/pilamental.png";
+import imgAuthor from "../public/NFT_Authors/Pilamental.png";
 
 
 const NFTColAnsiedad = () => {
