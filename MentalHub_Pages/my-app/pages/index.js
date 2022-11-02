@@ -10,10 +10,10 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Mental Hub | A platform to help you with the mental health care</title>
+        <title>MentalHub | A platform to help with your mental health care</title>
         <meta
-          name="Mental Hub"
-          content="A platform to help you with the mental health care"
+          name="MentalHub"
+          content="A platform to help with your mental health care"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

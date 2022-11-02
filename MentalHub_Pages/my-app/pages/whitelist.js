@@ -213,6 +213,7 @@ const checkConnect = async () => {
   // The array at the end of function call represents what state changes will trigger this effect
   // In this case, whenever the value of `walletConnected` changes - this effect will be called
   useEffect(() => {
+    if (typeof window.ethereum !== 'undefined'){
     checkConnect();
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
     if (!walletConnected) {
@@ -225,6 +226,8 @@ const checkConnect = async () => {
       });
     }
     connectWallet();
+  } else {
+    window.alert("Please Install MetaMask");} 
   }, [walletConnected]);
 
   return (

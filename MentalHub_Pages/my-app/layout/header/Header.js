@@ -38,6 +38,8 @@ const Header = () => {
   const getProviderOrSigner = async (needSigner = false) => {
     // Connect to Metamask
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
+      console.log('MetaMask is installed!');
+    
     const provider = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(provider);
 
@@ -53,6 +55,7 @@ const Header = () => {
       return signer;
     }
     return web3Provider;
+    
   };
 
   /*
@@ -107,10 +110,12 @@ const checkConnect = async () => {
   } else {
     console.log("setWalletConnected:false");
     setWalletConnected(false);
-  }
+  }  
 };
 
  useEffect(() => {
+  if (typeof window.ethereum !== 'undefined') {
+  
    if(typeof window !== 'undefined'){
        window.ethereum.on('accountsChanged', async () => {
         const {ethereum} = window;
@@ -135,6 +140,8 @@ const checkConnect = async () => {
       });
     } else
       connectWallet();
+  } else {
+          window.alert("Please Install MetaMask");} 
   }, [walletConnected]);
   
   const [isOpen, setIsOpen] = useState(false);
@@ -192,7 +199,7 @@ const checkConnect = async () => {
                   {renderUrl("DescriptionSection","Description")}
                 </NavItem>
                 <NavItem>
-                  {renderUrl("NTFCollectSection","NFT Collections")}
+                  {renderUrl("NTFCollectSection","Digital Collections")}
                 </NavItem>
                 <NavItem>
                   <a href="./whitelist" className="nav-link">

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Row, Col, Container } from 'reactstrap';
 import Link from 'next/link';
-
+//import NFTCarrousel from "../MentalComponents/NFTCarrousel";
 
 const NFTcoList = () => {
 
@@ -50,19 +50,22 @@ const NFTcoList = () => {
                 <Container>
                     <Row className="justify-content-center">
                         <Col md="7" className="text-center">
-                            <h1 className="title font-bold">NFT Collections</h1>
-                            <h6 className="subtitle font-18 font-bold" >By purchasing an NFT from our collections, you contribute to<br/>
-                                                            the visibility of psychological care, you can also access the tools,<br/>
-                                                            consultations and other benefits that MentalHub professionals constantly design for you.   
-                                                            </h6>
+                            <h1 className="title font-bold">Digital Collections</h1>
+                            <h6 className="subtitle font-18 font-bold" >
+                                By purchasing a piece from one of our digital collections (NFT), you <br/> 
+                                contribute to
+                                the visibility of psychological care, you can also access psyco-tools,
+                                consultations and other benefits that MentalHub professionals 
+                                are constantly building for you. <br/><br/>  
+                                </h6>
                         </Col>
                     </Row>
                 </Container>
             </div>
             <div>
                 <Container>
-                <div className="row">
-                {NFTColInfo.map(renderNFTgals)}       
+                <div  className="row">
+                {NFTColInfo.map(renderNFTgals)}                                                  
                 </div>
                 </Container>
             </div>            

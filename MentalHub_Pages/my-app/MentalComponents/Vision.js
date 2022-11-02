@@ -7,25 +7,26 @@ import img5 from "../public/banner1.jpg";
 const FeatureComponent = () => {
   return (
     <div id="VisionSection">
-      <div className="spacer ">
+      <div >
         <Container className="feature30">
           <Row>
-            <Col lg="10">
-              <Image
+            <Col lg="10" className="spacer" >
+              <Image 
                 src={img5}
-                className="rounded img-responsive"
+                className="img-responsive"
                 alt="wrappixel"
               />
             </Col>
-            <Col lg="5" md="7" className="text-center wrap-feature30-box">
+            <Col lg="6" md="6" className="text-center wrap-feature30-box">
               <Card className="card-shadow">
                 <CardBody>
-                  <div className="p-20">
-                    <h3 className="title font-bold">
-                      Vision
-                    </h3>
+                  <div className="p-05">
+                    <h1 className="title font-bold">
+                      MentalHub
+                    </h1>
                     <p className="font-bold">
-                    Mental Hub is proposed as a digital community built around NFTs, aimed at mental health care through specific psychological treatment for anxiety, depression, breakups and grief.
+                    A digital community, aimed at mental health care through
+                    psychological consultation for anxiety, depression, breakups and grief.
                     </p>
                   </div>
                 </CardBody>
