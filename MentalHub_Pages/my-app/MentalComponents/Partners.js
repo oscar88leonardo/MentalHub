@@ -35,9 +35,9 @@ const Partners = () => {
             <div className="spacer team2">
                 <Container>                    
                     <Row className="m-t-30 justify-content-center">
-                        <Col lg="4" md="4" >
+                        <Col lg="4" md="6" >
                             <Row className="no-gutters justify-content-center">
-                                <Col md="8" className="pro-pic t2 circle">
+                                <Col md="7" sm="5" xs="5" className="pro-pic t2 circle">
                                     <div className="card-img-overlay">
                                         <ul className="list-inline">
                                             <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-facebook"></i></a></li>
@@ -52,17 +52,19 @@ const Partners = () => {
                                         <h5 className="title font-medium text-center">Nataly Mosquera Dussán</h5>
                                         <h6 className="subtitle text-center">Psychotherapist</h6>
                                         <p className="text-justify"> Creator of 'Pila Mental', a proposal designed to help you unleash the potential of your mind 
-                                            with psychological tools. Co-founder of Me Too! an NGO that promotes inclusion and diversity through art, 
-                                            photographer, writer and content designer. I have a huge passion for science and the study of the psyche 
-                                            and human behavior, a lover of creative challenges and new learning.</p>
+                                            with psychological tools. Co-founder of Me Too! an NGO that promotes inclusion and diversity through art. 
+                                            Photographer, writer and content designer. I have a huge passion for science and the study of the psyche 
+                                            and human behavior, a lover of creative challenges and new learning.
+                                            <br/><br/>
+                                            </p>
                                     </div>
                                 </Col>
                             </Row>
                         </Col>
-                        <Col lg="4" md="4" className="m-b-30">
+                        <Col lg="4" md="6" sm="12" className="m-b-30">
                             <Row className="no-gutters justify-content-center">
-                                <Col md="8" className="pro-pic t3 circle">
-                                    <div className="card-img-overlay">
+                                <Col md="7" sm="5" xs="5" className="pro-pic t3 circle">
+                                    <div className="card-img-overlay"> 
                                         <ul className="list-inline">
                                             <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-facebook"></i></a></li>
                                             <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-twitter"></i></a></li>
@@ -77,7 +79,9 @@ const Partners = () => {
                                         <h6 className="subtitle text-center">Psychotherapist</h6>
                                         <p className="text-justify">Psychologist with extensive experience in the organizational field, both in human and administrative management, 
                                         as well as in the inclusion of self-care practices in occupational health and safety processes. In the clinical field, 
-                                        i used psychophysical techniques to manage stress, emotional congestion, states of anguish, and depersonalization.</p>
+                                        i used psychophysical techniques to manage stress, emotional congestion, states of anguish, and depersonalization.
+                                        <br/><br/>
+                                        </p>                                   
                                     </div>
                                 </Col>
                             </Row>

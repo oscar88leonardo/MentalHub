@@ -8,7 +8,7 @@ const NFTcoList = () => {
 
     const  NFTColInfo = [
 
-        {animation:"/NFT_CollPreview/MembersPreview.mp4", title:"Mental Hub Member", 
+        {animation:"/NFT_CollPreview/MembersPreview.mp4", title:"MentalHub Member", 
         Author_url:'"https://www.instagram.com/pila_mental_/"', Author_id:"@m3ntal_hub",
         Link:"/NFTCol0"},
 
@@ -52,9 +52,9 @@ const NFTcoList = () => {
                         <Col md="7" className="text-center">
                             <h1 className="title font-bold">Digital Collections</h1>
                             <h6 className="subtitle font-18 font-bold" >
-                                By purchasing a piece from one of our digital collections (NFT), you <br/> 
+                                By purchasing a piece from one of our digital collections (NFTs), you <br/> 
                                 contribute to
-                                the visibility of psychological care, you can also access psyco-tools,
+                                the visibility of psychological care, you can also access 'psycho-tools',
                                 consultations and other benefits that MentalHub professionals 
                                 are constantly building for you. <br/><br/>  
                                 </h6>

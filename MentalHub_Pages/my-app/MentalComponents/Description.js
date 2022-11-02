@@ -40,7 +40,7 @@ const FeatureComponent = () => {
                   <div className="icon-round bg-light-info">
                     <i className="fa fa-star"></i>
                   </div>
-                  <h5 className="font-medium">Why Mental Hub?</h5>
+                  <h5 className="font-medium">Why MentalHub?</h5>
                   <p className="text-justify m-t-20">
                   Did you know that according to the World Health Organization (WHO) more than 300 million people 
                   in the world suffer from some kind of anxiety disorder?, and since the pandemic the cases have 
