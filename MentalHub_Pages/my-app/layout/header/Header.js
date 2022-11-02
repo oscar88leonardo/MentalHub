@@ -141,7 +141,8 @@ const checkConnect = async () => {
     } else
       connectWallet();
   } else {
-          window.alert("Please Install MetaMask");} 
+          window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
+        } 
   }, [walletConnected]);
   
   const [isOpen, setIsOpen] = useState(false);
