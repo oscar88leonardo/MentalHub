@@ -86,7 +86,7 @@ const NFTColAnsiedad = () => {
         <div className='player-wrapper'>
           <video controls
               src={NFTitem.animation}
-              width='300'
+              width='100%'
               height='300'
               >
           </video>

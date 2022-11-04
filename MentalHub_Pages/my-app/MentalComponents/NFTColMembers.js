@@ -1,10 +1,7 @@
-/* eslint-disable */
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
 import ImgAuthor from "../public/NFT_Authors/MentalHubAuthor.png";
 import React, { useEffect, useRef, useState } from "react";
-// imports to interact with the smart contract
-// imports to interact with the contract
 import { Contract, providers, utils } from "ethers";
 import Web3Modal from "web3modal";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
@@ -285,6 +282,7 @@ const checkConnect = async () => {
   };  
 
 useEffect(() => {
+  if (typeof window.ethereum !== 'undefined'){
   // check connect
   checkConnect();  
   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
@@ -322,6 +320,9 @@ useEffect(() => {
         await getTokenIdsMinted();
       }, 5 * 1000);
     }
+  } else {
+    window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
+  }
   }, [walletConnected]);
 
 
@@ -340,13 +341,13 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
     if (walletConnected) {         
       // If we are currently waiting for something, return a loading button
       if (loading) {
-        return <button className="btn btn-light font-14">Loading...</button>;
+        return <button className="btn btn-light font-16 hcenter">Loading...</button>;
       }
 
       // If connected user is the owner, and airdrop hasnt started yet, allow them to start the airdrop
       if (isOwner && !airdropStarted) {
         return (
-          <button className="btn btn-light font-14" onClick={startAirdrop}>
+          <button className="btn btn-light font-16 hcenter" onClick={startAirdrop}>
             Start Airdrop!
           </button>
         );
@@ -356,7 +357,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
       if (!airdropStarted) {
         return (
           <div>
-            <div>Airdrop coming S o O n!</div>
+            <h6 className="text-center">Airdrop coming S o O n!</h6>
           </div>
         );
       }
@@ -365,10 +366,10 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
       if (airdropStarted && !airdropEnded) {
         return (
           <div>
-            <h6>
+            <h6 className="text-center">
               Airdrop has started for whitelisted addresses!
             </h6>
-            <button className="btn btn-light font-14" onClick={() =>airdropMint(name, pathTypeContDig,pathContDigi,contSessions)}>
+            <button className="btn btn-light font-16 hcenter" onClick={() =>airdropMint(name, pathTypeContDig,pathContDigi,contSessions)}>
               Claim 🚀!
             </button>
           </div>
@@ -377,8 +378,8 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
 
       // If presale started and has ended, its time for public minting
       if (airdropStarted && airdropEnded) {
-        return (
-          <button className="btn btn-light font-14" onClick={() => publicMint(name, pathTypeContDig,pathContDigi,contSessions)}>
+        return (          
+          <button className="btn btn-light font-16 hcenter" onClick={() => publicMint(name, pathTypeContDig,pathContDigi,contSessions)}>
             Public Mint 🚀!
           </button>
         );
@@ -393,9 +394,8 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
   const  NFTItemsInfo = [
                         {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
                          id:'Members', 
-                         usecase:"This NFT includes one psychology assessment consultation, one Ebook"+
-                                  "and 3 premium toolkits, lifetime access to the MentalHUb repository: resource bank and virtual library,"+
-                                  "This NFT identify you as a community member , more surprises are coming along the way!",
+                         usecase:"One \npsychology assessment consultation,\none ebook "+
+                                  "and 3 premium psycho-toolkits, lifetime access to MentalHUb repository",
                          name:"Member",
                          pathTypeContDig:"url",
                          pathContDigi:"Members",
@@ -410,20 +410,23 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
     return(   
       <Col md="4">
         <Card className="card-shadow" key={index}>              
-        <div className='player-wrapper center'>
-          <video controls
+          <div className='player-wrapper'>
+            <video controls
               src={NFTitem.animation}
-              width='300'
-              height='300'
+              width='100%'
+              height='50%'
               >
           </video>
           </div>
           <CardBody>
-            <h5 className="font-medium m-b-0 text-center">
+            <h3 className="font-bold m-b-0 text-center">
               {NFTitem.id}
-            </h5>
-            <p className="m-b-0 font-14 text-center">{NFTitem.usecase}</p> 
-            {RenderButtonStr}
+            </h3>
+              <p className="m-b-0 font-18 text-center">
+                          {NFTitem.usecase} 
+                          <br/><br/>
+              </p> 
+            {RenderButtonStr}            
           </CardBody>
         </Card>
         </Col>
@@ -435,30 +438,23 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
       <div className="spacer">
         <Container>
           <Row className="justify-content-center">
-            <Col lg="12" md="6" className="text-center"> 
-            <br /><h2 className="title font-bold">{NFTGeneralData.title}</h2><br />
-              <div className="d-flex no-block align-items-center">
-                    <span className="thumb-img">
-                      <Image src={ImgAuthor}  alt="wrapkit" className="circle" width='300' height='300'/> <br />
-                    </span>
-                    <div className="text-left font-18">
-                    <h3 className="subtitle text-center">An NFT collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a> </h3><br /> 
-                    <p className="text-center font-16"> Do you find it hard to enjoy your daily life often?, Do you experience intense and constant episodes of stress, anguish 
-                        or anxiety without really understanding why?. MentalHub is a collaborative environment where professionals and users connect on healthy networks and build 
-                        health-conscious communities. <br />
-                        We know that psychological disorders being an intense and disconcerting confrontation with pain cause havoc that completely
-                        exhausts you, and even if they are asphyxiating and inevitable, it is possible to treat them. Learn from them and turn such distress into personal growth.
-                        <br />  
-                        Be part of our community, empower yourself from your mental health and support others to achieve it through NFTs, 
-                        <br />
-                        have fun collecting and take care of your mental health!
-                        </p>
-                      <div className="font-14">                        
-                      </div>
-                    </div>
-                  </div>             
+            <Col lg="10" md="6" className="text-center"> 
+            <h2 className="title font-bold">{NFTGeneralData.title}</h2>            
+            <h3 className="subtitle text-center"> A digital collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a></h3>                               
             </Col>
           </Row>
+       
+          <div className="d-flex no-block align-items-center">
+                    <span  className="thumb-img">
+                      <Image  src={ImgAuthor}  alt="wrapkit" className="circle" width="120%" height="120%"/> <br />
+                    </span>
+                    
+                    <p className="text-center font-16"> 
+                        This NFT identify you as a community member, more surprises are coming along the way, stay tuned! 
+                    </p>
+            </div>
+          <Row>
+          </Row>        
           <Row className="justify-content-center">
           {NFTItemsInfo.map(renderNFTItems)}
           </Row>

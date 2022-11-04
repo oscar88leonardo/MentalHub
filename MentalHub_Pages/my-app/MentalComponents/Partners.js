@@ -43,7 +43,7 @@ const Partners = () => {
                                             <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-facebook"></i></a></li>
                                             <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-twitter"></i></a></li>
                                             <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-instagram"></i></a></li>
-                                            <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-behance"></i></a></li>
+                                            <li className="list-inline-item"><a href="https://www.instagram.com/nataly_mosquera_dussan/"><i className="fa fa-linkedin"></i></a></li>
                                         </ul>
                                     </div>
                                 </Col>
@@ -63,13 +63,13 @@ const Partners = () => {
                         </Col>
                         <Col lg="4" md="6" sm="12" className="m-b-30">
                             <Row className="no-gutters justify-content-center">
-                                <Col md="7" sm="5" xs="5" className="pro-pic t3 circle">
+                                <Col md="7" sm="5" xs="5" className="pro-pic t1 circle">
                                     <div className="card-img-overlay"> 
                                         <ul className="list-inline">
-                                            <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-facebook"></i></a></li>
-                                            <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-twitter"></i></a></li>
-                                            <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-instagram"></i></a></li>
-                                            <li className="list-inline-item"><a href="https://www.instagram.com/julioponcedeleonc/"><i className="fa fa-behance"></i></a></li>
+                                            <li className="list-inline-item"><a href="https://www.facebook.com/"><i className="fa fa-facebook"></i></a></li>
+                                            <li className="list-inline-item"><a href="https://www.twitter.com"><i className="fa fa-twitter"></i></a></li>
+                                            <li className="list-inline-item"><a href="https://www.instagram.com"><i className="fa fa-instagram"></i></a></li>
+                                            <li className="list-inline-item"><a href="https://www.linkedin.com/"><i className="fa fa-linkedin"></i></a></li>
                                         </ul>
                                     </div>
                                 </Col>
