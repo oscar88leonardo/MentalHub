@@ -12,3 +12,5 @@ MembersAirdrop contract Address [Metis goerli Testnet]: 0x459B185D76b9E33c95c533
 ## DEPRECATED TESTNET
 Whitelist Contract Address [Metis stardust Testnet]: 0x3AFc87192488Ee62e9F4583D8448948669320193
 MembersAirdrop contract Address [Metis testnet]: 0xe5075BD3b6401da79E03Efe848cb2bf6eB6C28F4 
+
+Metis Goerli faucet - https://goerli.faucet.metisdevops.link/

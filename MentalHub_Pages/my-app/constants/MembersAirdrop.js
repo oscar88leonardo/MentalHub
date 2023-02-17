@@ -1,4 +1,4 @@
-export const NFT_CONTRACT_ADDRESS = "0xe5075BD3b6401da79E03Efe848cb2bf6eB6C28F4" //Metis stardust address
+export const NFT_CONTRACT_ADDRESS = "0x459B185D76b9E33c95c533B7E6ff710Df513dbEF" //Metis goerli testnet address
 export const abi = [
   {
     "inputs": [

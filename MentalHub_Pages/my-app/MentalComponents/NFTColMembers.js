@@ -251,9 +251,9 @@ const getProviderOrSigner = async (needSigner = false) => {
 
     // If user is not connected to the Goerli network, let them know and throw an error
     const { chainId } = await web3Provider.getNetwork();
-    if (chainId !== 588) {
-      window.alert("Change network to Metis Stardust TestNet");
-      throw new Error("Change network to Metis Stardust TestNet");
+    if (chainId !== 599) {
+      window.alert("Change network to Metis Goerli TestNet");
+      throw new Error("Change network to Metis Goerli TestNet");
     }
 
     if (needSigner) {
