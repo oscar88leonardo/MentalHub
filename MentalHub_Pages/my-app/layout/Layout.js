@@ -1,4 +1,4 @@
-import Header from "./header/Header";
+import Header from "./header/Header.tsx";
 import Footer from "./footer/Footer";
 
 const Layout = ({ children }) => {

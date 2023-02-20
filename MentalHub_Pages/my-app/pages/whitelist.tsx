@@ -3,14 +3,21 @@ import { Row, Col, Container } from "reactstrap";
 import Image from "next/image";
 import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
-import Web3Modal from "web3modal";
+//import Web3Modal from "web3modal";
 import { providers, Contract } from "ethers";
+
+import { Web3Auth } from "@web3auth/modal";
+import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
+import RPC from "./web3RPC";
+
 import { useEffect, useRef, useState } from "react";
 import { WHITELIST_CONTRACT_ADDRESS, abi } from "../constants/whitelist";
 
+const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
+
 export default function Home() {
   // walletConnected keep track of whether the user's wallet is connected or not
-  const [walletConnected, setWalletConnected] = useState(false);
+  //const [walletConnected, setWalletConnected] = useState(false);
   // joinedWhitelist keeps track of whether the current metamask address has joined the Whitelist or not
   const [joinedWhitelist, setJoinedWhitelist] = useState(false);
   // loading is set to true when we are waiting for a transaction to get mined
@@ -18,7 +25,7 @@ export default function Home() {
   // numberOfWhitelisted tracks the number of addresses's whitelisted
   const [numberOfWhitelisted, setNumberOfWhitelisted] = useState(0);
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
-  const web3ModalRef = useRef();
+  //const web3ModalRef = useRef();
 
   /**
    * Returns a Provider or Signer object representing the Ethereum RPC with or without the
@@ -32,7 +39,7 @@ export default function Home() {
    *
    * @param {*} needSigner - True if you need the signer, default false otherwise
    */
-  const getProviderOrSigner = async (needSigner = false) => {
+  /*const getProviderOrSigner = async (needSigner = false) => {
     // Connect to Metamask
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
     const provider = await web3ModalRef.current.connect();
@@ -50,7 +57,45 @@ export default function Home() {
       return signer;
     }
     return web3Provider;
-  };
+  };*/
+
+  const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
+  const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const web3auth = new Web3Auth({
+          clientId, 
+          web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
+          chainConfig: {
+            chainNamespace: CHAIN_NAMESPACES.EIP155,
+            chainId: "0x257",
+            rpcTarget: "https://goerli.gateway.metisdevops.link", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+          },
+        });
+
+
+        setWeb3auth(web3auth);
+
+        await web3auth.initModal();
+        setProvider(web3auth.provider);
+        //};
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    if(provider){
+      checkIfAddressInWhitelist();
+      getNumberOfWhitelisted();
+    }
+  },[provider]);
 
   /**
    * addAddressToWhitelist: Adds the current connected address to the whitelist
@@ -58,7 +103,9 @@ export default function Home() {
   const addAddressToWhitelist = async () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
-      const signer = await getProviderOrSigner(true);
+      //const signer = await getProviderOrSigner(true);
+      const provider0 = new providers.Web3Provider(provider);
+      const signer = provider0.getSigner();
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const whitelistContract = new Contract(
@@ -87,13 +134,14 @@ export default function Home() {
     try {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
-      const provider = await getProviderOrSigner();
+      //const provider = await getProviderOrSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
+      const provider0 = new providers.Web3Provider(provider);
       const whitelistContract = new Contract(
         WHITELIST_CONTRACT_ADDRESS,
         abi,
-        provider
+        provider0
       );
       // call the numAddressesWhitelisted from the contract
       const _numberOfWhitelisted = await whitelistContract.numAddressesWhitelisted();
@@ -111,7 +159,9 @@ export default function Home() {
       // We will need the signer later to get the user's address
       // Even though it is a read transaction, since Signers are just special kinds of Providers,
       // We can use it in it's place
-      const signer = await getProviderOrSigner(true);
+      //const signer = await getProviderOrSigner(true);
+      const provider0 = new providers.Web3Provider(provider);
+      const signer = provider0.getSigner();
       const whitelistContract = new Contract(
         WHITELIST_CONTRACT_ADDRESS,
         abi,
@@ -132,7 +182,7 @@ export default function Home() {
   /*
     connectWallet: Connects the MetaMask wallet
   */
-  const connectWallet = async () => {
+  /*const connectWallet = async () => {
     try {
       // Get the provider from web3Modal, which in our case is MetaMask
       // When used for the first time, it prompts the user to connect their wallet
@@ -148,13 +198,13 @@ export default function Home() {
     } catch (err) {
       console.error(err);
     }
-  };
+  };*/
 
   /*
     renderButton: Returns a button based on the state of the dapp
   */
   const renderButton = () => {
-    if (walletConnected) {
+    if (provider) {
       if (joinedWhitelist) {
         return (
           <div className="subtitle op-10">
@@ -195,7 +245,7 @@ export default function Home() {
     }*/
   };
 
-const checkConnect = async () => {
+/*const checkConnect = async () => {
   const {ethereum} = window;
   const accounts = await ethereum.request({method: 'eth_accounts'});
   console.log(accounts);
@@ -207,12 +257,12 @@ const checkConnect = async () => {
     console.log("setWalletConnected:false");
     setWalletConnected(false);
   }
-};
+};*/
 
   // useEffects are used to react to changes in state of the website
   // The array at the end of function call represents what state changes will trigger this effect
   // In this case, whenever the value of `walletConnected` changes - this effect will be called
-  useEffect(() => {
+  /*useEffect(() => {
     if (typeof window.ethereum !== 'undefined'){
     checkConnect();
     // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
@@ -229,7 +279,7 @@ const checkConnect = async () => {
   } else {
     window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
   }
-  }, [walletConnected]);
+  }, [walletConnected]);*/
 
   return (
     <div>

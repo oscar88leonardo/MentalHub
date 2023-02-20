@@ -1,5 +1,5 @@
 import Head from "next/head";
-import NFTColMembers from "../MentalComponents/NFTColMembers";
+import NFTColMembers from "../MentalComponents/NFTColMembers.tsx";
 import React, { useEffect, useRef, useState } from "react";
 
 export default function Home() {
