@@ -1,20 +1,18 @@
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
 import ImgAuthor from "../public/NFT_Authors/MentalHubAuthor.png";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { Contract, providers, utils } from "ethers";
 //import Web3Modal from "web3modal";
 
-import { Web3Auth } from "@web3auth/modal";
-import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
-import RPC from "../pages/web3RPC";
+import { AppContext } from "../context/AppContext";
 
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist";
 
-const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
-
 const NFTColMembers = () => {
+
+  const { provider } = useContext(AppContext);
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -29,37 +27,6 @@ const NFTColMembers = () => {
   const [tokenIdsMinted, setTokenIdsMinted] = useState("0");
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   //const web3ModalRef = useRef();
-  
-  const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
-  const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const web3auth = new Web3Auth({
-          clientId, 
-          web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
-          chainConfig: {
-            chainNamespace: CHAIN_NAMESPACES.EIP155,
-            chainId: "0x257",
-            rpcTarget: "https://goerli.gateway.metisdevops.link", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-          },
-        });
-
-
-        setWeb3auth(web3auth);
-
-        await web3auth.initModal();
-          setProvider(web3auth.provider);
-        //};
-
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    init();
-  }, []);
 
   /**
    * presaleMint: Mint an NFT during the presale
