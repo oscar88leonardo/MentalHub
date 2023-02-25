@@ -21,7 +21,7 @@ import logo from "../../public/LogoMentalHub.png";
 
 const Header = () => {
   
-  const { provider, login } = useContext(AppContext);
+  const { provider, login, logout } = useContext(AppContext);
 
   useEffect(() => {
     renderButton();
@@ -97,6 +97,18 @@ const Header = () => {
     }
   };
   
+  const renderLogout = () => {
+    return (
+      <NavLink
+        href="#"
+        className="btn btn-light font-14"
+        onClick={logout}
+      >
+        Logout
+      </NavLink>
+    )
+  }
+
   return (
     <div className="fixed-top" style={{
         backgroundColor: '#0faba5' 
@@ -147,6 +159,9 @@ const Header = () => {
               <div className="act-buttons">
                 {renderButton()}
               </div>
+              <div className="act-buttons">
+                {provider ? renderLogout():''}
+                </div>
             </Collapse>
           </Navbar>
         </Container>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
 //import Web3Modal from "web3modal";
-import { providers, Contract } from "ethers";
+import { providers, Contract, utils } from "ethers";
 
 import { AppContext } from "../context/AppContext";
 
@@ -74,6 +74,8 @@ export default function Home() {
       //const signer = await getProviderOrSigner(true);
       const provider0 = new providers.Web3Provider(provider);
       const signer = provider0.getSigner();
+      console.log('signer:');
+      console.log(signer);
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const whitelistContract = new Contract(
@@ -81,15 +83,19 @@ export default function Home() {
         abi,
         signer
       );
+      console.log('pasa new Contract');
       // call the addAddressToWhitelist from the contract
       const tx = await whitelistContract.addAddressToWhitelist();
       setLoading(true);
+      console.log('pasa addAddressToWhitelist');
       // wait for the transaction to get mined
       await tx.wait();
       setLoading(false);
+      console.log('pasa wait');
       // get the updated number of addresses in the whitelist
       await getNumberOfWhitelisted();
       setJoinedWhitelist(true);
+      console.log('pasa setJoinedWhitelist');
     } catch (err) {
       console.error(err);
     }
@@ -106,6 +112,9 @@ export default function Home() {
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const provider0 = new providers.Web3Provider(provider);
+      const signer = provider0.getSigner();
+      console.log('signer:');
+      console.log(signer);
       const whitelistContract = new Contract(
         WHITELIST_CONTRACT_ADDRESS,
         abi,

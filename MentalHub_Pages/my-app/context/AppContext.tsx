@@ -11,6 +11,8 @@ export const AppContext = createContext(null);
 const AppProvider = ({ children }) => {
   const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
   const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
+  const [AddressWeb3, setAddressWeb3] = useState(null);
+  const [userInfo, setuserInfo] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -59,9 +61,30 @@ const AppProvider = ({ children }) => {
     window.location.href = "/";
   };
 
+  const getUserInfo = async () => {
+    if (!web3auth) {
+      console.log("web3auth not initialized yet");
+      return;
+    }
+    const user = await web3auth.getUserInfo();
+    setuserInfo(user);
+    //console.log(user);
+  };
+
+  const getAccounts = async () => {
+    if (!provider) {
+      console.info("provider not initialized yet");
+      return;
+    }
+    const rpc = new RPC(provider);
+    const address = await rpc.getAccounts();
+    setAddressWeb3(address);
+    //console.info(address);
+  };
+
   return (
     <AppContext.Provider
-      value={{ provider, login, logout }}
+      value={{ provider, AddressWeb3, userInfo, login, logout, getUserInfo, getAccounts }}
     >
       {children}
     </AppContext.Provider>

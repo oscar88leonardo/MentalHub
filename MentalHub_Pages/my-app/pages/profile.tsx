@@ -10,7 +10,7 @@ import { Row, Col, Container, Card, CardBody, NavLink } from "reactstrap";
 import Image from "next/image";
 //import bannerimg from "../assets/images/landingpage/banner-img.png";
 import bannerimg from "../public/mhm-web-banner.png";
-import img0 from "../assets/images/testimonial/1.jpg";
+import img0 from "../public/profile.png";
 import img1 from "../assets/images/portfolio/img1.jpg";
 import img2 from "../assets/images/portfolio/img2.jpg";
 import img3 from "../assets/images/portfolio/img3.jpg";
@@ -21,7 +21,7 @@ import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 
 export default function Profile() {
 
-  const { provider, logout } = useContext(AppContext);
+  const { provider, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
 
   const  NFTItemsInfo = [];
 
@@ -97,10 +97,29 @@ export default function Profile() {
  useEffect(() => {
   if (provider) {
     getNFTsOwner();
+    getUserInfo();
+    getAccounts();
   }
   }, [provider]);
   
+  useEffect(() => {
+    if (provider && AddressWeb3 && userInfo) {
+      renderUserName();
+    }
+    }, [AddressWeb3,userInfo]);
   
+const renderUserName = () => {
+  var userName = "";
+  if(AddressWeb3 && userInfo){
+    userName = AddressWeb3;
+    if(userInfo.name != undefined)
+      userName = userInfo.name + '\n' + '\n' + userName;
+  }
+  return(
+    userName
+  );
+}
+
   const renderNFTItems = (NFTitem, index) => {  
     console.log(NFTitem);
     console.log(NFTItemsInfo);
@@ -147,20 +166,11 @@ export default function Profile() {
                     </span>
                   </div>
                   <div className="m-l-20">
-                    <h6 className="m-b-0 customer">Michelle Anderson</h6>
+                    <h6 className="m-b-0 customer">{renderUserName()}</h6>
                   </div>
                 </CardBody>
               </Card>
             </Col>
-          </Row>
-          <Row>
-          <NavLink
-            href="#"
-            className="btn btn-light font-14"
-            onClick={logout}
-          >
-            Logout
-          </NavLink>
           </Row>
         </Container>
       </div>
