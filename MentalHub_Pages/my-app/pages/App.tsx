@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 // HIGHLIGHTSTART-importModules
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
-import RPC from "./web3RPC";
+import RPC from "./ethersRPC";
 
 const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 
@@ -109,7 +109,11 @@ function App() {
       return;
     }
     const rpc = new RPC(provider);
-    const receipt = await rpc.sendTransaction();
+    const receipt = await rpc.sendTransaction("0x40e1c367Eca34250cAF1bc8330E9EddfD403fC56",
+                                              "5000000000",
+                                              "6000000000000",
+                                              "0.001"
+    );
     console.info(receipt);
   };
 

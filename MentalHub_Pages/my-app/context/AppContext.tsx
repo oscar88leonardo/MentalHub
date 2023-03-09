@@ -1,6 +1,6 @@
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
-import RPC from "../pages/web3RPC";
+import RPC from "../pages/ethersRPC";
 
 import React, { createContext, useEffect, useState } from "react";
 
@@ -82,9 +82,26 @@ const AppProvider = ({ children }) => {
     //console.info(address);
   };
 
+  const sendTransaction = async (destination,vMaxPriorityFeePerGas,vMaxFeePerGas,vAmount) => {
+    if (!provider) {
+      console.info("provider not initialized yet");
+      return;
+    }
+    const rpc = new RPC(provider);
+    const receipt = await rpc.sendTransaction(destination,vMaxPriorityFeePerGas,vMaxFeePerGas,vAmount);
+    console.info(receipt);
+  };
+
   return (
     <AppContext.Provider
-      value={{ provider, AddressWeb3, userInfo, login, logout, getUserInfo, getAccounts }}
+      value={{ provider, 
+              AddressWeb3, 
+              userInfo, 
+              login, 
+              logout, 
+              getUserInfo, 
+              getAccounts, 
+              sendTransaction }}
     >
       {children}
     </AppContext.Provider>
