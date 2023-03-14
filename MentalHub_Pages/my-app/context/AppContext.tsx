@@ -13,6 +13,7 @@ const AppProvider = ({ children }) => {
   const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
   const [AddressWeb3, setAddressWeb3] = useState(null);
   const [userInfo, setuserInfo] = useState(null);
+  const [PrivateKey, setPrivateKey] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -23,7 +24,11 @@ const AppProvider = ({ children }) => {
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.EIP155,
             chainId: "0x257",
-            rpcTarget: "https://goerli.gateway.metisdevops.link", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+            rpcTarget: "https://goerli.gateway.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+            displayName: "Goerli Testnet",
+            blockExplorer: "https://goerli.explorer.metisdevops.link",
+            ticker: "METIS",
+            tickerName: "Metis",
           },
         });
 
@@ -92,16 +97,30 @@ const AppProvider = ({ children }) => {
     console.info(receipt);
   };
 
+  const getPrivateKey = async () => {
+    if (!provider) {
+      console.info("provider not initialized yet");
+      return;
+    }
+    const rpc = new RPC(provider);
+    const privateKey = await rpc.getPrivateKey();
+    console.info('privateKey:');
+    console.info(privateKey);
+    setPrivateKey(privateKey);
+  };
+
   return (
     <AppContext.Provider
       value={{ provider, 
               AddressWeb3, 
               userInfo, 
+              PrivateKey,
               login, 
               logout, 
               getUserInfo, 
               getAccounts, 
-              sendTransaction }}
+              sendTransaction,
+              getPrivateKey }}
     >
       {children}
     </AppContext.Provider>

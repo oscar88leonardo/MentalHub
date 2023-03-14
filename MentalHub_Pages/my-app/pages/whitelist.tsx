@@ -4,7 +4,7 @@ import Image from "next/image";
 import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
 //import Web3Modal from "web3modal";
-import { providers, Contract, utils } from "ethers";
+import { providers, Contract, utils, Wallet, BigNumber } from "ethers";
 
 import { AppContext } from "../context/AppContext";
 
@@ -13,7 +13,7 @@ import { WHITELIST_CONTRACT_ADDRESS, abi } from "../constants/whitelist";
 
 export default function Home() {
   
-  const { provider, sendTransaction } = useContext(AppContext);
+  const { provider, PrivateKey, sendTransaction, getPrivateKey } = useContext(AppContext);
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -62,6 +62,7 @@ export default function Home() {
     if(provider){
       checkIfAddressInWhitelist();
       getNumberOfWhitelisted();
+      getPrivateKey();
     }
   },[provider]);
 
@@ -72,20 +73,18 @@ export default function Home() {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new providers.Web3Provider(provider as any);
+      const provider0 = new providers.Web3Provider(provider);
       const signer = provider0.getSigner();
+      //await getPrivateKey();
+      /*console.log('PrivateKey:');
+      console.log(PrivateKey);
+      const signer = new Wallet(PrivateKey,provider0);*/
       console.log('signer:');
       console.log(signer);
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
 
       //await provider.getFeeData();
-      const whitelistContract = new Contract(
-        WHITELIST_CONTRACT_ADDRESS,
-        abi,
-        signer
-      );
-      console.log('pasa new Contract');
       /*await sendTransaction(WHITELIST_CONTRACT_ADDRESS,
       "5000000000",
       "6000000000000",
@@ -93,12 +92,61 @@ export default function Home() {
       //await trs.wait();
       console.log('pasa sendTransaction');*/
       // call the addAddressToWhitelist from the contract
-      const withSigner = whitelistContract.connect(signer);
-      const tx = await withSigner.addAddressToWhitelist({value:"0",
-                                                                maxPriorityFeePerGas:"5000000000",
-                                                                maxFeePerGas:"6000000000000"});
+      /*const destination = WHITELIST_CONTRACT_ADDRESS;
+      const amount = utils.parseEther("0"); // Convert 1 ether to wei
+      console.log('back transaction');
+      // Submit transaction to the blockchain
+      const tx0 = await signer.signTransaction({ // .sendTransaction({
+        from: signer.getAddress(),
+        to: destination,
+        value: amount,
+        maxPriorityFeePerGas: "5000000000", // Max priority fee per gas
+        maxFeePerGas: "6000000000000", // Max fee per gas
+      });
+      console.log('next transaction');
+      //await tx0.wait();
+      console.log('post transaction');*/
+
+      const whitelistContract = new Contract(
+        WHITELIST_CONTRACT_ADDRESS,
+        abi,
+        signer
+      );
+      console.log('pasa new Contract');
+      /*const amount = utils.parseEther("0");
+      const estimatedGasLimit = await whitelistContract.estimateGas.addAddressToWhitelist();
+      //const withSigner = whitelistContract.connect(signer);
+      const tx = await whitelistContract.populateTransaction.addAddressToWhitelist();
+      console.log('pasa populateTransaction');
+      tx.chainId = 599;
+      tx.gasLimit = estimatedGasLimit;
+      tx.gasPrice = await provider0.getGasPrice();
+      tx.nonce = await provider0.getTransactionCount(signer.getAddress());
+      //tx.maxFeePerGas = utils.parseUnits('50','gwei');
+      
+      console.log('pasa tx');
+      console.log(tx);
+
+      const txSigned = await signer.signTransaction(tx);
+      console.log('pasa signTransaction');
+      const wallet = signer.connect(provider0);
+      const submittedTx = await wallet.sendTransaction(tx);
+      //const submittedTx = await provider0.sendTransaction(txSigned);
+      console.log('pasa sendTransaction');
       setLoading(true);
       console.log('pasa addAddressToWhitelist');
+      const Receipt = await submittedTx.wait();
+      if (Receipt.status === 0)
+          throw new Error("Approve transaction failed");*/
+      
+      /*const response = await signer.signTransaction(tx);
+      console.log('pasa response');
+      console.log(response);
+      const wallet = signer.connect(provider0);
+      await wallet.sendTransaction(tx);
+      setLoading(true);
+      console.log('pasa addAddressToWhitelist');*/
+      const tx = await whitelistContract.addAddressToWhitelist();
       // wait for the transaction to get mined
       await tx.wait();
       setLoading(false);
@@ -109,6 +157,10 @@ export default function Home() {
       console.log('pasa setJoinedWhitelist');
     } catch (err) {
       console.error(err);
+      console.error(err.code);
+      console.error(err.receipt);
+      console.error(err.reason);
+      console.error(err.replacemente);
     }
   };
 
