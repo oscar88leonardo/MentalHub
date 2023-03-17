@@ -111,6 +111,7 @@ const NFTColMembers = () => {
       window.alert("You successfully minted a community member NFT!");
     } catch (err) {
       console.error(err);
+      window.alert("Proccess failed, check your funds.");
     }
   };
 

@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { Row, Col, Container } from "reactstrap";
+import { Row, Col, Container, Alert } from "reactstrap";
 import Image from "next/image";
 import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
@@ -146,9 +146,12 @@ export default function Home() {
       await wallet.sendTransaction(tx);
       setLoading(true);
       console.log('pasa addAddressToWhitelist');*/
+      setLoading(true);
       const tx = await whitelistContract.addAddressToWhitelist();
       // wait for the transaction to get mined
+      console.log('pasa addAddressToWhitelist');
       await tx.wait();
+      console.log('pasa tx.wait()');
       setLoading(false);
       console.log('pasa wait');
       // get the updated number of addresses in the whitelist
@@ -158,9 +161,8 @@ export default function Home() {
     } catch (err) {
       console.error(err);
       console.error(err.code);
-      console.error(err.receipt);
-      console.error(err.reason);
-      console.error(err.replacemente);
+      console.error(err.message);
+      alert('Proccess failed, check your funds.');
     }
   };
 
