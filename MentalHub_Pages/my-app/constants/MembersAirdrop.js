@@ -1,4 +1,8 @@
-export const NFT_CONTRACT_ADDRESS = "0x459B185D76b9E33c95c533B7E6ff710Df513dbEF" //Metis goerli testnet address
+// METIS GOERLI TESTNET
+ export const NFT_CONTRACT_ADDRESS = "0x459B185D76b9E33c95c533B7E6ff710Df513dbEF" //Metis goerli testnet address
+// POLYGON MUMBAI TESTNET
+// export const NFT_CONTRACT_ADDRESS ="0x2C73F53DB83Df1f6CD928e4F69Dbf122999c268f"  //MUMBAI TESTNET
+// ARTIFACTS
 export const abi = [
   {
     "inputs": [

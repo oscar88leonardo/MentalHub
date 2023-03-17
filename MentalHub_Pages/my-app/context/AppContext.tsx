@@ -22,8 +22,9 @@ const AppProvider = ({ children }) => {
           web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.EIP155,
-            chainId: "0x257",
-            rpcTarget: "https://goerli.gateway.metisdevops.link", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+            chainId: "0x257", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
+            rpcTarget: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/", 
+            // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
           },
         });
 
@@ -91,6 +92,8 @@ const AppProvider = ({ children }) => {
     const receipt = await rpc.sendTransaction(destination,vMaxPriorityFeePerGas,vMaxFeePerGas,vAmount);
     console.info(receipt);
   };
+
+
 
   return (
     <AppContext.Provider
