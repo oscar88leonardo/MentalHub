@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 require("dotenv").config({ path: ".env" });
-const { WHITELIST_CONTRACT_ADDRESS, METADATA_URL } = require("../constants/cNFTCol");
+const { WHITELIST_CONTRACT_ADDRESS, METADATA_URL, GATEWAY_URI } = require("../constants/cNFTCol");
 
 
 async function main() {
@@ -17,6 +17,7 @@ async function main() {
   // deploy the contract
   const deployedMembersAirdropContract = await MembersAirdropContract.deploy(
     metadataURL,
+    GATEWAY_URI,
     whitelistContract
   );
 

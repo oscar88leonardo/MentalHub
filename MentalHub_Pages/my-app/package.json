@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "@web3auth/base": "^4.4.0",
     "@web3auth/modal": "^4.4.2",
     "@web3auth/openlogin-adapter": "^4.4.2",

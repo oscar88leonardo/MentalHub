@@ -39,13 +39,20 @@ export default function Profile() {
       console.log(ArrTokenIds.length);
       for (const TkId of ArrTokenIds) {
         try {
-          const response = await fetch(
+          /*const response = await fetch(
             'http://localhost:3000/api/'+ TkId.toNumber()
           );
           const todo = await response.json(); 
           console.log(todo);
-          const jsonContent = JSON.parse(todo);
-          NFTItemsInfo.push(jsonContent);
+          const jsonContent = JSON.parse(todo);*/
+          const urlGateway = await nftContract.gatewayURI(TkId);
+          const response = await fetch(
+            urlGateway
+          );
+          const todo = await response.json(); 
+          console.log(todo);
+          //const jsonContent = JSON.parse(todo);
+          NFTItemsInfo.push(todo);
         } catch (err) {
           console.error(err);
         }

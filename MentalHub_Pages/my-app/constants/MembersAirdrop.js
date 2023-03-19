@@ -1,7 +1,8 @@
 // METIS GOERLI TESTNET
- export const NFT_CONTRACT_ADDRESS = "0x459B185D76b9E33c95c533B7E6ff710Df513dbEF" //Metis goerli testnet address
+ export const NFT_CONTRACT_ADDRESS = "0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5"; //Metis goerli testnet address IPFS
+
 // POLYGON MUMBAI TESTNET
-// export const NFT_CONTRACT_ADDRESS ="0x2C73F53DB83Df1f6CD928e4F69Dbf122999c268f"  //MUMBAI TESTNET
+// export const NFT_CONTRACT_ADDRESS ="0xd97533D7a552e2c793cdC477C0DcA64e76c76E3b"  //MUMBAI TESTNET address IPFS
 // ARTIFACTS
 export const abi = [
   {
@@ -9,6 +10,11 @@ export const abi = [
       {
         "internalType": "string",
         "name": "baseURI",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "gateURI",
         "type": "string"
       },
       {
@@ -216,6 +222,25 @@ export const abi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "gatewayURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -617,4 +642,4 @@ export const abi = [
     "stateMutability": "payable",
     "type": "receive"
   }
-]  
+];
