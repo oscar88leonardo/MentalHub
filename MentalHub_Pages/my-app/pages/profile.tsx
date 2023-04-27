@@ -18,10 +18,13 @@ import img4 from "../assets/images/portfolio/img4.jpg";
 import img5 from "../assets/images/portfolio/img5.jpg";
 import img6 from "../assets/images/portfolio/img6.jpg";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
+import { useViewerRecord } from "@self.id/react";
 
 export default function Profile() {
 
   const { provider, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
+  const [name, setName] = useState("");
+  const record = useViewerRecord("basicProfile");
 
   const  NFTItemsInfo = [];
 
@@ -174,6 +177,14 @@ const renderUserName = () => {
                   </div>
                   <div className="m-l-20">
                     <h6 className="m-b-0 customer">{renderUserName()}</h6>
+                    <h6 className="m-b-0 customer">{record.content ? (
+                                                      <span>
+                                                        Hello {record.content.name}!
+                                                      </span>
+                                                  ) : (<span>
+                                                        Ceramic Don't found
+                                                      </span>
+                                                  )}</h6>
                   </div>
                 </CardBody>
               </Card>
