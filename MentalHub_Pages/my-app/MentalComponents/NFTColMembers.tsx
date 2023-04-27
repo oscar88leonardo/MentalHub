@@ -98,7 +98,7 @@ const NFTColMembers = () => {
       await tx.wait();
       setLoading(false);
       let tokenIdsCurrent = await nftContract.getTokenIds(); 
-      try {
+      /*try {
         const res = await fetch(
           'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
         );
@@ -106,7 +106,7 @@ const NFTColMembers = () => {
         console.log(data);
       } catch (err) {
         console.log(err);
-      }
+      }*/
 
       window.alert("You successfully minted a community member NFT!");
     } catch (err) {
