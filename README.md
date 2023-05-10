@@ -7,7 +7,7 @@ NFT Col Members Contract Address [ETH Goerli Testnet]: 0x3AFc87192488Ee62e9F4583
 
 Whitelist contract Address [Metis goerli Testnet]: 0x3F32B7e7A5B8297Ae8Ab86b1EbaC9831CE4047fD
 MembersAirdrop contract Address [Metis goerli Testnet]: 0x459B185D76b9E33c95c533B7E6ff710Df513dbEF
-MembersAirdrop IPFS contract Address [Metis goerli Testnet]:0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
+MembersAirdrop IPFS contract Address [Metis goerli Testnet]:0xcAf1501488f3F985d1bA6420a48661A881f01061
 
 
 Whitelist contract Address [polygon mumbai Testnet]: 0xB73e449442055e1310E467bb657469e402aBd904
@@ -23,3 +23,6 @@ MembersAirdrop contract Address [Metis testnet]: 0xe5075BD3b6401da79E03Efe848cb2
 
 Metis Goerli faucet - https://goerli.faucet.metisdevops.link/
 
+## METADATA URL
+METADATA_URL = "ipfs://bafybeieq7ah4ygw7dfkodzeuvwppml3n3d3l57llhq3xax6wxp2wu4uwym/"
+GATEWAY_URI ="https://nftstorage.link/ipfs/bafybeieq7ah4ygw7dfkodzeuvwppml3n3d3l57llhq3xax6wxp2wu4uwym/"

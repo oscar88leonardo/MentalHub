@@ -62,6 +62,7 @@ const AppProvider = ({ children }) => {
   const connectToSelfID = async () => {
     const ethereumAuthProvider = await getEthereumAuthProvider();
     connect(ethereumAuthProvider);
+    console.log("ceramicCon:"+ceramicCon.status);
   };
 
   const getEthereumAuthProvider = async () => {

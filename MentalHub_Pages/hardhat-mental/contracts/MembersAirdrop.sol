@@ -54,6 +54,14 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         whitelist = IWhitelist(whitelistContract);
     }
 
+    function setbaseTokenURI(string memory baseURI) public onlyOwner {
+        _baseTokenURI = baseURI;
+    }
+
+    function setgatewayTokenURI(string memory gateURI) public onlyOwner {
+        _gatewayTokenURI = gateURI;
+    }
+
     function getTokenIds() public view returns (uint256) {
         return tokenIds;
     }

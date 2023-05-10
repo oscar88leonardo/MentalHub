@@ -18,12 +18,14 @@ import img4 from "../assets/images/portfolio/img4.jpg";
 import img5 from "../assets/images/portfolio/img5.jpg";
 import img6 from "../assets/images/portfolio/img6.jpg";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
+import { useViewerConnection } from "@self.id/react";
 import { useViewerRecord } from "@self.id/react";
 
 export default function Profile() {
 
   const { provider, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   const [name, setName] = useState("");
+  const [ceramicCon, connect, disconnect] = useViewerConnection();
   const record = useViewerRecord("basicProfile");
 
   const  NFTItemsInfo = [];
@@ -109,6 +111,7 @@ export default function Profile() {
     getNFTsOwner();
     getUserInfo();
     getAccounts();
+    console.log("ceramicCon:"+ceramicCon.status);
   }
   }, [provider]);
   
