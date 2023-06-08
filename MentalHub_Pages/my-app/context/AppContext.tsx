@@ -1,9 +1,6 @@
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import RPC from "../pages/ethersRPC";
-import { useViewerConnection } from "@self.id/react";
-import { EthereumAuthProvider } from "@self.id/web";
-import {providers} from "ethers";
 
 import React, { createContext, useEffect, useState } from "react";
 
@@ -17,7 +14,6 @@ const AppProvider = ({ children }) => {
   const [AddressWeb3, setAddressWeb3] = useState(null);
   const [userInfo, setuserInfo] = useState(null);
   const [PrivateKey, setPrivateKey] = useState(null);
-  const [ceramicCon, connect, disconnect] = useViewerConnection();
 
 
   useEffect(() => {
@@ -52,29 +48,6 @@ const AppProvider = ({ children }) => {
 
     init();
   }, []);
-
-  useEffect(() => {
-    if(provider){
-      connectToSelfID();
-    }
-  }, [provider]);
-
-  const connectToSelfID = async () => {
-    const ethereumAuthProvider = await getEthereumAuthProvider();
-    connect(ethereumAuthProvider);
-    console.log("ceramicCon:"+ceramicCon.status);
-  };
-
-  const getEthereumAuthProvider = async () => {
-    const wrappedProvider = new providers.Web3Provider(provider);
-    const signer = wrappedProvider.getSigner();
-    
-    //const wrappedProvider = await web3auth.provider;    
-    //const signer = wrappedProvider.getSigner();
-    const address = await signer.getAddress();
-    return new EthereumAuthProvider(wrappedProvider.provider, address);
-  }; 
-
 
   const login = async () => {
     if (!web3auth) {

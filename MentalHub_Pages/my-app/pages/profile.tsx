@@ -20,13 +20,76 @@ import img6 from "../assets/images/portfolio/img6.jpg";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { useViewerConnection } from "@self.id/react";
 import { useViewerRecord } from "@self.id/react";
+import { EthereumAuthProvider } from "@self.id/web";
+import styles from '../styles/Home.module.css'
+
+function RecordSetter() {
+
+  const [name, setName] = useState("");
+  const [points, setPoints] = useState("");
+
+  const record = useViewerRecord("basicProfile");
+  console.log('record:');
+  console.log(record);
+
+  const updateRecordPoints = async (points) => {
+    await record.merge({
+      points: points,
+    });
+  };
+
+  const updateRecordName = async (name) => {
+    await record.merge({
+      name: name,
+    });
+  };
+
+  return (
+    <div className={styles.content}>
+      <div className={styles.mt2}>
+        {record.content ? (
+          <div className={styles.flexCol}>
+            <span className={styles.subtitle}>Hello {record.content.name}!</span>
+            <span className={styles.subtitle}>You have {record.content.points}!</span>
+  
+            <span>
+              The above name was loaded from Ceramic Network. Try updating it
+              below.
+            </span>
+          </div>
+        ) : (
+          <span>
+            You do not have a profile record attached to your 3ID. Create a basic
+            profile by setting a name below.
+          </span>
+        )}
+      </div>
+  
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className={styles.mt2}
+      />
+      <button onClick={() => updateRecordName(name)}>Update Name</button>
+      <input
+        type="text"
+        placeholder="Points"
+        value={points}
+        onChange={(e) => setPoints(e.target.value)}
+        className={styles.mt2}
+      />
+      <button onClick={() => updateRecordPoints(points)}>Update Points</button>
+    </div>
+  );
+}
 
 export default function Profile() {
 
   const { provider, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   const [name, setName] = useState("");
   const [ceramicCon, connect, disconnect] = useViewerConnection();
-  const record = useViewerRecord("basicProfile");
 
   const  NFTItemsInfo = [];
 
@@ -106,12 +169,28 @@ export default function Profile() {
     }
   };
 
+  const connectToSelfID = async () => {
+    const ethereumAuthProvider = await getEthereumAuthProvider();
+    connect(ethereumAuthProvider);
+    console.log("ceramicCon:"+ceramicCon.status);
+  };
+
+  const getEthereumAuthProvider = async () => {
+    const wrappedProvider = new providers.Web3Provider(provider);
+    const signer = wrappedProvider.getSigner();
+    
+    //const wrappedProvider = await web3auth.provider;    
+    //const signer = wrappedProvider.getSigner();
+    const address = await signer.getAddress();
+    return new EthereumAuthProvider(wrappedProvider.provider, address);
+  };
+
  useEffect(() => {
   if (provider) {
     getNFTsOwner();
     getUserInfo();
     getAccounts();
-    console.log("ceramicCon:"+ceramicCon.status);
+    connectToSelfID();
   }
   }, [provider]);
   
@@ -125,8 +204,9 @@ const renderUserName = () => {
   var userName = "";
   if(AddressWeb3 && userInfo){
     userName = AddressWeb3;
-    if(userInfo.name != undefined)
+    if(userInfo.name != undefined) {
       userName = userInfo.name + '\n' + '\n' + userName;
+    }
   }
   return(
     userName
@@ -180,14 +260,6 @@ const renderUserName = () => {
                   </div>
                   <div className="m-l-20">
                     <h6 className="m-b-0 customer">{renderUserName()}</h6>
-                    <h6 className="m-b-0 customer">{record.content ? (
-                                                      <span>
-                                                        Hello {record.content.name}!
-                                                      </span>
-                                                  ) : (<span>
-                                                        Ceramic Don't found
-                                                      </span>
-                                                  )}</h6>
                   </div>
                 </CardBody>
               </Card>
@@ -202,6 +274,18 @@ const renderUserName = () => {
               <h2 className="title">My NTFs</h2>
             </Col>
           </Row>
+          {ceramicCon.status === "connected" ? (
+            <div>
+              <span className={styles.subtitle}>
+                Your 3ID is {ceramicCon.selfID.id}
+              </span>
+              <RecordSetter />
+            </div>
+          ) : (
+            <span className={styles.subtitle}>
+              Connect with your wallet to access your 3ID
+            </span>
+          )}
           <Row id="NFTList" className="m-t-40 justify-content-center">
             
           </Row>
