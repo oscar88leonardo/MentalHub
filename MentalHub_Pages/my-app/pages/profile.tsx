@@ -90,6 +90,12 @@ export default function Profile() {
   const { provider, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   const [name, setName] = useState("");
   const [ceramicCon, connect, disconnect] = useViewerConnection();
+  const record = useViewerRecord("basicProfile");
+  const updateRecordName = async (name) => {
+    await record.merge({
+      name: name,
+    });
+  };
 
   const  NFTItemsInfo = [];
 
@@ -195,17 +201,27 @@ export default function Profile() {
   }, [provider]);
   
   useEffect(() => {
-    if (provider && AddressWeb3 && userInfo) {
-      renderUserName();
-    }
-    }, [AddressWeb3,userInfo]);
+    renderUserName();
+    }, [ceramicCon.status]);
   
 const renderUserName = () => {
   var userName = "";
-  if(AddressWeb3 && userInfo){
-    userName = AddressWeb3;
-    if(userInfo.name != undefined) {
-      userName = userInfo.name + '\n' + '\n' + userName;
+
+  if (provider && AddressWeb3 && userInfo && ceramicCon.status == "connected") {
+    console.log('record:');
+    console.log(record);
+
+    if(AddressWeb3 && userInfo){
+      userName = AddressWeb3; 
+      if(record.content) {
+        if(record.content.name)
+          userName = record.content.name + '\n' + userName;
+      } else {
+        if(userInfo.name != undefined) {
+          updateRecordName(userInfo.name);
+          userName = userInfo.name + '\n' + userName;
+        }
+      }
     }
   }
   return(
