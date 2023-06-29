@@ -22,6 +22,9 @@ import { useViewerConnection } from "@self.id/react";
 import { useViewerRecord } from "@self.id/react";
 import { EthereumAuthProvider } from "@self.id/web";
 import styles from '../styles/Home.module.css'
+import ReactModal from 'react-modal';
+//import FormConsultante  from "../MentalComponents/formConsultante";
+
 
 function RecordSetter() {
 
@@ -64,7 +67,6 @@ function RecordSetter() {
           </span>
         )}
       </div>
-  
       <input
         type="text"
         placeholder="Name"
@@ -79,8 +81,9 @@ function RecordSetter() {
         value={points}
         onChange={(e) => setPoints(e.target.value)}
         className={styles.mt2}
-      />
+      />      
       <button onClick={() => updateRecordPoints(points)}>Update Points</button>
+      
     </div>
   );
 }
@@ -254,6 +257,24 @@ const renderUserName = () => {
         )  
   }
 
+  const FormConsultante=()=> {
+    const [modalisOpen, setIsOpen] = useState(false);
+   
+    return (
+      <div>
+        <button onClick={()=>setIsOpen(true)}>Open Modal</button>
+        <ReactModal 
+          isOpen={modalisOpen}
+          onRequestClose={() => setIsOpen(false)}
+          contentLabel="Example Modal"
+        >
+          This is the content of the modal.
+        </ReactModal>
+      </div>
+    );
+  };
+  
+
   return (
     <div>
       <Head>
@@ -285,12 +306,14 @@ const renderUserName = () => {
       </div>
       <div className="spacer">
         <Container>
+        <FormConsultante />
           <Row className="justify-content-left">
             <Col md="7" className="text-left">
               <h2 className="title">My NTFs</h2>
             </Col>
           </Row>
           {ceramicCon.status === "connected" ? (
+    
             <div>
               <span className={styles.subtitle}>
                 Your 3ID is {ceramicCon.selfID.id}
