@@ -23,7 +23,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "MentalComponents/formConsultante.js"  ],
   "exclude": [
     "node_modules"
   ]
