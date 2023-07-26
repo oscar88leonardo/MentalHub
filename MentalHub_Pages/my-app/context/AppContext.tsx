@@ -1,6 +1,6 @@
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
-import RPC from "../pages/ethersRPC";
+import RPC from "./ethersRPC";
 
 import React, { createContext, useEffect, useState } from "react";
 

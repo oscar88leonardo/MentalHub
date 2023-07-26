@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 // HIGHLIGHTSTART-importModules
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
-import RPC from "./ethersRPC";
+import RPC from "../context/ethersRPC";
 
 import * as React from 'react';
 
