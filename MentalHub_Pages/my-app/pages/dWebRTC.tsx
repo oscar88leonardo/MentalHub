@@ -24,6 +24,8 @@ import { useDisplayName } from "@huddle01/react/app-utils";
 import Button from "../MentalComponents/Button";
 import { Container, Row, Col } from "reactstrap";
 
+import axios from 'axios';
+
 
 const App = () => {
   // refs
@@ -35,9 +37,12 @@ const App = () => {
   const [displayNameText, setDisplayNameText] = useState("Guest");
   const [projectId, setProjectId] = useState("");
   const [accessToken, setAccessToken] = useState("");
-
+  
   const { initialize } = useHuddle01();
-  const { joinLobby } = useLobby();
+  
+  const { joinLobby,leaveLobby, isLoading, isLobbyJoined, error } = useLobby();
+  
+
   const {
     fetchAudioStream,
     produceAudio,
@@ -64,11 +69,12 @@ const App = () => {
   const {
     startRecording,
     stopRecording,
-    error,
+    //error,
     data: recordingData,
   } = useRecording();
 
   const { setDisplayName, error: displayNameError } = useDisplayName();
+
 
   useEventListener("room:joined", () => {
     console.log("room:joined");
@@ -81,7 +87,7 @@ const App = () => {
     <div className="grid grid-cols-2">
       <div>
       <Head>
-        <title>Mental Hub | Communication</title>
+        <title>MentalHub | Communication</title>
         <meta name="description" content="dWebRTC" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -90,108 +96,121 @@ const App = () => {
           <Row className="">
             <Col md="6" className="align-self-center ">
               <span className="label label-rounded label-inverse">
-                Whitelist Mental Hub
+                dWebRTC
               </span>
               <h1 className="title">Web Communication</h1>
-              <h6 className="subtitle op-18">
+              <h4 className="subtitle">
                 Audio/Video streaming and chat tests
-              </h6>
+              </h4>
+              <Button
+                disabled={!initialize.isCallable}
+                onClick={() => {
+                  setProjectId(process.env.pjId);
+                  console.log(projectId);
+                  initialize(projectId);
+                }}> INIT
+              </Button>
+              <Button
+                onClick={() => {
+                  axios.post('/api/createRoom')
+                    .then((response) => {setRoomId(response.data.data.roomId);console.log(roomId);})
+                    .catch((error) => console.error("Error fetching data:",error));                                          
+                }}> SETUP_ROOM
+              </Button>
+              <Button
+                disabled={!joinLobby.isCallable}
+                onClick={() => {
+                  joinLobby(roomId);
+                }}
+              >
+                JOIN_LOBY
+              </Button>
+
+              <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
+                LEAVE_LOBBY 
+              </Button>
+
             </Col>
+            <Col md="6" className="align-self-center ">
+              <h4 className="subtitle">Room State</h4>
+              <h6 className="subtitle break-words">{JSON.stringify(state.value)}</h6>
+            </Col>
+          </Row> 
+      
+          <Row className="">
+          <Col md="6" className="align-self-center ">
+            <div>
+            <h6 className="subtitle op-12">
+                Me Video:
+              </h6>
+            <video ref={videoRef} autoPlay muted></video>
+            <div className="grid grid-cols-4">
+              {Object.values(peers)
+                .filter((peer) => peer.cam)
+                .map((peer) => (
+                  <>
+                    role: {peer.role}
+                    <Video
+                      key={peer.peerId}
+                      peerId={peer.peerId}
+                      track={peer.cam}
+                      debug
+                    />
+                  </>
+                ))}
+              {Object.values(peers)
+                .filter((peer) => peer.mic)
+                .map((peer) => (
+                  <Audio key={peer.peerId} peerId={peer.peerId} track={peer.mic} />
+                ))}
+            </div>
+            </div>
+          </Col>
+          <Col md="6" className="align-self-center">
+          <div>
+            <h4 className="subtitle">Me Id</h4>
+            <div className="subtitle break-words">
+              {JSON.stringify(state.context.peerId)}
+            </div>
+        
+            <h4 className="subtitle">DisplayName</h4>
+            <div className="subtitle break-words">
+              {JSON.stringify(state.context.displayName)}
+            </div>
+        
+            <h4 className="subtitle">Recording Data</h4>
+            <div className="subtitle break-words">
+              {JSON.stringify(recordingData)}
+            </div>
+
+            <h4 className="subtitle">Error</h4>
+            <div className="break-words text-red-500">
+              {JSON.stringify(state.context.error)}
+            </div>
+
+            <h4 className="subtitle">Peers</h4>
+            <div className="subtitle break-words">
+              {JSON.stringify(peers)}
+            </div>
+
+            <h4 className="subtitle">Consumers</h4>
+            <div className="subtitle break-words">
+              {JSON.stringify(state.context.consumers)}
+            </div>  
+
+          </div>          
+          </Col>
           </Row>
         </Container>
       </div>
     </div>
 
-      <div>
-        <Head>
-          <title>Mental Hub | Whitelist</title>
-        </Head>
-        <h1 className="text-6xl font-bold">
-          Welcome to{" "}
-          <a className="text-blue-600" href="https://huddle01.com">
-            Huddle01 SDK!
-          </a>
-        </h1>
-
-        <h2 className="text-2xl">Room State</h2>
-        <h3 className="break-words">{JSON.stringify(state.value)}</h3>
-
-        <h2 className="text-2xl">Me Id</h2>
-        <div className="break-words">
-          {JSON.stringify(state.context.peerId)}
-        </div>
-        <h2 className="text-2xl">DisplayName</h2>
-        <div className="break-words">
-          {JSON.stringify(state.context.displayName)}
-        </div>
-        <h2 className="text-2xl">Recording Data</h2>
-        <div className="break-words">{JSON.stringify(recordingData)}</div>
-
-        <h2 className="text-2xl">Error</h2>
-        <div className="break-words text-red-500">
-          {JSON.stringify(state.context.error)}
-        </div>
-        <h2 className="text-2xl">Peers</h2>
-        <div className="break-words">{JSON.stringify(peers)}</div>
-        <h2 className="text-2xl">Consumers</h2>
-        <div className="break-words">
-          {JSON.stringify(state.context.consumers)}
-        </div>
-
-        <h2 className="text-3xl text-blue-500 font-extrabold">Idle</h2>
-        <input
-          type="text"
-          placeholder="Your Project Id"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-          className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none mr-2"
-        />
-        <Button
-          disabled={!initialize.isCallable}
-          onClick={() => {
-            initialize(projectId);
-          }}
-        >
-          INIT
-        </Button>
-
-        <br />
-        <br />
-        <h2 className="text-3xl text-red-500 font-extrabold">Initialized</h2>
-        <input
-          type="text"
-          placeholder="Your Room Id"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
-          className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none mr-2"
-        />
-        <input
-          type="text"
-          placeholder="Your Access Token (optional)"
-          value={accessToken}
-          onChange={(e) => setAccessToken(e.target.value)}
-          className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rpnounded-lg text-sm focus:outline-none mr-2"
-        />
-        <Button
-          disabled={!joinLobby.isCallable}
-          onClick={() => {
-            if (accessToken) joinLobby(roomId, accessToken);
-            else joinLobby(roomId);
-          }}
-        >
-          JOIN_LOBBY
-        </Button>
+      <div>       
         <br />
         <br />
         <h2 className="text-3xl text-yellow-500 font-extrabold">Lobby</h2>
+        <h4 className="subtitle">Room ID: {roomId}</h4>
         <div className="flex gap-4 flex-wrap">
-          <input
-            type="text"
-            placeholder="Your Room Id"
-            value={displayNameText}
-            onChange={(e) => setDisplayNameText(e.target.value)}
-            className="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none mr-2"
-          />
           <Button
             disabled={!setDisplayName.isCallable}
             onClick={() => {
@@ -289,30 +308,7 @@ const App = () => {
         {/* Uncomment to see the Xstate Inspector */}
         {/* <Inspect /> */}
       </div>
-      <div>
-        Me Video:
-        <video ref={videoRef} autoPlay muted></video>
-        <div className="grid grid-cols-4">
-          {Object.values(peers)
-            .filter((peer) => peer.cam)
-            .map((peer) => (
-              <>
-                role: {peer.role}
-                <Video
-                  key={peer.peerId}
-                  peerId={peer.peerId}
-                  track={peer.cam}
-                  debug
-                />
-              </>
-            ))}
-          {Object.values(peers)
-            .filter((peer) => peer.mic)
-            .map((peer) => (
-              <Audio key={peer.peerId} peerId={peer.peerId} track={peer.mic} />
-            ))}
-        </div>
-      </div>
+      
     </div>
   );
 };
