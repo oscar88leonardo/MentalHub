@@ -83,6 +83,24 @@ const App = () => {
     console.log("lobby:joined");
   });
 
+  const PJID = process.env.PJID; 
+  console.log('Pjid');
+  console.log(PJID);
+
+  useEffect(()=> {
+    setProjectId("Kh1bnUNe70zLM69oWW5oc5d6VuVhv-HU");
+    console.log('ProjectId');
+    console.log(projectId);  
+  })
+
+  const fcreateRoom = async () => {
+    axios.post('/api/createRoom')
+                    .then((response) => {setRoomId(response.data.data.roomId);
+                      console.log(roomId);})
+                    .catch((error) => console.error("Error fetching data:",error)); 
+  }
+
+
   return (    
     <div className="grid grid-cols-2">
       <div>
@@ -104,17 +122,13 @@ const App = () => {
               </h4>
               <Button
                 disabled={!initialize.isCallable}
-                onClick={() => {
-                  setProjectId(process.env.pjId);
-                  console.log(projectId);
-                  initialize(projectId);
+                onClick={() => {               
+                  initialize(PJID);
                 }}> INIT
               </Button>
               <Button
                 onClick={() => {
-                  axios.post('/api/createRoom')
-                    .then((response) => {setRoomId(response.data.data.roomId);console.log(roomId);})
-                    .catch((error) => console.error("Error fetching data:",error));                                          
+                  fcreateRoom();                                           
                 }}> SETUP_ROOM
               </Button>
               <Button
@@ -209,6 +223,7 @@ const App = () => {
         <br />
         <br />
         <h2 className="text-3xl text-yellow-500 font-extrabold">Lobby</h2>
+        <h4 className="subtitle">Pj ID: {projectId}</h4>
         <h4 className="subtitle">Room ID: {roomId}</h4>
         <div className="flex gap-4 flex-wrap">
           <Button

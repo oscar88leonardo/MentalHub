@@ -3,7 +3,9 @@ import axios from 'axios';
 export default async function handler(req, res) {
      try {
         const API_KEY = process.env.API_KEY;
-        //console.log(API_KEY);
+        //const API_KEY = "g5Tcae7LDpaNHc6-sHlbuxMnahWnkcnt";
+        console.log("API_KEY:");
+        console.log(API_KEY);
         // post and get response
         const response = await axios.post(
             'https://api.huddle01.com/api/v1/create-room',

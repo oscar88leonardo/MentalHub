@@ -71,6 +71,8 @@ const App = () => {
     console.log("lobby:joined");
   });
 
+  const pId = "";
+
   return (
     <div className="grid grid-cols-2">
       <div>
@@ -122,6 +124,14 @@ const App = () => {
         >
           INIT
         </Button>
+        <Button
+          disabled={!initialize.isCallable}
+          onClick={() => {
+            initialize(projectId);
+          }}
+        >
+          SET_PID
+        </Button>
 
         <br />
         <br />
@@ -148,6 +158,14 @@ const App = () => {
           }}
         >
           JOIN_LOBBY2
+        </Button>
+        <Button
+          disabled={!joinLobby.isCallable}
+          onClick={() => {
+            
+          }}
+        >
+          CREATE_ROOM
         </Button>
         <br />
         <br />
