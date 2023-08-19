@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useContext} from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import Head from "next/head";
 import Image from "next/image";
 
@@ -37,11 +37,11 @@ const App = () => {
   const [displayNameText, setDisplayNameText] = useState("Guest");
   const [projectId, setProjectId] = useState("");
   const [accessToken, setAccessToken] = useState("");
-  
+
   const { initialize } = useHuddle01();
-  
-  const { joinLobby,leaveLobby, isLoading, isLobbyJoined, error } = useLobby();
-  
+
+  const { joinLobby, leaveLobby, isLoading, isLobbyJoined, error } = useLobby();
+
 
   const {
     fetchAudioStream,
@@ -83,143 +83,153 @@ const App = () => {
     console.log("lobby:joined");
   });
 
-  const PJID = process.env.PJID; 
-  console.log('Pjid');
-  console.log(PJID);
 
-  useEffect(()=> {
-    setProjectId("Kh1bnUNe70zLM69oWW5oc5d6VuVhv-HU");
-    console.log('ProjectId');
-    console.log(projectId);  
-  })
+  const finitProject = async () => {
+    axios.post('/api/getprojectId')
+      .then((response) => {
+        setProjectId(response.data);
+      })
+      .catch((error) => console.error("Error fetching data:", error));
+
+  }
 
   const fcreateRoom = async () => {
     axios.post('/api/createRoom')
-                    .then((response) => {setRoomId(response.data.data.roomId);
-                      console.log(roomId);})
-                    .catch((error) => console.error("Error fetching data:",error)); 
+      .then((response) => {
+        setRoomId(response.data.data.roomId);
+        console.log(roomId);
+      })
+      .catch((error) => console.error("Error fetching data:", error));
+
   }
 
+  useEffect(() => {
+    if(projectId) {
+      console.log('projectId:');
+      console.log(projectId);
+      initialize(projectId);
+    }
+    }, [projectId]);
 
-  return (    
+  return (
     <div className="grid grid-cols-2">
       <div>
-      <Head>
-        <title>MentalHub | Communication</title>
-        <meta name="description" content="dWebRTC" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <div className="static-slider10">
-        <Container>
-          <Row className="">
-            <Col md="6" className="align-self-center ">
-              <span className="label label-rounded label-inverse">
-                dWebRTC
-              </span>
-              <h1 className="title">Web Communication</h1>
-              <h4 className="subtitle">
-                Audio/Video streaming and chat tests
-              </h4>
-              <Button
-                disabled={!initialize.isCallable}
-                onClick={() => {               
-                  initialize(PJID);
-                }}> INIT
-              </Button>
-              <Button
-                onClick={() => {
-                  fcreateRoom();                                           
-                }}> SETUP_ROOM
-              </Button>
-              <Button
-                disabled={!joinLobby.isCallable}
-                onClick={() => {
-                  joinLobby(roomId);
-                }}
-              >
-                JOIN_LOBY
-              </Button>
+        <Head>
+          <title>MentalHub | Communication</title>
+          <meta name="description" content="dWebRTC" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <div className="static-slider10">
+          <Container>
+            <Row className="">
+              <Col md="6" className="align-self-center ">
+                <span className="label label-rounded label-inverse">
+                  dWebRTC
+                </span>
+                <h1 className="title">Web Communication</h1>
+                <h4 className="subtitle">
+                  Audio/Video streaming and chat tests
+                </h4>
+                <Button
+                  disabled={!initialize.isCallable}
+                  onClick={() => {
+                    finitProject();
+                  }}> INIT
+                </Button>
+                <Button
+                  onClick={() => {
+                    fcreateRoom();
+                  }}> SETUP_ROOM
+                </Button>
+                <Button
+                  disabled={!joinLobby.isCallable}
+                  onClick={() => {
+                    joinLobby(roomId);
+                  }}
+                >
+                  JOIN_LOBY
+                </Button>
 
-              <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
-                LEAVE_LOBBY 
-              </Button>
+                <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
+                  LEAVE_LOBBY
+                </Button>
 
-            </Col>
-            <Col md="6" className="align-self-center ">
-              <h4 className="subtitle">Room State</h4>
-              <h6 className="subtitle break-words">{JSON.stringify(state.value)}</h6>
-            </Col>
-          </Row> 
-      
-          <Row className="">
-          <Col md="6" className="align-self-center ">
-            <div>
-            <h6 className="subtitle op-12">
-                Me Video:
-              </h6>
-            <video ref={videoRef} autoPlay muted></video>
-            <div className="grid grid-cols-4">
-              {Object.values(peers)
-                .filter((peer) => peer.cam)
-                .map((peer) => (
-                  <>
-                    role: {peer.role}
-                    <Video
-                      key={peer.peerId}
-                      peerId={peer.peerId}
-                      track={peer.cam}
-                      debug
-                    />
-                  </>
-                ))}
-              {Object.values(peers)
-                .filter((peer) => peer.mic)
-                .map((peer) => (
-                  <Audio key={peer.peerId} peerId={peer.peerId} track={peer.mic} />
-                ))}
-            </div>
-            </div>
-          </Col>
-          <Col md="6" className="align-self-center">
-          <div>
-            <h4 className="subtitle">Me Id</h4>
-            <div className="subtitle break-words">
-              {JSON.stringify(state.context.peerId)}
-            </div>
-        
-            <h4 className="subtitle">DisplayName</h4>
-            <div className="subtitle break-words">
-              {JSON.stringify(state.context.displayName)}
-            </div>
-        
-            <h4 className="subtitle">Recording Data</h4>
-            <div className="subtitle break-words">
-              {JSON.stringify(recordingData)}
-            </div>
+              </Col>
+              <Col md="6" className="align-self-center ">
+                <h4 className="subtitle">Room State</h4>
+                <h6 className="subtitle break-words">{JSON.stringify(state.value)}</h6>
+              </Col>
+            </Row>
 
-            <h4 className="subtitle">Error</h4>
-            <div className="break-words text-red-500">
-              {JSON.stringify(state.context.error)}
-            </div>
+            <Row className="">
+              <Col md="6" className="align-self-center ">
+                <div>
+                  <h6 className="subtitle op-12">
+                    Me Video:
+                  </h6>
+                  <video ref={videoRef} autoPlay muted></video>
+                  <div className="grid grid-cols-4">
+                    {Object.values(peers)
+                      .filter((peer) => peer.cam)
+                      .map((peer) => (
+                        <>
+                          role: {peer.role}
+                          <Video
+                            key={peer.peerId}
+                            peerId={peer.peerId}
+                            track={peer.cam}
+                            debug
+                          />
+                        </>
+                      ))}
+                    {Object.values(peers)
+                      .filter((peer) => peer.mic)
+                      .map((peer) => (
+                        <Audio key={peer.peerId} peerId={peer.peerId} track={peer.mic} />
+                      ))}
+                  </div>
+                </div>
+              </Col>
+              <Col md="6" className="align-self-center">
+                <div>
+                  <h4 className="subtitle">Me Id</h4>
+                  <div className="subtitle break-words">
+                    {JSON.stringify(state.context.peerId)}
+                  </div>
 
-            <h4 className="subtitle">Peers</h4>
-            <div className="subtitle break-words">
-              {JSON.stringify(peers)}
-            </div>
+                  <h4 className="subtitle">DisplayName</h4>
+                  <div className="subtitle break-words">
+                    {JSON.stringify(state.context.displayName)}
+                  </div>
 
-            <h4 className="subtitle">Consumers</h4>
-            <div className="subtitle break-words">
-              {JSON.stringify(state.context.consumers)}
-            </div>  
+                  <h4 className="subtitle">Recording Data</h4>
+                  <div className="subtitle break-words">
+                    {JSON.stringify(recordingData)}
+                  </div>
 
-          </div>          
-          </Col>
-          </Row>
-        </Container>
+                  <h4 className="subtitle">Error</h4>
+                  <div className="break-words text-red-500">
+                    {JSON.stringify(state.context.error)}
+                  </div>
+
+                  <h4 className="subtitle">Peers</h4>
+                  <div className="subtitle break-words">
+                    {JSON.stringify(peers)}
+                  </div>
+
+                  <h4 className="subtitle">Consumers</h4>
+                  <div className="subtitle break-words">
+                    {JSON.stringify(state.context.consumers)}
+                  </div>
+
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </div>
       </div>
-    </div>
 
-      <div>       
+      <div>
         <br />
         <br />
         <h2 className="text-3xl text-yellow-500 font-extrabold">Lobby</h2>
@@ -323,7 +333,7 @@ const App = () => {
         {/* Uncomment to see the Xstate Inspector */}
         {/* <Inspect /> */}
       </div>
-      
+
     </div>
   );
 };

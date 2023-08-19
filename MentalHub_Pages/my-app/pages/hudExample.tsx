@@ -71,7 +71,7 @@ const App = () => {
     console.log("lobby:joined");
   });
 
-  const pId = "";
+  const pId = "Kh1bnUNe70zLM69oWW5oc5d6VuVhv-HU";
 
   return (
     <div className="grid grid-cols-2">
@@ -119,24 +119,25 @@ const App = () => {
         <Button
           disabled={!initialize.isCallable}
           onClick={() => {
-            initialize(projectId);
+            setProjectId(pId);
           }}
         >
-          INIT
+          SET_PID
         </Button>
+        
         <Button
           disabled={!initialize.isCallable}
           onClick={() => {
             initialize(projectId);
           }}
         >
-          SET_PID
+          INIT
         </Button>
+        <br />
+        <br />
 
-        <br />
-        <br />
-        <h2 className="text-3xl text-red-500 font-extrabold">Initialized</h2>
-        <input
+        <h2 className="text-3xl text-red-500 font-extrabold">Initialized</h2>        
+        <input  
           type="text"
           placeholder="Your Room Id"
           value={roomId}
