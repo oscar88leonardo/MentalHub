@@ -96,7 +96,8 @@ const App = () => {
   const fcreateRoom = async () => {
     axios.post('/api/createRoom')
       .then((response) => {
-        setRoomId(response.data.data.roomId);
+        setRoomId(response.data.roomId);
+        console.log('roomId:');
         console.log(roomId);
       })
       .catch((error) => console.error("Error fetching data:", error));
@@ -141,6 +142,7 @@ const App = () => {
                     fcreateRoom();
                   }}> SETUP_ROOM
                 </Button>
+                
                 <Button
                   disabled={!joinLobby.isCallable}
                   onClick={() => {
@@ -149,11 +151,6 @@ const App = () => {
                 >
                   JOIN_LOBY
                 </Button>
-
-                <Button disabled={!leaveRoom.isCallable} onClick={leaveRoom}>
-                  LEAVE_LOBBY
-                </Button>
-
               </Col>
               <Col md="6" className="align-self-center ">
                 <h4 className="subtitle">Room State</h4>
@@ -242,7 +239,7 @@ const App = () => {
               setDisplayName(displayNameText);
             }}
           >
-            {`SET_DISPLAY_NAME error: ${displayNameError}`}
+            {`SET_DISPLAY_NAME: ${displayNameError}`}
           </Button>
           <Button
             disabled={!fetchVideoStream.isCallable}
