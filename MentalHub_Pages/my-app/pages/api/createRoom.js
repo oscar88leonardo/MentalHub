@@ -21,18 +21,26 @@ export default async function handler(req, res) {
   //Read the json data file data.json
   //const fileContents = await fs.readFile(jsonDirectory + '/data.json', 'utf8');
 
+
   const fs = require("fs");
+  var existFile = false;
 
-  (async () => {
-    try {
-      fs.promises.access(fileroomPath, fs.constants.F_OK);
-      // Do something
-      const rooms = JSON.parse(fs.readFileSync(fileroomPath,'utf-8'));
-      console.log(rooms);
-      res.status(200).json(rooms);
+  fs.access("foo.txt", fs.constants.F_OK, (err) => {
+    if (!err) {
+        existFile = true;
+      }
+      else {
+        existFile = false;
+      }
+    });
 
-      } catch (err) {
-
+    console.log('existFile:');
+    console.log(existFile);
+    if (existFile){
+    const rooms = JSON.parse(fs.readFileSync(fileroomPath,'utf-8'));
+    console.log(rooms);
+    res.status(200).json(rooms);
+    } else {
         console.log("estoy en el catch antes de axios");
         try{  
           const response = await axios.post(
@@ -58,9 +66,8 @@ export default async function handler(req, res) {
               res.status(error.response.status).json({ message: error.message });
         }
       }  
-    })();
                
-  }
+}
 
    
   
