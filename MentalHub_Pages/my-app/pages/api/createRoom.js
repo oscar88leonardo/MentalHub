@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   //Find the absolute path of the json directory
   console.log("antes de filepath");
-  onsole.log(process.cwd());
+  console.log(process.cwd());
   const fileroomPath = path.join(process.cwd(), 'pages/api/hdrooms.txt');
   console.log("FILEPATH:");
   console.log(fileroomPath);
