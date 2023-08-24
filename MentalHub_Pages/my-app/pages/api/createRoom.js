@@ -58,7 +58,7 @@ export default async function handler(req, res) {
           }
         );
         console.log("estoy en el catch despues de axios");        
-        //console.log(response.data);
+        console.log(response.data);
         res.status(200).json(response.data.data);        
         fs.writeFileSync(fileroomPath, JSON.stringify(response.data.data) );
         } catch (error) {
