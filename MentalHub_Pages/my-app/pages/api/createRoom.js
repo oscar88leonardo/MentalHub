@@ -13,6 +13,8 @@ export default async function handler(req, res) {
   //const fs = require("fs");
 
   //Find the absolute path of the json directory
+  console.log("antes de filepath");
+  onsole.log(process.cwd());
   const fileroomPath = path.join(process.cwd(), 'pages/api/hdrooms.txt');
   console.log("FILEPATH:");
   console.log(fileroomPath);
@@ -30,7 +32,8 @@ export default async function handler(req, res) {
       res.status(200).json(rooms);
 
       } catch (err) {
-      
+
+        console.log("estoy en el catch antes de axios");
         try{  
           const response = await axios.post(
           'https://api.huddle01.com/api/v1/create-room',
@@ -45,7 +48,8 @@ export default async function handler(req, res) {
               'x-api-key': API_KEY,
           },
           }
-        );        
+        );
+        console.log("estoy en el catch despues de axios");        
         //console.log(response.data);
         res.status(200).json(response.data.data);        
         fs.writeFileSync(fileroomPath, JSON.stringify(response.data.data) );
