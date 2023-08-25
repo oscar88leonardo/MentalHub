@@ -26,14 +26,14 @@ export default async function handler(req, res) {
   const fs = require("fs");
   var existFile = false;
 
-  fs.access(fileroomPath, fs.constants.F_OK, (err) => {
-    if (!err) {
+  
+  if (fs.existsSync(fileroomPath)) {
         existFile = true;
       }
       else {
         existFile = false;
       }
-    });
+  
 
     console.log('existFile:');
     console.log(existFile);
