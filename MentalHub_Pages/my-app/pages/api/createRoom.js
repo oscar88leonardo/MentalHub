@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   const fs = require("fs");
   var existFile = false;
 
-  fs.access("foo.txt", fs.constants.F_OK, (err) => {
+  fs.access(fileroomPath, fs.constants.F_OK, (err) => {
     if (!err) {
         existFile = true;
       }
