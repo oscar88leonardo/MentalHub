@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@huddle01/iframe": "^0.0.9",
     "@huddle01/react": "^0.0.9",
     "@livepeer/react": "^2.5.8",
     "@pinata/sdk": "^2.1.0",
