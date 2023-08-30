@@ -23,7 +23,7 @@ import { useViewerRecord } from "@self.id/react";
 import { EthereumAuthProvider } from "@self.id/web";
 import styles from '../styles/Home.module.css'
 import ReactModal from 'react-modal';
-//import FormConsultante  from "../MentalComponents/formConsultante";
+import FormConsultante  from "../MentalComponents/formConsultante";
 
 
 function RecordSetter() {
@@ -203,9 +203,9 @@ export default function Profile() {
   }
   }, [provider]);
   
-  useEffect(() => {
+  /*useEffect(() => {
     renderUserName();
-    }, [ceramicCon.status]);
+    }, [ceramicCon.status]);*/
   
 const renderUserName = () => {
   var userName = "";
@@ -255,25 +255,7 @@ const renderUserName = () => {
         </Card>
         </Col>
         )  
-  }
-
-  const FormConsultante=()=> {
-    const [modalisOpen, setIsOpen] = useState(false);
-   
-    return (
-      <div>
-        <button onClick={()=>setIsOpen(true)}>Open Modal</button>
-        <ReactModal 
-          isOpen={modalisOpen}
-          onRequestClose={() => setIsOpen(false)}
-          contentLabel="Example Modal"
-        >
-          This is the content of the modal.
-        </ReactModal>
-      </div>
-    );
-  };
-  
+  }  
 
   return (
     <div>
