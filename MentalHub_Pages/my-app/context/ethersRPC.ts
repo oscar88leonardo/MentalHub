@@ -1,5 +1,6 @@
 import type { SafeEventEmitterProvider } from "@web3auth/base";
 import { ethers } from "ethers";
+import { BrowserProvider } from "ethers/providers";
 
 export default class EthereumRpc {
   private provider: SafeEventEmitterProvider;
@@ -10,7 +11,7 @@ export default class EthereumRpc {
 
   async getChainId(): Promise<any> {
     try {
-      const ethersProvider = new ethers.providers.Web3Provider(this.provider);
+      const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
       // Get the connected Chain's ID
       const networkDetails = await ethersProvider.getNetwork();
 
@@ -22,8 +23,8 @@ export default class EthereumRpc {
 
   async getAccounts(): Promise<any> {
     try {
-      const ethersProvider = new ethers.providers.Web3Provider(this.provider);
-      const signer = ethersProvider.getSigner();
+      const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
+      const signer = await ethersProvider.getSigner();
 
       // Get user's Ethereum public address
       const address = await signer.getAddress();

@@ -1,5 +1,5 @@
 import ReactModal from 'react-modal';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Row,
   Col,
@@ -10,39 +10,43 @@ import {
   Button,
   Alert,
 } from "reactstrap";
-import { useViewerRecord } from "@self.id/react";
-import { uploadImage, uploadFile } from '@self.id/image-utils';
+/*import { useViewerRecord } from "@self.id/react";
+import { uploadImage, uploadFile } from '@self.id/image-utils';*/
+import { AppContext } from "../context/AppContext";
  
 const FormConsultante=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [imageProfile, setImageProfile] = useState(null);
-  const record = useViewerRecord("basicProfile");
+  //const record = useViewerRecord("basicProfile");
 
-  const updateRecordEmail = async (email) => {
+  const { orbis, orbisProfile} = useContext(AppContext);
+
+  /*const updateRecordEmail = async (email) => {
     await record.merge({
       email: email,
     });
-  };
+  };*/
 
   const updateRecordName = async (name) => {
-    await record.merge({
+    /*await record.merge({
       name: name,
-    });
+    });*/
+    orbis.updateProfile({username:name});
   };
 
   const updateRecordImageProfile = async (imageProfile) => {
     console.log('imageProfile:');
     console.log(imageProfile);
     if(imageProfile.length > 0) {
-      const imageSources = await uploadImage(
+      /*const imageSources = await uploadImage(
         'https://mental-hub-my-app-p3qk.vercel.app/api/uploadimage',
         imageProfile[0],
         [{ width: 60, height: 60 }],
       )
       await record.merge({
         image: imageSources,
-      });
+      });*/
     } else 
       alert('Select an image.');
   };

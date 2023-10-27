@@ -111,7 +111,7 @@ const Header = () => {
 
   return (
     <div className="fixed-top" style={{
-        backgroundColor: '#0faba5' 
+        backgroundColor: '#0faba5'
       }} id="top">
       <div className="header6">
         <Container className="po-relative">
