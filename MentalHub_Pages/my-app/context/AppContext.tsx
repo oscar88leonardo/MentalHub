@@ -29,6 +29,12 @@ const AppProvider = ({ children }) => {
   const [isConnectOrbis, setisConnectOrbis] = useState(false);
   const [orbisProvider, setorbisProvider] = useState(null);
 
+  const [contWeb3, setContWeb3] = useState(0);
+
+  const inCont = () => {
+    setContWeb3(contWeb3+1);
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -220,13 +226,15 @@ const AppProvider = ({ children }) => {
               orbis,
               userOrbis,
               orbisProfile,
+              contWeb3,              
               login, 
               logout, 
               getUserInfo, 
               getAccounts, 
               sendTransaction,
               getPrivateKey, 
-              getOrbisProfile
+              getOrbisProfile,
+              inCont
             }}
     >
       {children}

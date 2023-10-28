@@ -12,7 +12,8 @@ import FormConsultante  from "../MentalComponents/formConsultante";
 export default function Profile() {
 
   // get global data from Appcontext
-  const { provider, orbisProvider, AddressWeb3,orbis, userOrbis, orbisProfile, userInfo, getUserInfo, getAccounts, getOrbisProfile} = useContext(AppContext);
+  const { provider, orbisProvider, AddressWeb3, contWeb3, orbis, userOrbis, orbisProfile, userInfo, getUserInfo, getAccounts, getOrbisProfile, inCont} = useContext(AppContext);
+  
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (userOrbis) {
@@ -23,12 +24,14 @@ export default function Profile() {
     }
     }, [userOrbis]);
 
-    /*useEffect(() => {
-      if (orbisProfile) {
-        console.log(orbisProfile.);
+    useEffect(() => {
+      if (orbisProfile != undefined) {
+        console.log(orbisProfile);
         renderUrlProfilePicture();
+        renderUserName();
+
       }
-      }, [orbisProfile]);*/
+      }, [orbisProfile]);
     
     const  NFTItemsInfo = [];
 
@@ -221,6 +224,12 @@ export default function Profile() {
         <div className="spacer">
         <Container>
         <FormConsultante />
+        <div>
+          <h2>{contWeb3}</h2>
+          <button onClick={
+            () => inCont()
+          }>INCREMENTAR</button>
+        </div>
           <Row className="justify-content-left">
             <Col md="7" className="text-left">
               <h2 className="title">My NTFs</h2>

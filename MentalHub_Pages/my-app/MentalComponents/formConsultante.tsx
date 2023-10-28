@@ -1,5 +1,5 @@
 import ReactModal from 'react-modal';
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Row,
   Col,
@@ -13,14 +13,17 @@ import {
 /*import { useViewerRecord } from "@self.id/react";
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
+
  
 const FormConsultante=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
+  const [pfp, setPfp] = useState("");
   const [imageProfile, setImageProfile] = useState(null);
   //const record = useViewerRecord("basicProfile");
+  
 
-  const { orbis, orbisProfile} = useContext(AppContext);
+  const { orbis, orbisProfile, getOrbisProfile, contWeb3, inCont }= useContext(AppContext);
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({
@@ -28,12 +31,6 @@ const FormConsultante=()=> {
     });
   };*/
 
-  const updateRecordName = async (name) => {
-    /*await record.merge({
-      name: name,
-    });*/
-    orbis.updateProfile({username:name});
-  };
 
   const updateRecordImageProfile = async (imageProfile) => {
     console.log('imageProfile:');
@@ -51,12 +48,32 @@ const FormConsultante=()=> {
       alert('Select an image.');
   };
 
-  const updateRecord = async () => {
-    await updateRecordName(name);
-    await updateRecordImageProfile(imageProfile);
+  const updateRecord = async () => {  
+    const res = await orbis.updateProfile({username:name, pfp:pfp});
+    //await updateRecordImageProfile(imageProfile);
+    console.log("res status:");
+    console.log(res);
+    if (res.status == 200) {
+      console.log("Status to get OrbisProfile:");
+      setTimeout(() => getOrbisProfile(), 1000);
+      console.log(orbisProfile);
+    }
     setIsOpen(false);
   };
  
+  useEffect(() => {
+    console.log("orbis profile DATA");
+    console.log(orbisProfile);   
+    if (orbisProfile!=undefined){
+      console.log("orbis profile defined");
+      if (orbisProfile.username != undefined)
+        setName(orbisProfile.username);
+      if (orbisProfile.details.profile.pfp!= undefined)
+        setPfp(orbisProfile.details.profile.pfp);  
+    }
+  },[orbisProfile])
+
+
   return (
     <div>
       <button onClick={()=>setIsOpen(true)}>Edit Data Profile</button>
@@ -96,7 +113,9 @@ const FormConsultante=()=> {
               <Col lg="6">
                 <FormGroup className="m-t-15">
                   <Input type="text" placeholder="name" 
-                    onChange={(e) => setName(e.target.value)}/>
+                    onChange={(e) => setName(e.target.value)}
+                    value={name}
+                    />
                 </FormGroup>
               </Col>
               <Col lg="6">
@@ -115,6 +134,12 @@ const FormConsultante=()=> {
                     Save <i className="ti-arrow-right"></i>
                   </span>
                 </Button>
+                <div>
+                  <h2>{contWeb3}</h2>
+                  <a onClick={
+                    () => inCont()
+                  }>INCREMENTAR</a>
+                </div>
               </Col>
             </Row>
           </Form>
