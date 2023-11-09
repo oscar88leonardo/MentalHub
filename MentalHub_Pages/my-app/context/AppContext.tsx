@@ -100,10 +100,10 @@ const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (PinataGateway){
+    if (PinataGateway && PinataApiKey && PinataSecret){
       initOrbis();
     }
-  }, [PinataGateway])
+  }, [PinataGateway,PinataApiKey,PinataSecret])
 
   useEffect(() => {
     if (provider){

@@ -78,8 +78,12 @@ const FormConsultante=()=> {
       console.log("orbis profile defined");
       if (orbisProfile.username != undefined)
         setName(orbisProfile.username);
-      if (orbisProfile.details.profile.pfp!= undefined)
-        setPfp(orbisProfile.details.profile.pfp);  
+      if (orbisProfile.details.profile!= undefined){
+        if (orbisProfile.details.profile!= undefined){
+          if (orbisProfile.details.profile.pfp!= undefined)
+            setPfp(orbisProfile.details.profile.pfp);  
+        }
+      }
     }
   },[orbisProfile])
 

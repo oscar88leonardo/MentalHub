@@ -2,7 +2,8 @@ import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
 import ImgAuthor from "../public/NFT_Authors/MentalHubAuthor.png";
 import React, { useEffect, useRef, useState, useContext } from "react";
-import { Contract, providers, utils } from "ethers";
+import { Contract, parseEther } from "ethers";
+import { BrowserProvider } from "ethers/providers";
 //import Web3Modal from "web3modal";
 
 import { AppContext } from "../context/AppContext";
@@ -35,11 +36,11 @@ const NFTColMembers = () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);  
       const whitelistContract = new Contract(WHITELIST_CONTRACT_ADDRESS, abi_w, signer);
     
       const iswhitelisted = await whitelistContract.whitelistedAddresses(signer.getAddress()); 
@@ -50,7 +51,7 @@ const NFTColMembers = () => {
         const tx = await nftContract.airdropMint({
           // value signifies the cost of one crypto dev which is "0" eth for aridrop.
           // We are parsing `0.` string to ether using the utils library from ethers.js
-          value: utils.parseEther("0"),
+          value: parseEther("0"),
         });
         setLoading(true);
         // wait for the transaction to get mined
@@ -82,20 +83,29 @@ const NFTColMembers = () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
       // call the mint from the contract to mint the Crypto Dev
+      console.log("nftContract publicMint:");
+      console.log(nftContract);
+      console.log("utils.parseEther publicMint:");
+      const valueEther = parseEther('0.01');
+      console.log(valueEther);
       const tx = await nftContract.mint({
         // value signifies the cost of one crypto dev which is "0.01" eth.
         // We are parsing `0.01` string to ether using the utils library from ethers.js
-        value: utils.parseEther("0.01"),
+        value: valueEther,
       });
+      console.log("tx publicMint:");
+      console.log(tx);
       setLoading(true);
       // wait for the transaction to get mined
       await tx.wait();
+      console.log("tx publicMint:");
+      console.log(tx);
       setLoading(false);
       let tokenIdsCurrent = await nftContract.getTokenIds(); 
       /*try {
@@ -133,8 +143,8 @@ const NFTColMembers = () => {
   try {
     // We need a Signer here since this is a 'write' transaction.
     //const signer = await getProviderOrSigner(true);
-    const provider0 = new providers.Web3Provider(provider);
-    const signer = provider0.getSigner();
+    const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+    const signer = await provider0.getSigner();
     // Create a new instance of the Contract with a Signer, which allows
     // update methods
     const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
@@ -160,7 +170,7 @@ const checkIfAirdropStarted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new providers.Web3Provider(provider);
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
@@ -186,17 +196,24 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new providers.Web3Provider(provider);
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
       // call the presaleEnded from the contract
       const _airdropEnded = await nftContract.airdropEnded();
+      console.log("_airdropEnded:");
+      console.log(typeof _airdropEnded);
+      console.log(_airdropEnded);
       // _presaleEnded is a Big Number, so we are using the lt(less than function) instead of `<`
       // Date.now()/1000 returns the current time in seconds
       // We compare if the _presaleEnded timestamp is less than the current time
       // which means presale has ended
-      const hasEnded = _airdropEnded.lt(Math.floor(Date.now() / 1000));
+      let hasEnded = null;
+      if(_airdropEnded < Math.floor(Date.now() / 1000))
+        hasEnded = true;
+      else 
+        hasEnded = false;
       if (hasEnded) {
         setAirdropEnded(true);
       } else {
@@ -218,8 +235,8 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
@@ -245,7 +262,7 @@ const getTokenIdsMinted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new providers.Web3Provider(provider);
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);

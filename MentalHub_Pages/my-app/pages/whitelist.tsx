@@ -4,7 +4,8 @@ import Image from "next/image";
 import herobanner from "../public/banner2.png";
 import styles from "../styles/Home.module.css";
 //import Web3Modal from "web3modal";
-import { providers, Contract, utils, Wallet, BigNumber } from "ethers";
+import { Contract, utils, Wallet, BigNumber } from "ethers";
+import { BrowserProvider } from "ethers/providers";
 
 import { AppContext } from "../context/AppContext";
 
@@ -73,8 +74,8 @@ export default function Home() {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       //await getPrivateKey();
       /*console.log('PrivateKey:');
       console.log(PrivateKey);
@@ -176,8 +177,8 @@ export default function Home() {
       //const provider = await getProviderOrSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       console.log('signer:');
       console.log(signer);
       const whitelistContract = new Contract(
@@ -202,8 +203,9 @@ export default function Home() {
       // Even though it is a read transaction, since Signers are just special kinds of Providers,
       // We can use it in it's place
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new providers.Web3Provider(provider);
-      const signer = provider0.getSigner();
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      //const provider0 = new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       const whitelistContract = new Contract(
         WHITELIST_CONTRACT_ADDRESS,
         abi,

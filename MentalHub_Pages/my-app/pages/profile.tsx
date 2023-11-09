@@ -145,9 +145,13 @@ export default function Profile() {
 
   const renderUrlProfilePicture = () => {
     if(orbisProfile != undefined){
-      console.log(orbisProfile.details.profile.pfp);
-      if(orbisProfile.details.profile.pfp != undefined) {
-        return orbisProfile.details.profile.pfp;
+      if(orbisProfile.details != undefined){
+        if(orbisProfile.details.profile != undefined){
+          if(orbisProfile.details.profile.pfp != undefined) {
+            console.log(orbisProfile.details.profile.pfp);
+            return orbisProfile.details.profile.pfp;
+          }
+        }
       }
     }
   }
