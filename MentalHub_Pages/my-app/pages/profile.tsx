@@ -8,6 +8,8 @@ import {  Contract } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import FormConsultante  from "../MentalComponents/formConsultante";
+import ChatFeedComponent from "../MentalComponents/ChatFeedComponent";
+
 
 export default function Profile() {
 
@@ -216,29 +218,31 @@ export default function Profile() {
                     <div className="m-l-20">
                       <h6 className="m-b-0 customer">{renderUserName()}</h6>
                     </div>
+                    <div className="m-l-20">
+                    <FormConsultante />
+                    </div>
                   </CardBody>
                 </Card>
               </Col>
             </Row>
           </Container>
         </div>    
-        <div className="spacer">
+        <div >
         <Container>
-        <FormConsultante />
-        <div>
-          <h2>{contWeb3}</h2>
-          <button onClick={
-            () => inCont()
-          }>INCREMENTAR</button>
-        </div>
-          <Row className="justify-content-left">
+        <Row className="justify-content-left">
             <Col md="7" className="text-left">
               <h2 className="title">My NTFs</h2>
             </Col>
-          </Row>
-          <Row id="NFTList" className="m-t-40 justify-content-center">
-            
-          </Row>
+        </Row>
+        <Row id="NFTList" className="m-t-40 justify-content-center">
+
+        </Row>
+        <Row className="justify-content-left">
+          <Col md="7" className="text-left">
+            <h2 className="title">My Wall</h2>
+          </Col>
+        </Row>  
+        <ChatFeedComponent />  
         </Container>
       </div>
       </div>

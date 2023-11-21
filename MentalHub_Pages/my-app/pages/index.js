@@ -6,6 +6,7 @@ import Partners from "../MentalComponents/Partners";
 import Vision from "../MentalComponents/Vision";
 import Description from "../MentalComponents/Description";
 
+
 export default function Home() {
   return (
     <div>

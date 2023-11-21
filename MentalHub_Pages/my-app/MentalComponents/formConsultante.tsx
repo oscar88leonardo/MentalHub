@@ -9,6 +9,7 @@ import {
   Input,
   Button,
   Alert,
+  NavLink, 
 } from "reactstrap";
 /*import { useViewerRecord } from "@self.id/react";
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
@@ -114,7 +115,14 @@ const FormConsultante=()=> {
 
   return (
     <div>
-      <button onClick={()=>setIsOpen(true)}>Edit Data Profile</button>
+      <NavLink
+        href="#"
+        className="btn btn-light font-14"
+        onClick={()=>setIsOpen(true)}
+      >
+        Edit Profile
+      </NavLink>
+      
       <ReactModal 
         isOpen={modalisOpen}
         onRequestClose={() => setIsOpen(false)}
@@ -145,7 +153,7 @@ const FormConsultante=()=> {
       }}
       >
         <div className="contact-box p-r-40">
-          <h4 className="title">Form Consultant</h4>
+          <h4 className="title">Edita tu perfil</h4>
           <Form>
             <Row>
               <Col lg="6">
@@ -164,20 +172,14 @@ const FormConsultante=()=> {
               </Col>
               <Col lg="12">
                 <Button
-                  className="btn btn-danger-gradiant m-t-20 btn-arrow"
+                  className="btn btn-light m-t-20 btn-arrow"
                   onClick={() => updateRecord()}
                 >
                   <span>
                     {" "}
                     Save <i className="ti-arrow-right"></i>
                   </span>
-                </Button>
-                <div>
-                  <h2>{contWeb3}</h2>
-                  <a onClick={
-                    () => inCont()
-                  }>INCREMENTAR</a>
-                </div>
+                </Button>              
               </Col>
             </Row>
           </Form>
