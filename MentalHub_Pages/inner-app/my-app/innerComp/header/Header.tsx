@@ -12,7 +12,8 @@ import {
   NavLink,
 } from "reactstrap";
 
-import logo from "../public/LogoMentalHub.png";
+import Menu from "./Menu";
+import logo from "../../public/LogoMentalHub.png";
 
 const Header = () => {
 
@@ -28,7 +29,8 @@ const Header = () => {
                   width={98}
                   height={81}
                   src={logo} alt="wrapkit" />
-                </NavbarBrand>                  
+                </NavbarBrand>  
+                <Menu/>
               </Navbar>
             </Container>
           </div>

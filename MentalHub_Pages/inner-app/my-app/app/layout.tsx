@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import  Footer from "../innerComp/Footer";
-import  Header from "../innerComp/Header";
+import  Header from "../innerComp/header/Header";
+//import { HuddleClient, HuddleProvider } from "@huddle01/react";
+//import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,20 +18,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
   return (
     <html>
       <body>
-        <div id="main-wrapper">
-              <Header/>
-              <div className="page-wrapper"
-              style={{
-                marginTop: '50px'
-              }}
-              >
-              <div className="container-fluid">{children}</div>
-              </div>  
-              <Footer />                
-        </div>
+        
+          <div id="main-wrapper">
+                <Header/>
+                <div className="page-wrapper"
+                style={{
+                  marginTop: '50px'
+                }}
+                >
+                <div className="container-fluid">{children}</div>
+                </div>  
+                <Footer />                
+          </div>
+        
       </body>
   </html>
   );
