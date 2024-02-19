@@ -13,46 +13,30 @@ import { AppContext } from "../../context/AppContext";
 
 
 const menu = () => {
-  const { provider, login, logout } = useContext(AppContext);
+  const { provider, isConnected, login, logout } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
   //const router = useRouter();
   const toggle = () => setIsOpen(!isOpen);
 
   useEffect(() => {
     renderButton();
-  }, [provider]);
+  }, [isConnected]);
 
 
   // revisar rutas en app router
     const renderUrl = (AuxSection = "", AuxText = "") => {
-        /*
-        console.log(router.pathname);
-        var vHref = './#'+AuxSection;
-        if (router.pathname != '/') {
-            return (
-            <NavLink
-                href={vHref}
-                className="nav-link"
-            >
-                {AuxText}
-            </NavLink>
-            );
-        } else {
-            */
             return (
             <Link to={AuxSection} spy={true} smooth={true} offset={10} duration={500} className="nav-link">
                 {AuxText}
             </Link>
             );
-       // }
     }; 
         
     const renderButton = () => {
       console.log("provider:");
-      //console.log(provider.state);  
       console.log(provider);
 
-        if (provider) {
+        if (isConnected) {
           return (
             <NavLink
               href="./profile"
@@ -126,7 +110,7 @@ const menu = () => {
                 {renderButton()}
               </div>
               <div className="act-buttons">
-                {provider ? renderLogout():''}
+                {isConnected ? renderLogout():''}
                 
               </div>          
         </Collapse>
