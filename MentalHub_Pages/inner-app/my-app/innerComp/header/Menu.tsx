@@ -38,7 +38,42 @@ const menu = () => {
             </Link>
             );
        // }
-    };  
+    }; 
+        
+    const renderButton = () => {
+        //if (provider) {
+          return (
+            <NavLink
+              href="./profile"
+              className="btn btn-light font-14"
+            >
+              Profile
+            </NavLink>
+          );
+        } /*else {
+          return (
+            <NavLink
+              href="#"
+              className="btn btn-light font-14"
+              onClick={login}
+            >
+              Connect wallet
+            </NavLink>
+          );
+        }
+      };*/
+  
+    const renderLogout = () => {
+    return (
+      <NavLink
+        href="#"
+        className="btn btn-light font-14"
+        //onClick={logout}
+      >
+        Logout
+      </NavLink>
+    )
+  }
 
   return (
     <div>
@@ -75,7 +110,14 @@ const menu = () => {
             <NavItem>
                 {renderUrl("FAQsSection","FAQs")}
             </NavItem>
-            </Nav>            
+            </Nav>  
+            <div className="act-buttons">
+                {renderButton()}
+              </div>
+              <div className="act-buttons">
+                {/*provider ? renderLogout():''*/}
+                {renderLogout()}
+              </div>          
         </Collapse>
     </div>
   )

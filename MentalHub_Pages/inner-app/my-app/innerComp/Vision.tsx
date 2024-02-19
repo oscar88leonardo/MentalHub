@@ -2,7 +2,7 @@
 import React from "react";
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
-//import banner from "../public/MainBanner.jpg";
+import banner from "../public/MainBanner.jpg";
 
 const FeatureComponent = () => {
   return (
@@ -11,11 +11,11 @@ const FeatureComponent = () => {
         <Container className="feature30">
           <Row>
             <Col lg="10" className="spacer" >
-             {/*} <Image 
+              <Image 
                 src={banner}
                 className="img-responsive"
                 alt="wrappixel"
-                /> */ }
+                />  
             </Col>
             <Col lg="6" md="6" className="text-center wrap-feature30-box">
               <Card className="card-shadow">

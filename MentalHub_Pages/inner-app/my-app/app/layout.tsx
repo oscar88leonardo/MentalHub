@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import { Roboto } from "next/font/google";
+import "../styles/scss/style.scss";
 import  Footer from "../innerComp/Footer";
 import  Header from "../innerComp/header/Header";
-//import { HuddleClient, HuddleProvider } from "@huddle01/react";
-//import React from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const roboto = Roboto({
+  weight: '300',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -21,9 +23,8 @@ export default function RootLayout({
 
 
   return (
-    <html>
-      <body>
-        
+    <html lang="en" className={roboto.className}>
+      <body>        
           <div id="main-wrapper">
                 <Header/>
                 <div className="page-wrapper"
@@ -34,8 +35,7 @@ export default function RootLayout({
                 <div className="container-fluid">{children}</div>
                 </div>  
                 <Footer />                
-          </div>
-        
+          </div>        
       </body>
   </html>
   );
