@@ -1,6 +1,5 @@
 "use client"
 import React, { useEffect, useRef, useState, useContext } from "react";
-
 import {
   Collapse,
   NavbarToggler,
@@ -8,15 +7,23 @@ import {
   NavItem,
   NavLink,
 } from "reactstrap";
-
 //import { useRouter } from "next/router";
 import { Link } from "react-scroll";
+import { AppContext } from "../../context/AppContext";
+
 
 const menu = () => {
+  const { provider, login, logout } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
   //const router = useRouter();
   const toggle = () => setIsOpen(!isOpen);
 
+  useEffect(() => {
+    renderButton();
+  }, [provider]);
+
+
+  // revisar rutas en app router
     const renderUrl = (AuxSection = "", AuxText = "") => {
         /*
         console.log(router.pathname);
@@ -41,7 +48,11 @@ const menu = () => {
     }; 
         
     const renderButton = () => {
-        //if (provider) {
+      console.log("provider:");
+      //console.log(provider.state);  
+      console.log(provider);
+
+        if (provider) {
           return (
             <NavLink
               href="./profile"
@@ -50,7 +61,7 @@ const menu = () => {
               Profile
             </NavLink>
           );
-        } /*else {
+        } else {
           return (
             <NavLink
               href="#"
@@ -61,14 +72,14 @@ const menu = () => {
             </NavLink>
           );
         }
-      };*/
+      };
   
     const renderLogout = () => {
     return (
       <NavLink
         href="#"
         className="btn btn-light font-14"
-        //onClick={logout}
+        onClick={logout}
       >
         Logout
       </NavLink>
@@ -115,8 +126,8 @@ const menu = () => {
                 {renderButton()}
               </div>
               <div className="act-buttons">
-                {/*provider ? renderLogout():''*/}
-                {renderLogout()}
+                {provider ? renderLogout():''}
+                
               </div>          
         </Collapse>
     </div>
