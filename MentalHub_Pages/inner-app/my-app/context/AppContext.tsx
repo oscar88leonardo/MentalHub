@@ -60,7 +60,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     }
     const web3authProvider = await web3auth.connect();
     setProvider(web3authProvider);
-    if(web3authProvider)
+    if(web3auth.connected)
       setIsConected(true);
     else
       setIsConected(false);
