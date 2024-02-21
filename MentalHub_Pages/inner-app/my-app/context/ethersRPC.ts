@@ -1,5 +1,5 @@
 import type { SafeEventEmitterProvider } from "@web3auth/base";
-import { ethers } from "ethers";
+import { ethers,parseEther,formatEther } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 
 export default class EthereumRpc {
@@ -37,14 +37,15 @@ export default class EthereumRpc {
 
   async getBalance(): Promise<string> {
     try {
-      const ethersProvider = new ethers.providers.Web3Provider(this.provider);
+      //const ethersProvider = new ethers.providers.Web3Provider(this.provider);
+      const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
       const signer = ethersProvider.getSigner();
 
       // Get user's Ethereum public address
       const address = await signer.getAddress();
 
       // Get user's balance in ether
-      const balance = ethers.utils.formatEther(
+      const balance = formatEther(
         await ethersProvider.getBalance(address) // Balance is in wei
       );
 
@@ -54,15 +55,15 @@ export default class EthereumRpc {
     }
   }
 
-  async sendTransaction(destination,vMaxPriorityFeePerGas,vMaxFeePerGas,vAmount): Promise<any> {
+  /*async sendTransaction(destination,vMaxPriorityFeePerGas,vMaxFeePerGas,vAmount): Promise<any> {
     try {
-      const ethersProvider = new ethers.providers.Web3Provider(this.provider);
+      const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
       const signer = ethersProvider.getSigner();
 
       //const destination = "0x40e1c367Eca34250cAF1bc8330E9EddfD403fC56";
 
       // Convert 1 ether to wei
-      const amount = ethers.utils.parseEther(vAmount);//"0.001");
+      const amount = parseEther(vAmount);//"0.001");
 
       // Submit transaction to the blockchain
       const tx = await signer.sendTransaction({
@@ -79,11 +80,11 @@ export default class EthereumRpc {
     } catch (error) {
       return error as string;
     }
-  }
+  }*/
 
-  async signMessage() {
+  /*async signMessage() {
     try {
-      const ethersProvider = new ethers.providers.Web3Provider(this.provider);
+      const ethersProvider = new BrowserProvider(this.provider);
       const signer = ethersProvider.getSigner();
 
       const originalMessage = "YOUR_MESSAGE";
@@ -95,7 +96,7 @@ export default class EthereumRpc {
     } catch (error) {
       return error as string;
     }
-  }
+  }*/
 
   async getPrivateKey(): Promise<any> {
     try {

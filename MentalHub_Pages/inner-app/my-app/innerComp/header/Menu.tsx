@@ -7,7 +7,7 @@ import {
   NavItem,
   NavLink,
 } from "reactstrap";
-//import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
 import { AppContext } from "../../context/AppContext";
 
@@ -15,7 +15,7 @@ import { AppContext } from "../../context/AppContext";
 const menu = () => {
   const { provider, isConnected, login, logout } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
-  //const router = useRouter();
+  const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
 
   useEffect(() => {
@@ -24,13 +24,26 @@ const menu = () => {
 
 
   // revisar rutas en app router
-    const renderUrl = (AuxSection = "", AuxText = "") => {
-            return (
-            <Link to={AuxSection} spy={true} smooth={true} offset={10} duration={500} className="nav-link">
-                {AuxText}
-            </Link>
-            );
-    }; 
+  const renderUrl = (AuxSection = "", AuxText = "") => {
+    console.log(pathname);
+    var vHref = './#'+AuxSection;
+    if (pathname != '/') {
+      return (
+        <NavLink
+          href={vHref}
+          className="nav-link"
+        >
+          {AuxText}
+        </NavLink>
+      );
+    } else {
+      return (
+        <Link to={AuxSection} spy={true} smooth={true} offset={10} duration={500} className="nav-link">
+          {AuxText}
+        </Link>
+      );
+    }
+  };
         
     const renderButton = () => {
       console.log("provider:");

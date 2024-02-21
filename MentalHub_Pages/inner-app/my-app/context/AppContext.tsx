@@ -92,6 +92,18 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     setuserInfo(user);
   };
 
+  const getPrivateKey = async () => {
+    if (!provider) {
+      console.info("provider not initialized yet");
+      return;
+    }
+    const rpc = new RPC(provider);
+    const privateKey = await rpc.getPrivateKey();
+    console.info('privateKey:');
+    console.info(privateKey);
+    setPrivateKey(privateKey);
+  };
+
   return (
     <AppContext.Provider
       value={{ provider,
@@ -101,7 +113,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
               isConnected,
               login, 
               logout, 
-              getUserInfo
+              getUserInfo,
+              getPrivateKey
             }}
     >
       {children}

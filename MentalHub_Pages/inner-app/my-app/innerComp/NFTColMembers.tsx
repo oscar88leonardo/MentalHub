@@ -13,7 +13,7 @@ import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist
 
 const NFTColMembers = () => {
 
-  const { provider } = useContext(AppContext);
+  const { provider,isConnected } = useContext(AppContext);
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -318,7 +318,7 @@ useEffect(() => {
   // check connect
   //checkConnect();  
   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
-    if (provider) {
+    if (isConnected) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
       // The `current` value is persisted throughout as long as this page is open
       /*web3ModalRef.current = new Web3Modal({
@@ -355,7 +355,7 @@ useEffect(() => {
   /*} else {
     window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
   }*/
-  }, [provider]);
+  }, [isConnected]);
 
 
 const variables_state = () => {
@@ -370,7 +370,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
-    if (provider) {         
+    if (isConnected) {         
       // If we are currently waiting for something, return a loading button
       if (loading) {
         return <button className="btn btn-light font-16 hcenter">Loading...</button>;
