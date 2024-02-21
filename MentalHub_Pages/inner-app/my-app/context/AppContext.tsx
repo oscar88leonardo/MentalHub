@@ -41,6 +41,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         await web3auth.initModal();
           setProvider(web3auth.provider);
         //};
+        if(web3auth.connected)
+          setIsConected(true);
 
       } catch (error) {
         console.error(error);
@@ -50,7 +52,6 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     init();
 
   }, []);
-   
 
   const login = async () => {
     if (!web3auth) {
