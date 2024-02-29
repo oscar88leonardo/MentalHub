@@ -1,3 +1,4 @@
+"use client"
 import Head from "next/head";
 import React, { useEffect, useRef, useState, useContext } from "react";
 import { AppContext } from "../../context/AppContext";
@@ -212,7 +213,7 @@ export default function Profile() {
                   <CardBody>
                     <div className="d-flex no-block align-items-center">
                       <span className="thumb-img">
-                      <Image src={renderUrlProfilePicture()} alt="wrapkit" className="circle" width="100%" height="100%" />
+                      <Image src={renderUrlProfilePicture()} alt="wrapkit" className="circle" width="100" height="100" />
                       </span>
                     </div>
                     <div className="m-l-20">

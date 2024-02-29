@@ -62,7 +62,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
 
     init();
 
-    axios.post('/api/getpinataId')
+    axios.get('/api/getpinataId')
     .then((response) => {
       setPinataGateway(response.data.PINATA_GATEWAY);
       setPinataApiKey(response.data.PINATA_API_KEY);
