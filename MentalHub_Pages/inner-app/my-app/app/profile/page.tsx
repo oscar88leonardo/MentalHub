@@ -19,7 +19,7 @@ export default function Profile() {
   
   // when a changue in orbis provider is detected
   useEffect(() => {
-    if (userOrbis) {
+    if (userOrbis != null && userOrbis != undefined) {
       getNFTsOwner();
       getUserInfo();
       getAccounts();
@@ -28,7 +28,7 @@ export default function Profile() {
     }, [userOrbis]);
 
     useEffect(() => {
-      if (orbisProfile != undefined) {
+      if (orbisProfile != null && orbisProfile != undefined) {
         console.log(orbisProfile);
         renderUrlProfilePicture();
         renderUserName();

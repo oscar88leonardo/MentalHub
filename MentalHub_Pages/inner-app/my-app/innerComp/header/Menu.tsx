@@ -25,7 +25,7 @@ const menu = () => {
 
   // revisar rutas en app router
   const renderUrl = (AuxSection = "", AuxText = "") => {
-    console.log(pathname);
+    //console.log(pathname);
     var vHref = './#'+AuxSection;
     if (pathname != '/') {
       return (
@@ -46,8 +46,8 @@ const menu = () => {
   };
         
     const renderButton = () => {
-      console.log("provider:");
-      console.log(provider);
+      //console.log("provider:");
+      //console.log(provider);
 
         if (isConnected) {
           return (

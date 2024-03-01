@@ -102,10 +102,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   }, [PinataGateway,PinataApiKey,PinataSecret])
 
   useEffect(() => {
-    if (isConnected){
+    if (isConnected && orbis){
       loginOrbis();
     }
-  }, [isConnected])
+  }, [isConnected,orbis])
 
   const login = async () => {
     if (!web3auth) {
