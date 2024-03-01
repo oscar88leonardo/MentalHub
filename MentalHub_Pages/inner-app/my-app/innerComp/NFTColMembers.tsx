@@ -424,7 +424,8 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
                            AuthorUrl:"https://www.instagram.com/pila_mental_/", AuthorId:"@mental_hub"}
                                                     
   const  NFTItemsInfo = [
-                        {animation:"https://drive.google.com/uc?export=download&id=1z-h-yztjs-k0L9zNcpsoLUoEABJBQoBk", 
+                        { 
+                         animation:"https://aqua-uneven-canid-277.mypinata.cloud/ipfs/QmSgf5R7Fv4voxy5EPpPqx7eDwEpryEEnGGjs2RzyR17yK", 
                          id:'Members', 
                          usecase:"One \npsychology assessment consultation,\none ebook "+
                                   "and 3 premium psycho-toolkits, lifetime access to MentalHUb repository",
@@ -444,10 +445,12 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
         <Card className="card-shadow" key={index}>              
           <div className='player-wrapper'>
             <video controls
-              src={NFTitem.animation}
+              
               width='100%'
               height='50%'
-              >
+              > 
+              <source src={NFTitem.animation} type="video/mp4" />
+              Your browser does not support the video tag.
           </video>
           </div>
           <CardBody>
