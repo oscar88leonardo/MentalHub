@@ -15,25 +15,58 @@ import { NFT_CONTRACT_ADDRESS, abi } from "../../constants/MembersAirdrop";
 
 export default function Home() {
   
-  const [baseTokenURI, setbaseTokenURI] = useState(null);
-  const [gatewayTokenURI, setgatewayTokenURI] = useState(null);
+  const [baseTokenURI, setbaseTokenURI] = useState("");
+  const [gatewayTokenURI, setgatewayTokenURI] = useState("");
+  const [isOwner, setIsOwner] = useState(false);
 
   const { provider,isConnected } = useContext(AppContext);
 
   useEffect(() => {
     if(isConnected){
-      renderButton();
+      checkIsOwner();
     }
   },[isConnected]);
+
+  useEffect(() => {
+    if(isOwner){
+      renderButton();
+    }
+  },[isOwner]);
+
+  const checkIsOwner = async () => {
+    try {
+      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
+      // We connect to the Contract using a Provider, so we will only
+      // have read-only access to the Contract
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+      // call the owner function from the contract
+      const _owner = await nftContract.owner();
+      // We will get the signer now to extract the address of the currently connected MetaMask account
+      //const signer = await getProviderOrSigner(true);
+      // Get the address associated to the signer which is connected to  MetaMask
+      const address = await signer.getAddress();
+      if (address.toLowerCase() === _owner.toLowerCase()) {
+        setIsOwner(true);
+      } else {
+        window.alert("This wallet does not own the contract.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const addsetbaseTokenURI = async () => {
     try {
       const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      await nftContract.setbaseTokenURI(baseTokenURI);
-      const _baseTokenURI = await nftContract._baseTokenURI;
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+      console.log(baseTokenURI);
+      const tx = await nftContract.setbaseTokenURI(baseTokenURI);
+      await tx.wait();
+      const _baseTokenURI = await nftContract.tokenURI(2);
       console.log(_baseTokenURI);
       
     } catch (err) {
@@ -44,11 +77,14 @@ export default function Home() {
   const addsetgatewayTokenURI = async () => {
     try {
       const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      await nftContract.setgatewayTokenURI(gatewayTokenURI);
-      const _gatewayTokenURI = await nftContract._gatewayTokenURI;
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+      console.log(gatewayTokenURI);
+      const tx = await nftContract.setgatewayTokenURI(gatewayTokenURI);
+      await tx.wait();
+      const _gatewayTokenURI = await nftContract.gatewayURI(2);
       console.log(_gatewayTokenURI);
       
     } catch (err) {
@@ -105,7 +141,7 @@ export default function Home() {
               <h6 className="subtitle op-8">
                 Update token metadata on deplyed smart contract.
               </h6>
-              {renderButton()}
+              {isOwner ? renderButton():""}
             </Col>
             <Col md="6">
               <Image src={herobanner} alt="herobanner"></Image>
