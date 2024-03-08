@@ -14,27 +14,16 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { NFT_CONTRACT_ADDRESS, abi } from "../../constants/MembersAirdrop";
 
 export default function Home() {
-<<<<<<< HEAD
   
   const [baseTokenURI, setbaseTokenURI] = useState("");
   const [gatewayTokenURI, setgatewayTokenURI] = useState("");
   const [isOwner, setIsOwner] = useState(false);
-=======
-
-  const [baseTokenURI, setbaseTokenURI] = useState(null);
-  const [gatewayTokenURI, setgatewayTokenURI] = useState(null);
->>>>>>> 96a5b5d (abi updates for MembersAirdrops contract)
 
   const { provider, isConnected } = useContext(AppContext);
 
   useEffect(() => {
-<<<<<<< HEAD
     if(isConnected){
       checkIsOwner();
-=======
-    if (isConnected) {
-      renderButton();
->>>>>>> 96a5b5d (abi updates for MembersAirdrops contract)
     }
   }, [isConnected]);
 
@@ -74,13 +63,8 @@ export default function Home() {
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-<<<<<<< HEAD
       console.log(baseTokenURI);
       const tx = await nftContract.setbaseTokenURI(baseTokenURI);
-=======
-      const tx = await nftContract.setbaseTokenURI(baseTokenURI);
-      nftContract.setbaseTokenURI(baseTokenURI);
->>>>>>> 96a5b5d (abi updates for MembersAirdrops contract)
       await tx.wait();
       const _baseTokenURI = await nftContract.tokenURI(2);
       console.log(_baseTokenURI);
@@ -97,12 +81,7 @@ export default function Home() {
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-<<<<<<< HEAD
       console.log(gatewayTokenURI);
-=======
-      console.log(NFT_CONTRACT_ADDRESS);
-      console.log(nftContract);
->>>>>>> 96a5b5d (abi updates for MembersAirdrops contract)
       const tx = await nftContract.setgatewayTokenURI(gatewayTokenURI);
       await tx.wait();
       const _gatewayTokenURI = await nftContract.gatewayURI(2);
