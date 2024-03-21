@@ -38,7 +38,7 @@ export default function Home({ params }: { params: { roomId: string } }) {
   const { peerIds } = usePeerIds();
 
   const getToken = async () => {
-    const tokenResponse = await fetch(`meet/token?roomId=${params.roomId}`);
+    const tokenResponse = await fetch(`token?roomId=${params.roomId}`);
     const token = await tokenResponse.text();
     return token;
   };
@@ -116,8 +116,8 @@ export default function Home({ params }: { params: { roomId: string } }) {
                 className='bg-blue-500 p-2 mx-2 rounded-lg'
                 onClick={async () => {
                   const status = isRecording
-                    ? await fetch(`/meet/stopRecording?roomId=${params.roomId}`)
-                    : await fetch(`/meet/startRecording?roomId=${params.roomId}`);
+                    ? await fetch(`/stopRecording?roomId=${params.roomId}`)
+                    : await fetch(`/startRecording?roomId=${params.roomId}`);
 
                   const data = await status.json();
                   console.log({ data });
