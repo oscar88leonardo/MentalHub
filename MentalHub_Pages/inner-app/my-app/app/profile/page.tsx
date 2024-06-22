@@ -9,32 +9,31 @@ import {  Contract } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
-import ChatFeedComponent from "../../innerComp/ChatFeedComponent";
 
 
 export default function Profile() {
 
   // get global data from Appcontext
-  const { provider, isConnected, orbisProvider, AddressWeb3, orbis, userOrbis, orbisProfile, userInfo, getUserInfo, getAccounts, getOrbisProfile } = useContext(AppContext);
+  const { provider, ceramic, composeClient, innerProfile, getInnerProfile, isConnected, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   
   // when a changue in orbis provider is detected
   useEffect(() => {
-    if (userOrbis != null && userOrbis != undefined) {
+    if (isConnected != null && ceramic.did != undefined) {
       getNFTsOwner();
       getUserInfo();
       getAccounts();
-      getOrbisProfile();
+      getInnerProfile();
     }
-    }, [userOrbis]);
+    }, [ceramic.did]);
 
     useEffect(() => {
-      if (orbisProfile != null && orbisProfile != undefined) {
-        console.log(orbisProfile);
-        renderUrlProfilePicture();
+      if (ceramic.did != undefined) {
+        //console.log(orbisProfile);
+        //renderUrlProfilePicture();
         renderUserName();
 
       }
-      }, [orbisProfile]);
+      }, [innerProfile]);
     
     const NFTItemsInfo = [];
 
@@ -139,14 +138,46 @@ export default function Profile() {
           )  
     }  
 
-  const updateProfile = async (username, pfp) => {
-    const res = await orbis.updateProfile({
+  const updateProfile = async (name) => {
+
+    const strMutation = `
+    mutation {
+      createInnerverProfile(input: {
+        content: {
+          name: "${name}"
+          displayName: "${name}"
+        }
+      }) 
+      {
+        document {
+          name
+          displayName
+        }
+      }
+    }
+    `;
+    console.log("strMutation:");
+    console.log(strMutation)
+    console.log("composeClient:")
+    console.log(composeClient)
+    /*const isAuth = await composeClient.context.isAuthenticated();
+    console.log("isAuth:")
+    console.log(isAuth)*/
+    const update = await composeClient.executeQuery(strMutation);
+    console.log("Profile update: ", innerProfile);
+    console.log("update:")
+    console.log(update)
+    if (update.errors) {
+      console.log("errors:");
+      console.log(update.errors);
+    }
+    /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
-    });
+    });*/
   }
 
-  const renderUrlProfilePicture = () => {
+  /*const renderUrlProfilePicture = () => {
     if(orbisProfile != undefined){
       if(orbisProfile.details != undefined){
         if(orbisProfile.details.profile != undefined){
@@ -157,28 +188,26 @@ export default function Profile() {
         }
       }
     }
-  }
+  }*/
 
   // render UserName    
   const renderUserName = () => {
     var userName = "";
-    //console.log("DID by Orbis PREVIEW:");
-    //console.log(userOrbis.did);
-    console.log("Orbis object_1");
-    console.log(orbis);
-    if (orbisProfile != undefined){
+    console.log("innerProfile object_1");
+    console.log(innerProfile);
+    if (innerProfile != undefined){
       console.log("Data on ceramic");
-      console.log(orbisProfile);
-      if(orbisProfile.username != undefined) {
-        userName = orbisProfile.username + " - " + orbisProfile.address;
+      console.log(innerProfile);
+      if(innerProfile.name != undefined) {
+        userName = innerProfile.name + " - " + AddressWeb3;
       } else if(userInfo != undefined) {
         console.log("userInfo:");
         console.log(userInfo);
         if(userInfo.name != undefined){
           userName = userInfo.name + " - " + AddressWeb3;
-          console.log("profileImage:");
-          console.log(userInfo.profileImage);
-          updateProfile(userInfo.name,userInfo.profileImage);
+          /*console.log("profileImage:");
+          console.log(userInfo.profileImage);*/
+          updateProfile(userInfo.name);
         }
       }
     }
@@ -213,7 +242,7 @@ export default function Profile() {
                   <CardBody>
                     <div className="d-flex no-block align-items-center">
                       <span className="thumb-img">
-                      <Image src={renderUrlProfilePicture()} alt="wrapkit" className="circle" width="100" height="100" />
+                      <Image src={"public/prfile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
                       </span>
                     </div>
                     <div className="m-l-20">
@@ -238,12 +267,6 @@ export default function Profile() {
         <Row id="NFTList" className="m-t-40 justify-content-center">
 
         </Row>
-        <Row className="justify-content-left">
-          <Col md="7" className="text-left">
-            <h2 className="title">My Wall</h2>
-          </Col>
-        </Row>  
-        <ChatFeedComponent />  
         </Container>
       </div>
       </div>

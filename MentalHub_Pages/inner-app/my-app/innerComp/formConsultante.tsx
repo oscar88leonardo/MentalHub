@@ -26,7 +26,7 @@ const FormConsultante=()=> {
   //const record = useViewerRecord("basicProfile");
   
 
-  const { orbis, orbisProfile, getOrbisProfile }= useContext(AppContext);
+  const { ceramic, composeClient, innerProfile, getInnerProfile }= useContext(AppContext);
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({
@@ -35,7 +35,7 @@ const FormConsultante=()=> {
   };*/
 
 
-  const updateRecordImageProfile = async (imageProfile) => {
+  /*const updateRecordImageProfile = async (imageProfile) => {
     console.log('imageProfile:');
     console.log(imageProfile);
     if(imageProfile.length > 0) {
@@ -52,15 +52,15 @@ const FormConsultante=()=> {
       }         
         
     } 
-  };
+  };*/
 
   const updateRecord = async () => {
     setupdateFlag(true);  
-    console.log("PFP pre update:");
-    console.log(pfp);
-    await updateRecordImageProfile(imageProfile);
+    /*console.log("PFP pre update:");
+    console.log(pfp);*/
+    /*await updateRecordImageProfile(imageProfile);
     console.log("PFP post update:");
-    console.log(pfp);
+    console.log(pfp);*/
     /*const res = await orbis.updateProfile({username:name, pfp:pfp});
     console.log("res status:");
     console.log(res);
@@ -73,46 +73,82 @@ const FormConsultante=()=> {
   };
  
   useEffect(() => {
-    console.log("orbis profile DATA");
-    console.log(orbisProfile);   
-    if (orbisProfile!=undefined){
-      console.log("orbis profile defined");
-      if (orbisProfile.username != undefined)
-        setName(orbisProfile.username);
-      if (orbisProfile.details.profile!= undefined){
+    console.log("innerProfile DATA");
+    console.log(innerProfile);   
+    if (innerProfile!=undefined){
+      console.log("innerProfile defined");
+      if (innerProfile.name != undefined)
+        setName(innerProfile.name);
+      /*if (orbisProfile.details.profile!= undefined){
         if (orbisProfile.details.profile!= undefined){
           if (orbisProfile.details.profile.pfp!= undefined)
             setPfp(orbisProfile.details.profile.pfp);  
         }
-      }
+      }*/
     }
-  },[orbisProfile])
+  },[innerProfile])
 
   useEffect(() => {
     // action on update of pfp
-    console.log("PFP post update:");
-    console.log(pfp);
+    /*console.log("PFP post update:");
+    console.log(pfp);*/
     // update orbis profile
     //getOrbisProfile();
-    if(orbis != undefined && orbisProfile != undefined && updateFlag!=false) {
-      updateProfile(name, pfp);
-      console.log("OrbisProfile Updated");
+    if(ceramic.did != undefined && innerProfile != undefined && updateFlag!=false) {
+      updateProfile(name);
+      console.log("innerProfile Updated");
       setupdateFlag(false);
     }
   }, [pfp, name]);
 
-  const updateProfile = async (username, pfp) => {
-    const res = await orbis.updateProfile({
+  const updateProfile = async (username) => {
+    /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
-    });
-    if (res.status == 200) {
-      console.log("Status to get OrbisProfile:");
-      setTimeout( () => getOrbisProfile(), 500);
-      console.log(orbisProfile);
+    });*/
+
+    const strMutation = `
+    mutation {
+      createInnerverProfile(input: {
+        content: {
+          name: "${username}"
+          displayName: "${username}"
+        }
+      }) 
+      {
+        document {
+          name
+          displayName
+        }
+      }
+    }
+    `;
+    console.log("strMutation:");
+    console.log(strMutation)
+    console.log("composeClient:")
+    console.log(composeClient)
+    /*const isAuth = await composeClient.context.isAuthenticated();
+    console.log("isAuth:")
+    console.log(isAuth)*/
+    const update = await composeClient.executeQuery(strMutation);
+    console.log("Profile update: ", innerProfile);
+    console.log("update:")
+    console.log(update)
+    if (update.errors) {
+      console.log("errors:");
+      console.log(update.errors);
+    } else {
+      console.log("Status to get getInnerProfile:");
+      setTimeout( () => getInnerProfile(), 500);
+      console.log(innerProfile);
     }
   }
-
+  /*<Col lg="6">
+                <FormGroup className="m-t-15">
+                  <Input type="file" placeholder="image" 
+                  onChange={(e) => setImageProfile(e.target.files)}/>
+                </FormGroup>
+              </Col>*/
   return (
     <div>
       <NavLink
@@ -162,12 +198,6 @@ const FormConsultante=()=> {
                     onChange={(e) => setName(e.target.value)}
                     value={name}
                     />
-                </FormGroup>
-              </Col>
-              <Col lg="6">
-                <FormGroup className="m-t-15">
-                  <Input type="file" placeholder="image" 
-                  onChange={(e) => setImageProfile(e.target.files)}/>
                 </FormGroup>
               </Col>
               <Col lg="12">

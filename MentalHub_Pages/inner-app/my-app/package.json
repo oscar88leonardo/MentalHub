@@ -9,14 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ceramicnetwork/http-client": "^5.15.0",
+    "@composedb/client": "^0.7.1",
+    "@didtools/pkh-ethereum": "^0.5.0",
     "@huddle01/iframe": "^0.0.12",
     "@huddle01/react": "^2.0.3",
     "@huddle01/server-sdk": "^2.0.0",
-    "@orbisclub/components": "^0.2.11",
-    "@orbisclub/orbis-sdk": "^0.4.89",
     "@web3auth/base": "^7.3.2",
     "@web3auth/modal": "^7.3.2",
     "bootstrap": "^5.3.2",
+    "did-session": "^3.1.0",
     "ethers": "^6.11.1",
     "formidable": "^3.5.1",
     "next": "14.1.0",

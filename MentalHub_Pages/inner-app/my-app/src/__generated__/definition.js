@@ -1,0 +1,2 @@
+// This is an auto-generated file, do not edit manually
+export const definition = {"models":{"InnerverProfile":{"interface":false,"implements":[],"id":"kjzl6hvfrbw6c7q62395i5uuvalmhly9cwf2w7xwfvd7pgz2rqa53svpldps0dm","accountRelation":{"type":"single"}}},"objects":{"InnerverProfile":{"rol":{"type":"reference","refType":"enum","refName":"Rol","required":false},"name":{"type":"string","required":true},"displayName":{"type":"string","required":true}}},"enums":{"Rol":["Terapeuta","Consultante"]},"accountData":{"innerverProfile":{"type":"node","name":"InnerverProfile"}}}
