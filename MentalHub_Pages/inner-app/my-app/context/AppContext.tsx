@@ -2,6 +2,7 @@
 import { Web3Auth } from "@web3auth/modal";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import RPC from "./ethersRPC";
+import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 
 import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
@@ -55,19 +56,25 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   useEffect(() => {
     const init = async () => {
       try {
+        const chainConfig = {
+          chainNamespace: CHAIN_NAMESPACES.EIP155,
+          chainId: "0x257", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
+          rpcTarget: "https://goerli.gateway.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+          // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
+          displayName: "Goerli Testnet",
+          blockExplorerUrl: "https://goerli.explorer.metisdevops.link",
+          ticker: "METIS",
+          tickerName: "Metis",
+        }
+
+        const privateKeyProvider = new EthereumPrivateKeyProvider({
+          config: { chainConfig: chainConfig },
+        });
+
         const web3auth = new Web3Auth({
           clientId, 
           web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
-          chainConfig: {
-            chainNamespace: CHAIN_NAMESPACES.EIP155,
-            chainId: "0x257", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
-            rpcTarget: "https://goerli.gateway.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-            // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
-            displayName: "Goerli Testnet",
-            blockExplorer: "https://goerli.explorer.metisdevops.link",
-            ticker: "METIS",
-            tickerName: "Metis",
-          },
+          privateKeyProvider: privateKeyProvider,
         });
         setWeb3auth(web3auth);
         await web3auth.initModal();
