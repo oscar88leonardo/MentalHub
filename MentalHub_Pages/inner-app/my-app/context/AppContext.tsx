@@ -244,6 +244,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         }
         `);
         setInnerProfile(profile?.data?.viewer?.innerverProfile);
+        console.log("getInnerProfile:");
+        console.log(profile);
     }
     /*const { data, error } = await orbis.getProfile(userOrbis.did);  
     setOrbisProfile(data);

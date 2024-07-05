@@ -18,16 +18,16 @@ export default function Profile() {
   
   // when a changue in orbis provider is detected
   useEffect(() => {
-    if (isConnected != null && ceramic.did != undefined) {
+    if (isConnected && ceramic.did != undefined) {
       getNFTsOwner();
       getUserInfo();
       getAccounts();
       getInnerProfile();
     }
-    }, [ceramic.did]);
+    }, [isConnected,ceramic.did]);
 
     useEffect(() => {
-      if (ceramic.did != undefined) {
+      if (isConnected && ceramic.did != undefined) {
         //console.log(orbisProfile);
         //renderUrlProfilePicture();
         renderUserName();
