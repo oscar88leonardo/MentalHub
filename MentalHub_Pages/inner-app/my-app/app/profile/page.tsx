@@ -242,7 +242,7 @@ export default function Profile() {
                   <CardBody>
                     <div className="d-flex no-block align-items-center">
                       <span className="thumb-img">
-                      <Image src={"public/prfile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
+                      <Image src={"/public/profile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
                       </span>
                     </div>
                     <div className="m-l-20">

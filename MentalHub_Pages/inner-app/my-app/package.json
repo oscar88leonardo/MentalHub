@@ -17,6 +17,7 @@
     "@huddle01/server-sdk": "^2.2.2",
     "@web3auth/base": "^8.6.2",
     "@web3auth/ethereum-provider": "^8.6.2",
+    "@web3auth/metamask-adapter": "^8.8.0",
     "@web3auth/modal": "^8.6.2",
     "bootstrap": "^5.3.3",
     "did-session": "^3.1.0",

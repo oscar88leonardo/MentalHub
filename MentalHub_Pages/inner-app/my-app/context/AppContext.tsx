@@ -16,6 +16,9 @@ import { RuntimeCompositeDefinition } from "@composedb/types";
 import { DIDSession } from "did-session";
 import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
 
+import { MetamaskAdapter } from "@web3auth/metamask-adapter";
+const metamaskAdapter = new MetamaskAdapter();
+
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
 
@@ -45,10 +48,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.1.28:7007");
+  const ceramic = new CeramicClient("http://192.168.0.17:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.1.28:7007",
+    ceramic: "http://192.168.0.17:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -58,24 +61,28 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       try {
         const chainConfig = {
           chainNamespace: CHAIN_NAMESPACES.EIP155,
-          chainId: "0x257", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
-          rpcTarget: "https://goerli.gateway.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+          chainId: "0xE9FE", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
+          rpcTarget: "https://sepolia.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
           // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
-          displayName: "Goerli Testnet",
-          blockExplorerUrl: "https://goerli.explorer.metisdevops.link",
-          ticker: "METIS",
-          tickerName: "Metis",
+          displayName: "Sepolia Testnet",
+          blockExplorerUrl: "https://sepolia-explorer.metisdevops.link/",
+          ticker: "tMETIS",
+          tickerName: "TestnetMetis",
         }
 
         const privateKeyProvider = new EthereumPrivateKeyProvider({
           config: { chainConfig: chainConfig },
         });
 
+        
+
         const web3auth = new Web3Auth({
           clientId, 
           web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
           privateKeyProvider: privateKeyProvider,
         });
+
+        web3auth.configureAdapter(metamaskAdapter);
         setWeb3auth(web3auth);
         await web3auth.initModal();
           setProvider(web3auth.provider);
