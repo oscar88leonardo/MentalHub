@@ -14,27 +14,25 @@ import FormConsultante  from "../../innerComp/formConsultante";
 export default function Profile() {
 
   // get global data from Appcontext
-  const { provider, ceramic, composeClient, innerProfile, getInnerProfile, isConnected, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
+  const { provider, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   
   // when a changue in orbis provider is detected
   useEffect(() => {
-    if (isConnected && ceramic.did != undefined) {
-      getNFTsOwner();
-      getUserInfo();
+    if (isConComposeDB) {
       getAccounts();
+      //getNFTsOwner();
       getInnerProfile();
+      getUserInfo();
+      //renderUserName();
     }
-    }, [isConnected,ceramic.did]);
-
+    }, [isConComposeDB]);
+  
     useEffect(() => {
-      if (isConnected && ceramic.did != undefined) {
-        //console.log(orbisProfile);
-        //renderUrlProfilePicture();
+      if (innerProfile != undefined) {
         renderUserName();
-
       }
       }, [innerProfile]);
-    
+
     const NFTItemsInfo = [];
 
     const getNFTsOwner = async () => {
@@ -138,7 +136,7 @@ export default function Profile() {
           )  
     }  
 
-  const updateProfile = async (name) => {
+  const updateProfile = async (name,rol) => {
 
     const strMutation = `
     mutation {
@@ -146,31 +144,29 @@ export default function Profile() {
         content: {
           name: "${name}"
           displayName: "${name}"
+          rol: ${rol}
         }
       }) 
       {
         document {
           name
           displayName
+          rol
         }
       }
     }
     `;
     console.log("strMutation:");
     console.log(strMutation)
-    console.log("composeClient:")
+    executeQuery(strMutation);
+    /*console.log("composeClient:")
     console.log(composeClient)
-    /*const isAuth = await composeClient.context.isAuthenticated();
+    const isAuth = await composeClient.context.isAuthenticated();
     console.log("isAuth:")
     console.log(isAuth)*/
-    const update = await composeClient.executeQuery(strMutation);
+//    const update = await composeClient.executeQuery(strMutation);
     console.log("Profile update: ", innerProfile);
-    console.log("update:")
-    console.log(update)
-    if (update.errors) {
-      console.log("errors:");
-      console.log(update.errors);
-    }
+    
     /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
@@ -199,15 +195,15 @@ export default function Profile() {
       console.log("Data on ceramic");
       console.log(innerProfile);
       if(innerProfile.name != undefined) {
-        userName = innerProfile.name + " - " + AddressWeb3;
+        userName = innerProfile.name + " - " + innerProfile.rol + " - " + AddressWeb3;
       } else if(userInfo != undefined) {
         console.log("userInfo:");
         console.log(userInfo);
         if(userInfo.name != undefined){
-          userName = userInfo.name + " - " + AddressWeb3;
+          userName = userInfo.name + " - " + innerProfile.rol + " - " + AddressWeb3;
           /*console.log("profileImage:");
           console.log(userInfo.profileImage);*/
-          updateProfile(userInfo.name);
+          updateProfile(userInfo.name,innerProfile.rol);
         }
       }
     }
@@ -242,7 +238,7 @@ export default function Profile() {
                   <CardBody>
                     <div className="d-flex no-block align-items-center">
                       <span className="thumb-img">
-                      <Image src={"/public/profile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
+                      <Image src={"/profile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
                       </span>
                     </div>
                     <div className="m-l-20">

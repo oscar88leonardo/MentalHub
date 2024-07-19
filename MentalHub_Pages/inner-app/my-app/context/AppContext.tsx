@@ -6,7 +6,8 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 
 import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
-import { providerToBrowserProvider } from "../innerComp/providerUtility";
+//import { providerToBrowserProvider } from "../innerComp/providerUtility";
+import { BrowserProvider } from "ethers/providers"
 import { CeramicClient } from "@ceramicnetwork/http-client"
 import { ComposeClient } from "@composedb/client";
 
@@ -31,27 +32,20 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
   const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
   const [isConnected, setIsConected] = useState(false);
+  const [isConComposeDB, setIsConComposeDB] = useState(false);
   const [AddressWeb3, setAddressWeb3] = useState(null);
   const [userInfo, setuserInfo] = useState(null);
   const [PrivateKey, setPrivateKey] = useState(null);
 
   const [innerProfile, setInnerProfile] = useState();
-  /*const [PinataGateway, setPinataGateway] = useState(null);
-  const [PinataApiKey, setPinataApiKey] = useState(null);
-  const [PinataSecret, setPinataSecret] = useState(null);
-  const [orbis, setorbis] = useState(null);
-  const [userOrbis, setUserOrbis] = useState();
-  const [orbisProfile, setOrbisProfile] = useState();
-  const [isConnectOrbis, setisConnectOrbis] = useState(false);
-  const [orbisProvider, setorbisProvider] = useState(null);*/
 
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.0.17:7007");
+  const ceramic = new CeramicClient("http://192.168.1.28:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.0.17:7007",
+    ceramic: "http://192.168.1.28:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -97,50 +91,13 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
 
     init();
 
-    /*axios.get('/api/getpinataId')
-    .then((response) => {
-      setPinataGateway(response.data.PINATA_GATEWAY);
-      setPinataApiKey(response.data.PINATA_API_KEY);
-      setPinataSecret(response.data.PINATA_SECRET);      
-    })
-    .catch((error) => console.error("Error fetching data:", error));*/
-
   }, []);
 
-  /*const initOrbis = async () => {
-    try {             
-    console.log("PinataGateway");
-    console.log(PinataGateway);
-    console.log("PinataAPIKEY");
-    console.log(PinataApiKey);
-    console.log("PinataSecret");
-    console.log(PinataSecret);
-    //console.log("RES DATA:"); 
-    // init oribs classs object
-    const orbis = new Orbis({
-      PINATA_GATEWAY: PinataGateway, // Your Pinata Gateway
-      PINATA_API_KEY: PinataApiKey, // Your Pinata API key
-      PINATA_SECRET_API_KEY: PinataSecret // Your Pinata Secret API key
-    });    
-
-    setorbis(orbis);
-
-    } catch (error) {
-      console.error(error);
-    }
-  };*/
-
-  /*useEffect(() => {
-    if (PinataGateway && PinataApiKey && PinataSecret){
-      initOrbis();
-    }
-  }, [PinataGateway,PinataApiKey,PinataSecret])*/
-
   useEffect(() => {
-    if (isConnected && ceramic && composeClient){
+    if (isConnected){
       loginComposeDB();
     }
-  }, [isConnected,ceramic,composeClient])
+  }, [isConnected])
 
   const login = async () => {
     if (!web3auth) {
@@ -156,48 +113,75 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   };
   
   const loginComposeDB = async () => {
-    console.log("ceramic OBJ");
-    console.log(ceramic);
-    console.log("ComposeDB OBJ");
-    console.log(composeClient);
     
-    const oProvider = providerToBrowserProvider(provider);      
+    const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
+    let session;
 
-    // We enable the ethereum provider to get the user's addresses.
-    // const ethProvider = window.ethereum;
-    // request ethereum accounts.
-    const addresses = await oProvider.enable({
-      method: "eth_requestAccounts",
-    });
-    const accountId = await getAccountId(oProvider, addresses[0]);
-    const authMethod = await EthereumWebAuth.getAuthMethod(oProvider, accountId);
+    if (sessionStr) {
+      session = await DIDSession.fromSession(sessionStr);
+    }
+    if (!session || (session.hasSession && session.isExpired)) {
+      //const oProvider = providerToBrowserProvider(provider);      
+      const oProvider = new BrowserProvider(provider);
+      const signer = await oProvider.getSigner();
 
-    /**
-     * Create DIDSession & provide capabilities for resources that we want to access.
-     * @NOTE: The specific resources (ComposeDB data models) are provided through
-     * "compose.resources" below.
-     */
+      // We enable the ethereum provider to get the user's addresses.
+      // const ethProvider = window.ethereum;
+      // request ethereum accounts.
+      console.log("signer");
+      console.log(signer);
+      //setAddressWeb3(signer.address);
+      const accountId = await getAccountId(provider, signer.address);
+      console.log("accountId");
+      console.log(accountId);
+      const authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
+      console.log("authMethod");
+      console.log(authMethod);
 
-    let session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
-    // Set the session in localStorage.
-    //localStorage.setItem("ceramic:eth_did", session.serialize());
+      /**
+       * Create DIDSession & provide capabilities for resources that we want to access.
+       * @NOTE: The specific resources (ComposeDB data models) are provided through
+       * "compose.resources" below.
+       */
+
+      session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
+      console.log("session");
+      console.log(session);
+      sessionStorage.setItem("ceramic:eth_did", session.serialize());
+      // Set the session in localStorage.
+      //localStorage.setItem("ceramic:eth_did", session.serialize());
+    }
 
     // Set our Ceramic DID to be our session DID.
     composeClient.setDID(session.did);
     ceramic.did = session.did;
 
-    //setorbisProvider(oProvider);
-    /*const res = await orbis.connect_v2({ provider: oProvider, chain: "ethereum", lit: false });
-    // Check if the connection is successful or not 
-    if(res.status == 200) {
-      setisConnectOrbis(true);
-      setUserOrbis(res);        
-    } else {
-      console.log("Error connecting to Ceramic: ", res);
-      alert("Error connecting to Ceramic.");
-    }*/
- 
+    console.log("ceramic OBJ");
+    console.log(ceramic);
+    console.log("ComposeDB OBJ");
+    console.log(composeClient);
+
+    setIsConComposeDB(true);
+
+    return;
+    
 };
+
+const executeQuery = async (query) => {
+  await loginComposeDB();
+  console.log("exec ceramic OBJ");
+  console.log(ceramic);
+  console.log("exec ComposeDB OBJ");
+  console.log(composeClient);
+  const update = await composeClient.executeQuery(query);
+  console.log("update:")
+  console.log(update)
+  if (update.errors) {
+    console.log("errors:");
+    console.log(update.errors);
+  }
+  getInnerProfile();
+}
 
   const logout = async () => {
     
@@ -210,6 +194,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     await web3auth.logout();
     setProvider(null);
     setIsConected(false);
+    setIsConComposeDB(false);
+    sessionStorage.removeItem("ceramic:eth_did");
     /*setisConnectOrbis(false);
     setUserOrbis(null);*/
     window.location.href = "/";
@@ -227,6 +213,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   };
 
   const getInnerProfile = async () => {
+    await loginComposeDB();
     if (ceramic.did == undefined) {
       console.log("ceramic not initialized yet");
       return;
@@ -284,10 +271,13 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
               userInfo, 
               PrivateKey,
               isConnected,
+              isConComposeDB,
               ceramic,
               composeClient,
               innerProfile,
+              executeQuery,
               getInnerProfile,
+              loginComposeDB,
               login, 
               logout, 
               getUserInfo,

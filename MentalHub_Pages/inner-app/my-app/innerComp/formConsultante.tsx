@@ -20,13 +20,14 @@ import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 const FormConsultante=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
+  const [rol, setRol] = useState("");
   const [pfp, setPfp] = useState("");
   const [imageProfile, setImageProfile] = useState(null);
   const [updateFlag,setupdateFlag] = useState(false);
   //const record = useViewerRecord("basicProfile");
   
 
-  const { ceramic, composeClient, innerProfile, getInnerProfile }= useContext(AppContext);
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({
@@ -69,6 +70,7 @@ const FormConsultante=()=> {
       setTimeout(() => getOrbisProfile(), 250);
       console.log(orbisProfile);
     } */
+   updateProfile(name,rol);
     setIsOpen(false);
   };
  
@@ -79,6 +81,8 @@ const FormConsultante=()=> {
       console.log("innerProfile defined");
       if (innerProfile.name != undefined)
         setName(innerProfile.name);
+      if (innerProfile.rol != undefined)
+        setRol(innerProfile.rol);
       /*if (orbisProfile.details.profile!= undefined){
         if (orbisProfile.details.profile!= undefined){
           if (orbisProfile.details.profile.pfp!= undefined)
@@ -88,20 +92,18 @@ const FormConsultante=()=> {
     }
   },[innerProfile])
 
-  useEffect(() => {
+  /*useEffect(() => {
     // action on update of pfp
-    /*console.log("PFP post update:");
-    console.log(pfp);*/
     // update orbis profile
     //getOrbisProfile();
     if(ceramic.did != undefined && innerProfile != undefined && updateFlag!=false) {
-      updateProfile(name);
+      updateProfile(name,rol);
       console.log("innerProfile Updated");
       setupdateFlag(false);
     }
-  }, [pfp, name]);
+  }, [pfp, name]);*/
 
-  const updateProfile = async (username) => {
+  const updateProfile = async (username,rol) => {
     /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
@@ -113,35 +115,22 @@ const FormConsultante=()=> {
         content: {
           name: "${username}"
           displayName: "${username}"
+          rol: ${rol}
         }
       }) 
       {
         document {
           name
           displayName
+          rol
         }
       }
     }
     `;
     console.log("strMutation:");
     console.log(strMutation)
-    console.log("composeClient:")
-    console.log(composeClient)
-    /*const isAuth = await composeClient.context.isAuthenticated();
-    console.log("isAuth:")
-    console.log(isAuth)*/
-    const update = await composeClient.executeQuery(strMutation);
+    executeQuery(strMutation);
     console.log("Profile update: ", innerProfile);
-    console.log("update:")
-    console.log(update)
-    if (update.errors) {
-      console.log("errors:");
-      console.log(update.errors);
-    } else {
-      console.log("Status to get getInnerProfile:");
-      setTimeout( () => getInnerProfile(), 500);
-      console.log(innerProfile);
-    }
   }
   /*<Col lg="6">
                 <FormGroup className="m-t-15">
@@ -197,6 +186,10 @@ const FormConsultante=()=> {
                   <Input type="text" placeholder="name" 
                     onChange={(e) => setName(e.target.value)}
                     value={name}
+                    />
+                  <Input type="text" placeholder="rol" 
+                    onChange={(e) => setRol(e.target.value)}
+                    value={rol}
                     />
                 </FormGroup>
               </Col>
