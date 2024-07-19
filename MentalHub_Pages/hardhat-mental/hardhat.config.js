@@ -9,7 +9,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 module.exports = {
   solidity: "0.8.9",
   networks: {
-    metis_goerli: {
+    metis_sepolia: {
       url: METISNODE_HTTP_URL,
       accounts: [PRIVATE_KEY],
     },   
