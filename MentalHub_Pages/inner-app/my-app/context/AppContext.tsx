@@ -77,12 +77,13 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         });
 
         web3auth.configureAdapter(metamaskAdapter);
-        setWeb3auth(web3auth);
         await web3auth.initModal();
           setProvider(web3auth.provider);
         //};
+        setWeb3auth(web3auth);
         if(web3auth.connected)
           setIsConected(true);
+
 
       } catch (error) {
         console.error(error);
@@ -190,14 +191,12 @@ const executeQuery = async (query) => {
       console.info("web3auth not initialized yet");
       return;
     }
-    //orbis.logout();
+    
     await web3auth.logout();
     setProvider(null);
     setIsConected(false);
     setIsConComposeDB(false);
     sessionStorage.removeItem("ceramic:eth_did");
-    /*setisConnectOrbis(false);
-    setUserOrbis(null);*/
     window.location.href = "/";
   };
 
