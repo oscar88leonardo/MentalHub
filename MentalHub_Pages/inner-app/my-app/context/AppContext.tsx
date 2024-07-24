@@ -181,7 +181,7 @@ const executeQuery = async (query) => {
     console.log("errors:");
     console.log(update.errors);
   }
-  getInnerProfile();
+  //getInnerProfile();
 }
 
   const logout = async () => {

@@ -20,7 +20,7 @@ export default function Profile() {
   useEffect(() => {
     if (isConComposeDB) {
       getAccounts();
-      //getNFTsOwner();
+      getNFTsOwner();
       getInnerProfile();
       getUserInfo();
       //renderUserName();
@@ -157,8 +157,9 @@ export default function Profile() {
     }
     `;
     console.log("strMutation:");
-    console.log(strMutation)
-    executeQuery(strMutation);
+    console.log(strMutation);
+    await executeQuery(strMutation);
+    await getInnerProfile();
     /*console.log("composeClient:")
     console.log(composeClient)
     const isAuth = await composeClient.context.isAuthenticated();

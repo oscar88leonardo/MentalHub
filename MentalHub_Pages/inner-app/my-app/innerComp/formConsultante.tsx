@@ -27,7 +27,7 @@ const FormConsultante=()=> {
   //const record = useViewerRecord("basicProfile");
   
 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery,getInnerProfile } = useContext(AppContext);
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({
@@ -129,7 +129,8 @@ const FormConsultante=()=> {
     `;
     console.log("strMutation:");
     console.log(strMutation)
-    executeQuery(strMutation);
+    await executeQuery(strMutation);
+    await getInnerProfile();
     console.log("Profile update: ", innerProfile);
   }
   /*<Col lg="6">
