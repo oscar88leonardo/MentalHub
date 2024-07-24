@@ -27,7 +27,7 @@ const FormConsultante=()=> {
   //const record = useViewerRecord("basicProfile");
   
 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery,getInnerProfile } = useContext(AppContext);
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({

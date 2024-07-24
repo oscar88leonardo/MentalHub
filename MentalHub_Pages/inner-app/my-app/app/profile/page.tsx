@@ -12,7 +12,7 @@ import FormConsultante  from "../../innerComp/formConsultante";
 
 
 export default function Profile() {
-
+  const [userName, setUserName] = useState("");
   // get global data from Appcontext
   const { provider, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   
@@ -189,19 +189,18 @@ export default function Profile() {
 
   // render UserName    
   const renderUserName = () => {
-    var userName = "";
     console.log("innerProfile object_1");
     console.log(innerProfile);
     if (innerProfile != undefined){
       console.log("Data on ceramic");
       console.log(innerProfile);
       if(innerProfile.name != undefined) {
-        userName = innerProfile.name + " - " + innerProfile.rol + " - " + AddressWeb3;
+        setUserName(innerProfile.name + " - " + innerProfile.rol + " - " + AddressWeb3);
       } else if(userInfo != undefined) {
         console.log("userInfo:");
         console.log(userInfo);
         if(userInfo.name != undefined){
-          userName = userInfo.name + " - " + innerProfile.rol + " - " + AddressWeb3;
+          setUserName(userInfo.name + " - " + innerProfile.rol + " - " + AddressWeb3);
           /*console.log("profileImage:");
           console.log(userInfo.profileImage);*/
           updateProfile(userInfo.name,innerProfile.rol);
@@ -217,9 +216,6 @@ export default function Profile() {
         }     
       }
     }*/
-    return(
-      userName
-    );
   }
 
   return (
@@ -243,7 +239,7 @@ export default function Profile() {
                       </span>
                     </div>
                     <div className="m-l-20">
-                      <h6 className="m-b-0 customer">{renderUserName()}</h6>
+                      <h6 className="m-b-0 customer">{userName}</h6>
                     </div>
                     <div className="m-l-20">
                     <FormConsultante />
