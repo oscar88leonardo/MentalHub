@@ -42,10 +42,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.1.28:7007");
+  const ceramic = new CeramicClient("http://192.168.0.17:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.1.28:7007",
+    ceramic: "http://192.168.0.17:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
