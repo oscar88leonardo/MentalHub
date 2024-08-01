@@ -455,7 +455,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
                         ]
   
   const renderNFT = () => {
-    NFTItemsInfo.map(renderNFTItems);
+    return NFTItemsInfo.map(renderNFTItems);
   }
   
   const renderNFTItems = (NFTitem, index) => {  
@@ -516,7 +516,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
             </h3>
           </Row>
           <Row className="justify-content-center">
-          {renderNFT}
+          {renderNFT()}
           </Row>
         </Container>
       </div>
