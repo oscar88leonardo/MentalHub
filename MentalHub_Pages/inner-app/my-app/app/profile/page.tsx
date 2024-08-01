@@ -14,19 +14,25 @@ import FormConsultante  from "../../innerComp/formConsultante";
 export default function Profile() {
   const [userName, setUserName] = useState("");
   // get global data from Appcontext
-  const { provider, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
+  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
+      getSigner();
       getAccounts();
-      getNFTsOwner();
       getInnerProfile();
       getUserInfo();
       //renderUserName();
     }
     }, [isConComposeDB]);
-  
+    
+    useEffect(() => {
+      if (signer != null) {
+        getNFTsOwner();
+      }
+      }, [signer]);
+
     useEffect(() => {
       if (innerProfile != undefined) {
         renderUserName();
@@ -39,8 +45,8 @@ export default function Profile() {
       try {
         // We need a Signer here since this is a 'write' transaction.
         //const signer = await getProviderOrSigner(true);
-        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-        const signer = await provider0.getSigner();
+        /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        const signer = await provider0.getSigner();*/
         // Create a new instance of the Contract with a Signer, which allows
         // update methods
         const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);

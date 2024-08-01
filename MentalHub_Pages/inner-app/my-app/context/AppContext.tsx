@@ -17,6 +17,10 @@ import { RuntimeCompositeDefinition } from "@composedb/types";
 import { DIDSession } from "did-session";
 import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
 
+import type {
+  JsonRpcSigner
+} from "../node_modules/ethers/src.ts/providers/provider-jsonrpc.js";
+
 import { MetamaskAdapter } from "@web3auth/metamask-adapter";
 const metamaskAdapter = new MetamaskAdapter();
 
@@ -36,16 +40,17 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [AddressWeb3, setAddressWeb3] = useState(null);
   const [userInfo, setuserInfo] = useState(null);
   const [PrivateKey, setPrivateKey] = useState(null);
+  const [signer, setSigner] = useState<JsonRpcSigner | null>(null)
 
   const [innerProfile, setInnerProfile] = useState();
 
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.0.17:7007");
+  const ceramic = new CeramicClient("http://192.168.1.28:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.0.17:7007",
+    ceramic: "http://192.168.1.28:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -138,7 +143,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       const authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
       console.log("authMethod");
       console.log(authMethod);
-
+      
       /**
        * Create DIDSession & provide capabilities for resources that we want to access.
        * @NOTE: The specific resources (ComposeDB data models) are provided through
@@ -151,6 +156,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       sessionStorage.setItem("ceramic:eth_did", session.serialize());
       // Set the session in localStorage.
       //localStorage.setItem("ceramic:eth_did", session.serialize());
+      setSigner(signer);
     }
 
     // Set our Ceramic DID to be our session DID.
@@ -239,6 +245,16 @@ const executeQuery = async (query) => {
         console.log(orbisProfile);*/
  
   };
+  
+  const getSigner = async () => {
+    if (!provider) {
+      console.info("provider not initialized yet");
+      return;
+    }
+    const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+    const signer = await provider0.getSigner();
+    setSigner(signer);
+  }
 
   const getAccounts = async () => {
     if (!provider) {
@@ -266,6 +282,7 @@ const executeQuery = async (query) => {
   return (
     <AppContext.Provider
       value={{ provider,
+              signer,
               AddressWeb3, 
               userInfo, 
               PrivateKey,
@@ -274,6 +291,7 @@ const executeQuery = async (query) => {
               ceramic,
               composeClient,
               innerProfile,
+              getSigner,
               executeQuery,
               getInnerProfile,
               loginComposeDB,

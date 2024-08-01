@@ -13,7 +13,7 @@ import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist
 
 const NFTColMembers = () => {
 
-  const { provider,isConComposeDB } = useContext(AppContext);
+  const { provider, signer, getSigner,isConComposeDB } = useContext(AppContext);
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -29,6 +29,12 @@ const NFTColMembers = () => {
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   //const web3ModalRef = useRef();
 
+  useEffect(() => {
+    if (isConComposeDB) {
+      getSigner();
+    }
+    }, [isConComposeDB]);
+
   /**
    * presaleMint: Mint an NFT during the presale
    */
@@ -36,8 +42,8 @@ const NFTColMembers = () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
+      /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);  
@@ -83,8 +89,8 @@ const NFTColMembers = () => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
+      /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+      const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
@@ -143,8 +149,8 @@ const NFTColMembers = () => {
   try {
     // We need a Signer here since this is a 'write' transaction.
     //const signer = await getProviderOrSigner(true);
-    const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-    const signer = await provider0.getSigner();
+    /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+    const signer = await provider0.getSigner();*/
     console.log("signer for airdrop:");
     console.log(signer);
     const address = await signer.getAddress();
@@ -241,7 +247,7 @@ const checkIfAirdropEnded = async () => {
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
       const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
+      //const signer = await provider0.getSigner();
       // We connect to the Contract using a Provider, so we will only
       // have read-only access to the Contract
       const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
@@ -329,7 +335,7 @@ useEffect(() => {
   // check connect
   //checkConnect();  
   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
-    if (isConComposeDB) {
+    if (signer != null) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
       // The `current` value is persisted throughout as long as this page is open
       /*web3ModalRef.current = new Web3Modal({
@@ -366,7 +372,7 @@ useEffect(() => {
   /*} else {
     window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
   }*/
-  }, [isConComposeDB]);
+  }, [signer]);
 
 
 const variables_state = () => {
@@ -489,18 +495,22 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
             <h3 className="subtitle text-center"> A digital collection by <a href={NFTGeneralData.AuthorUrl}>{NFTGeneralData.AuthorId}</a></h3>                               
             </Col>
           </Row>
-       
-          <div className="d-flex no-block align-items-center">
-                    <span  className="thumb-img">
-                      <Image  src={ImgAuthor}  alt="wrapkit" className="circle" width="120%" height="120%"/> <br />
-                    </span>
-                    
-                    <p className="text-center font-16"> 
-                        This NFT identify you as a community member, more surprises are coming along the way, stay tuned! 
-                    </p>
-            </div>
           <Row>
+            <div className="d-flex no-block align-items-center">
+                      <span  className="thumb-img">
+                        <Image  src={ImgAuthor}  alt="wrapkit" className="circle" width="120%" height="120%"/> <br />
+                      </span>
+                      
+                      <p className="text-center font-16"> 
+                          This NFT identify you as a community member, more surprises are coming along the way, stay tuned! 
+                      </p>
+              </div>
           </Row>        
+          <Row>
+            <h3 className="subtitle text-center">
+              {tokenIdsMinted} Tokens minted
+            </h3>
+          </Row>
           <Row className="justify-content-center">
           {NFTItemsInfo.map(renderNFTItems)}
           </Row>
