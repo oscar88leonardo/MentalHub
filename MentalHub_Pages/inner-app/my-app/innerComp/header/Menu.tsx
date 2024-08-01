@@ -13,14 +13,14 @@ import { AppContext } from "../../context/AppContext";
 
 
 const menu = () => {
-  const { provider, isConnected, login, logout } = useContext(AppContext);
+  const { provider, isConComposeDB, login, logout } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
 
   useEffect(() => {
     renderButton();
-  }, [isConnected]);
+  }, [isConComposeDB]);
 
 
   // revisar rutas en app router
@@ -49,7 +49,7 @@ const menu = () => {
       //console.log("provider:");
       //console.log(provider);
 
-        if (isConnected) {
+        if (isConComposeDB) {
           return (
             <NavLink
               href="./profile"
@@ -123,7 +123,7 @@ const menu = () => {
                 {renderButton()}
               </div>
               <div className="act-buttons">
-                {isConnected ? renderLogout():''}
+                {isConComposeDB ? renderLogout():''}
                 
               </div>          
         </Collapse>
