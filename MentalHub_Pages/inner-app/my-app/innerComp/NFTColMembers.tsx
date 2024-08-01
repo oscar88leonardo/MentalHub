@@ -368,6 +368,7 @@ useEffect(() => {
       setInterval(async function () {
         await getTokenIdsMinted();
       }, 5 * 1000);
+      renderNFT();
     }
   /*} else {
     window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
@@ -452,7 +453,10 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
                          contSessions:1
                         }
                         ]
-                      
+  
+  const renderNFT = () => {
+    NFTItemsInfo.map(renderNFTItems);
+  }
   
   const renderNFTItems = (NFTitem, index) => {  
     const RenderButtonStr = renderButton(NFTitem.name, NFTitem.pathTypeContDig, NFTitem.pathContDigi, NFTitem.contSessions);
@@ -512,7 +516,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
             </h3>
           </Row>
           <Row className="justify-content-center">
-          {NFTItemsInfo.map(renderNFTItems)}
+          {renderNFT}
           </Row>
         </Container>
       </div>
