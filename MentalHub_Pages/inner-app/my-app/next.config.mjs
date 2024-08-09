@@ -12,7 +12,7 @@ const nextConfig = {
         },
         {
           protocol: 'https',
-          hostname: 'ipfs.io',
+          hostname: 'aqua-uneven-canid-277.mypinata.cloud',
           port: '',
           pathname: '/**',
         },

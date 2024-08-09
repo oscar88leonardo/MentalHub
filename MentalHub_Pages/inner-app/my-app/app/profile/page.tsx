@@ -13,6 +13,7 @@ import FormConsultante  from "../../innerComp/formConsultante";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
+  const [pfp, setPfp] = useState("");
   // get global data from Appcontext
   const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
   
@@ -36,6 +37,7 @@ export default function Profile() {
     useEffect(() => {
       if (innerProfile != undefined) {
         renderUserName();
+        renderUrlProfilePicture();
       }
       }, [innerProfile]);
 
@@ -142,7 +144,7 @@ export default function Profile() {
           )  
     }  
 
-  const updateProfile = async (name,rol) => {
+  const updateProfile = async (name,rol,pfp) => {
 
     const strMutation = `
     mutation {
@@ -151,6 +153,7 @@ export default function Profile() {
           name: "${name}"
           displayName: "${name}"
           rol: ${rol}
+          pfp: ${pfp}
         }
       }) 
       {
@@ -158,6 +161,7 @@ export default function Profile() {
           name
           displayName
           rol
+          pfp
         }
       }
     }
@@ -180,18 +184,18 @@ export default function Profile() {
     });*/
   }
 
-  /*const renderUrlProfilePicture = () => {
-    if(orbisProfile != undefined){
-      if(orbisProfile.details != undefined){
-        if(orbisProfile.details.profile != undefined){
-          if(orbisProfile.details.profile.pfp != undefined) {
-            console.log(orbisProfile.details.profile.pfp);
-            return orbisProfile.details.profile.pfp;
-          }
-        }
+  const renderUrlProfilePicture = () => {
+    if(innerProfile != undefined){
+      if(innerProfile.pfp != undefined) {
+        console.log(innerProfile.pfp);
+        setPfp(innerProfile.pfp);
+      } else {
+        setPfp("/profile.png");
       }
+    } else {
+      setPfp("/profile.png");
     }
-  }*/
+  }
 
   // render UserName    
   const renderUserName = () => {
@@ -207,9 +211,9 @@ export default function Profile() {
         console.log(userInfo);
         if(userInfo.name != undefined){
           setUserName(userInfo.name + " - " + innerProfile.rol + " - " + AddressWeb3);
-          /*console.log("profileImage:");
-          console.log(userInfo.profileImage);*/
-          updateProfile(userInfo.name,innerProfile.rol);
+          console.log("profileImage:");
+          console.log(userInfo.profileImage);
+          updateProfile(userInfo.name,innerProfile.rol,userInfo.profileImage);
         }
       }
     }
@@ -241,7 +245,7 @@ export default function Profile() {
                   <CardBody>
                     <div className="d-flex no-block align-items-center">
                       <span className="thumb-img">
-                      <Image src={"/profile.png"/*renderUrlProfilePicture()*/} alt="wrapkit" className="circle" width="100" height="100" />
+                      <Image src={/*"/profile.png"*/pfp} alt="wrapkit" className="circle" width="100" height="100" />
                       </span>
                     </div>
                     <div className="m-l-20">

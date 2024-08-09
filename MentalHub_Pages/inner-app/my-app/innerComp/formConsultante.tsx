@@ -24,6 +24,7 @@ const FormConsultante=()=> {
   const [pfp, setPfp] = useState("");
   const [imageProfile, setImageProfile] = useState(null);
   const [updateFlag,setupdateFlag] = useState(false);
+  const [imageFlag,setimageFlag] = useState(false);
   //const record = useViewerRecord("basicProfile");
   
 
@@ -36,41 +37,47 @@ const FormConsultante=()=> {
   };*/
 
 
-  /*const updateRecordImageProfile = async (imageProfile) => {
+  const updateRecordImageProfile = async (imageProfile) => {
     console.log('imageProfile:');
     console.log(imageProfile);
     if(imageProfile.length > 0) {
-      const uploadedFile = await orbis.uploadMedia(imageProfile[0]);
+      //const uploadedFile = await orbis.uploadMedia(imageProfile[0]);
+      const formData = new FormData();
+      formData.append("file", imageProfile[0]);
+      console.log('formData:');
+      console.log(formData);
+      const uploadedFile = await fetch("/api/uploadFile", {
+        method: "POST",
+        body: formData,
+      });
       console.log('uploadedFile:');
-      console.log(uploadedFile);    
+      console.log(uploadedFile);   
       if (uploadedFile.status == 200){
-        if(uploadedFile.result.url != undefined){
+        await uploadedFile.json().then((object:Object) => {
+          console.log(object);
+          if(object.hasOwnProperty('IpfsHash')){
+            setPfp(object.IpfsHash);
+          }
+        });
+        //console.log(ipfshash.IpfsHash); 
+        /*if(uploadedFile.result.url != undefined){
           console.log("uploaded file");
           console.log(uploadedFile.result.url);  
           let urlImage = 'https://ipfs.io/ipfs/' + uploadedFile.result.url.replace('ipfs://','');
           setPfp(urlImage);          
-        }
-      }         
+        }*/
+      }       
         
     } 
-  };*/
+    setimageFlag(true);
+  };
 
   const updateRecord = async () => {
     setupdateFlag(true);  
     /*console.log("PFP pre update:");
     console.log(pfp);*/
-    /*await updateRecordImageProfile(imageProfile);
-    console.log("PFP post update:");
-    console.log(pfp);*/
-    /*const res = await orbis.updateProfile({username:name, pfp:pfp});
-    console.log("res status:");
-    console.log(res);
-    if (res.status == 200) {
-      console.log("Status to get OrbisProfile:");
-      setTimeout(() => getOrbisProfile(), 250);
-      console.log(orbisProfile);
-    } */
-   updateProfile(name,rol);
+    await updateRecordImageProfile(imageProfile);
+    
     setIsOpen(false);
   };
  
@@ -92,18 +99,31 @@ const FormConsultante=()=> {
     }
   },[innerProfile])
 
-  /*useEffect(() => {
+  useEffect(() => {
     // action on update of pfp
     // update orbis profile
     //getOrbisProfile();
-    if(ceramic.did != undefined && innerProfile != undefined && updateFlag!=false) {
+    /*if(ceramic.did != undefined && innerProfile != undefined && updateFlag!=false) {
       updateProfile(name,rol);
       console.log("innerProfile Updated");
       setupdateFlag(false);
+    }*/
+    if(updateFlag && imageFlag) {
+      console.log("PFP post update:");
+      console.log(pfp);
+      /*const res = await orbis.updateProfile({username:name, pfp:pfp});
+      console.log("res status:");
+      console.log(res);
+      if (res.status == 200) {
+        console.log("Status to get OrbisProfile:");
+        setTimeout(() => getOrbisProfile(), 250);
+        console.log(orbisProfile);
+      } */
+      updateProfile(name,rol,pfp);
     }
-  }, [pfp, name]);*/
+  }, [imageFlag]);
 
-  const updateProfile = async (username,rol) => {
+  const updateProfile = async (username,rol,pfp) => {
     /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
@@ -116,6 +136,7 @@ const FormConsultante=()=> {
           name: "${username}"
           displayName: "${username}"
           rol: ${rol}
+          pfp: "${pfp}"
         }
       }) 
       {
@@ -123,6 +144,7 @@ const FormConsultante=()=> {
           name
           displayName
           rol
+          pfp
         }
       }
     }
@@ -132,13 +154,10 @@ const FormConsultante=()=> {
     await executeQuery(strMutation);
     await getInnerProfile();
     console.log("Profile update: ", innerProfile);
+    setupdateFlag(false);
+    setimageFlag(false);
   }
-  /*<Col lg="6">
-                <FormGroup className="m-t-15">
-                  <Input type="file" placeholder="image" 
-                  onChange={(e) => setImageProfile(e.target.files)}/>
-                </FormGroup>
-              </Col>*/
+  
   return (
     <div>
       <NavLink
@@ -192,6 +211,12 @@ const FormConsultante=()=> {
                     onChange={(e) => setRol(e.target.value)}
                     value={rol}
                     />
+                </FormGroup>
+              </Col>
+              <Col lg="6">
+                <FormGroup className="m-t-15">
+                  <Input type="file" placeholder="image" 
+                  onChange={(e) => setImageProfile(e.target.files)}/>
                 </FormGroup>
               </Col>
               <Col lg="12">
