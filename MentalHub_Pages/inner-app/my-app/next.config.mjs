@@ -18,6 +18,12 @@ const nextConfig = {
         },
         {
           protocol: 'https',
+          hostname: 'chocolate-sour-kite-810.mypinata.cloud',
+          port: '',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
           hostname: 'drive.usercontent.google.com',
           port: '',
           pathname: '/**',

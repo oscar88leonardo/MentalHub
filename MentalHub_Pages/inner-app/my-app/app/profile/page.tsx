@@ -184,16 +184,22 @@ export default function Profile() {
     });*/
   }
 
+
+
   const renderUrlProfilePicture = () => {
     if(innerProfile != undefined){
       if(innerProfile.pfp != undefined) {
         console.log(innerProfile.pfp);
-        setPfp(innerProfile.pfp);
+          if(innerProfile.pfp.startsWith('https')) {
+            setPfp(innerProfile.pfp);
       } else {
         setPfp("/profile.png");
       }
     } else {
       setPfp("/profile.png");
+    }
+  } else {
+    setPfp("/profile.png");
     }
   }
 
