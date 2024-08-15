@@ -40,35 +40,37 @@ const FormConsultante=()=> {
   const updateRecordImageProfile = async (imageProfile) => {
     console.log('imageProfile:');
     console.log(imageProfile);
-    if(imageProfile.length > 0) {
-      //const uploadedFile = await orbis.uploadMedia(imageProfile[0]);
-      const formData = new FormData();
-      formData.append("file", imageProfile[0]);
-      console.log('formData:');
-      console.log(formData);
-      const uploadedFile = await fetch("/api/uploadFile", {
-        method: "POST",
-        body: formData,
-      });
-      console.log('uploadedFile:');
-      console.log(uploadedFile);   
-      if (uploadedFile.status == 200){
-        await uploadedFile.json().then((object:Object) => {
-          console.log(object);
-          if(object.hasOwnProperty('IpfsHash')){
-            setPfp(object.IpfsHash);
-          }
+    if(imageProfile != null) {
+      if(imageProfile.length > 0) {
+        //const uploadedFile = await orbis.uploadMedia(imageProfile[0]);
+        const formData = new FormData();
+        formData.append("file", imageProfile[0]);
+        console.log('formData:');
+        console.log(formData);
+        const uploadedFile = await fetch("/api/uploadFile", {
+          method: "POST",
+          body: formData,
         });
-        //console.log(ipfshash.IpfsHash); 
-        /*if(uploadedFile.result.url != undefined){
-          console.log("uploaded file");
-          console.log(uploadedFile.result.url);  
-          let urlImage = 'https://ipfs.io/ipfs/' + uploadedFile.result.url.replace('ipfs://','');
-          setPfp(urlImage);          
-        }*/
-      }       
-        
-    } 
+        console.log('uploadedFile:');
+        console.log(uploadedFile);   
+        if (uploadedFile.status == 200){
+          await uploadedFile.json().then((object:Object) => {
+            console.log(object);
+            if(object.hasOwnProperty('IpfsHash')){
+              setPfp(object.IpfsHash);
+            }
+          });
+          //console.log(ipfshash.IpfsHash); 
+          /*if(uploadedFile.result.url != undefined){
+            console.log("uploaded file");
+            console.log(uploadedFile.result.url);  
+            let urlImage = 'https://ipfs.io/ipfs/' + uploadedFile.result.url.replace('ipfs://','');
+            setPfp(urlImage);          
+          }*/
+        }       
+          
+      } 
+    }
     setimageFlag(true);
   };
 

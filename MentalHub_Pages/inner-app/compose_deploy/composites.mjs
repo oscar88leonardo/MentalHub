@@ -21,33 +21,32 @@ const ceramic = new CeramicClient("http://192.168.1.105:7007");
  */
 export const writeComposite = async (spinner) => {
   await authenticate();
-  console.log(ceramic);
   const innerverseProfileComposite = await createComposite(
     ceramic,
     "../composites/innerverseProfile.graphql"
   );
+  console.log("innerverseProfileComposite:");
   console.log(innerverseProfileComposite);
-
-  /*const innerverseProfile = readFileSync("./composites/innerverProfile.json", {
+  const huddleSchema = readFileSync("../composites/innerverseHuddle01.graphql", {
     encoding: "utf-8",
-  })
-  console.log("innerverseProfile:");
-  console.log(innerverseProfile);
-  const innerverseProfileComposite = await Composite.fromJSON({
+  }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  console.log("huddleSchema:");
+  console.log(huddleSchema);
+  const huddleComposite = await Composite.create({
     ceramic,
-    definition: innerverseProfile,
+    schema: huddleSchema,
   });
-
+  console.log("huddleComposite:");
+  console.log(huddleComposite);
   const composite = Composite.from([
-    profileComposite,
-    postsComposite,
-    followingComposite,
-    postsProfileComposite,
-    commentsComposite,
-    commentsPostsComposite,
-  ]);*/
+    innerverseProfileComposite,
+    huddleComposite,
+  ]);
 
-  await writeEncodedComposite(innerverseProfileComposite, "../my-app/src/__generated__/definition.json");
+  console.log("composite:");
+  console.log(composite);
+
+  await writeEncodedComposite(composite, "../my-app/src/__generated__/definition.json");
   spinner.info("creating composite for runtime usage");
   await writeEncodedCompositeRuntime(
     ceramic,
@@ -70,16 +69,12 @@ export const writeComposite = async (spinner) => {
  */
 const authenticate = async () => {
   const seed = readFileSync("./admin_seed.txt");
-  console.log(seed)
   const key = fromString(seed, "base16");
-  console.log(key)
   const did = new DID({
     resolver: getResolver(),
     provider: new Ed25519Provider(key),
   });
-  console.log(did)
   await did.authenticate();
-  console.log(did.authenticated)
   ceramic.did = did;
 };
 

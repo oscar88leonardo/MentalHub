@@ -1,0 +1,12 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    id: ID!
+}
+
+type Huddle01
+    @createModel(accountRelation: LIST, description: "Huddle Therapist Room") {
+    name: String! @string(minLength: 1, maxLength: 100)
+    edited: DateTime
+    created: DateTime!
+    profileId: StreamID! @documentReference(model: "InnerverProfile")
+    profile: InnerverProfile! @relationDocument(property: "profileId")
+}
