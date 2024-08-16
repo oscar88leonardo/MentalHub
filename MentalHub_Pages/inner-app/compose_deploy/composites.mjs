@@ -25,22 +25,34 @@ export const writeComposite = async (spinner) => {
     ceramic,
     "../composites/innerverseProfile.graphql"
   );
-  console.log("innerverseProfileComposite:");
-  console.log(innerverseProfileComposite);
+  console.log(innerverseProfileComposite.modelIDs);
   const huddleSchema = readFileSync("../composites/innerverseHuddle01.graphql", {
     encoding: "utf-8",
   }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-  console.log("huddleSchema:");
-  console.log(huddleSchema);
+  
   const huddleComposite = await Composite.create({
     ceramic,
     schema: huddleSchema,
   });
-  console.log("huddleComposite:");
-  console.log(huddleComposite);
+  console.log(huddleComposite.modelIDs)
+  const huddsProfileSchema = readFileSync(
+    "../composites/innerverseHuddProfile.graphql",
+    {
+      encoding: "utf-8",
+    }
+  )
+    .replace("$HUDD_ID", huddleComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  console.log(huddsProfileSchema);
+  const huddsProfileComposite = await Composite.create({
+    ceramic,
+    schema: huddsProfileSchema,
+  });
+  console.log(huddsProfileComposite.modelIDs);
   const composite = Composite.from([
     innerverseProfileComposite,
     huddleComposite,
+    huddsProfileComposite,
   ]);
 
   console.log("composite:");

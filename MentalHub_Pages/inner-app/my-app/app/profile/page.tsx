@@ -9,6 +9,7 @@ import {  Contract } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
+import TherapistRooms  from "../../innerComp/TherapistRooms";
 
 
 export default function Profile() {
@@ -148,7 +149,7 @@ export default function Profile() {
 
     const strMutation = `
     mutation {
-      createInnerverProfile(input: {
+      setInnerverProfile(input: {
         content: {
           name: "${name}"
           displayName: "${name}"
@@ -259,6 +260,7 @@ export default function Profile() {
                     </div>
                     <div className="m-l-20">
                     <FormConsultante />
+                    <TherapistRooms />
                     </div>
                   </CardBody>
                 </Card>

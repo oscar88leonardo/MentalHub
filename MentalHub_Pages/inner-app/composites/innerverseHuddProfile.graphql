@@ -1,0 +1,7 @@
+type Huddle01 @loadModel(id: "$HUDD_ID") {
+    id: ID!
+}
+
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    hudds: [Huddle01] @relationFrom(model: "Huddle01", property: "profileId")
+}

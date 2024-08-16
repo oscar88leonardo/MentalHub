@@ -187,6 +187,7 @@ const executeQuery = async (query) => {
     console.log("errors:");
     console.log(update.errors);
   }
+  return update
   //getInnerProfile();
 }
 
@@ -232,6 +233,14 @@ const executeQuery = async (query) => {
               displayName
               rol
               pfp
+              hudds(first: 10) {
+                edges {
+                  node {
+                    id
+                    name
+                  }
+                }
+              }
             }
           }
         }

@@ -173,7 +173,7 @@ const FormConsultante=()=> {
       <ReactModal 
         isOpen={modalisOpen}
         onRequestClose={() => setIsOpen(false)}
-        contentLabel="Example Modal"
+        contentLabel="Edit Profile"
         style={{
         overlay: {
           position: 'fixed',
@@ -188,7 +188,7 @@ const FormConsultante=()=> {
           top: '40px',
           left: '10px',
           right: '10px',
-          bottom: '50%',
+          bottom: '15%',
           border: '1px solid #ccc',
           background: '#fff',
           overflow: 'auto',
