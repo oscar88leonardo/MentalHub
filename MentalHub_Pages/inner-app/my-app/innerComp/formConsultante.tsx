@@ -10,6 +10,7 @@ import {
   Button,
   Alert,
   NavLink, 
+  Label
 } from "reactstrap";
 /*import { useViewerRecord } from "@self.id/react";
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
@@ -188,7 +189,7 @@ const FormConsultante=()=> {
           top: '40px',
           left: '10px',
           right: '10px',
-          bottom: '15%',
+          bottom: '50%',
           border: '1px solid #ccc',
           background: '#fff',
           overflow: 'auto',
@@ -209,10 +210,25 @@ const FormConsultante=()=> {
                     onChange={(e) => setName(e.target.value)}
                     value={name}
                     />
-                  <Input type="text" placeholder="rol" 
+                </FormGroup>
+                <FormGroup className="m-t-15">
+                  <Label for="rolSelect">
+                    Rol
+                  </Label>
+                  <Input
+                    id="rolSelect"
+                    name="rolSelect"
+                    type="select"
                     onChange={(e) => setRol(e.target.value)}
                     value={rol}
-                    />
+                  >
+                    <option>
+                      Terapeuta
+                    </option>
+                    <option>
+                      Consultante
+                    </option>
+                  </Input>
                 </FormGroup>
               </Col>
               <Col lg="6">

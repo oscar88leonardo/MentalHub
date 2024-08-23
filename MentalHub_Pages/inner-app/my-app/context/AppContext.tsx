@@ -47,10 +47,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.1.105:7007");
+  const ceramic = new CeramicClient("http://192.168.1.28:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.1.105:7007",
+    ceramic: "http://192.168.1.28:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -134,15 +134,12 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       // We enable the ethereum provider to get the user's addresses.
       // const ethProvider = window.ethereum;
       // request ethereum accounts.
-      console.log("signer");
-      console.log(signer);
+      
       //setAddressWeb3(signer.address);
       const accountId = await getAccountId(provider, signer.address);
-      console.log("accountId");
-      console.log(accountId);
+      
       const authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
-      console.log("authMethod");
-      console.log(authMethod);
+      
       
       /**
        * Create DIDSession & provide capabilities for resources that we want to access.
@@ -151,8 +148,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
        */
 
       session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
-      console.log("session");
-      console.log(session);
+      
       sessionStorage.setItem("ceramic:eth_did", session.serialize());
       // Set the session in localStorage.
       //localStorage.setItem("ceramic:eth_did", session.serialize());
@@ -163,10 +159,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     composeClient.setDID(session.did);
     ceramic.did = session.did;
 
-    console.log("ceramic OBJ");
+    /*console.log("ceramic OBJ");
     console.log(ceramic);
     console.log("ComposeDB OBJ");
-    console.log(composeClient);
+    console.log(composeClient);*/
 
     setIsConComposeDB(true);
 
@@ -214,8 +210,8 @@ const executeQuery = async (query) => {
       return;
     }
     const user = await web3auth.getUserInfo();
-    console.log(user);
-    setuserInfo(user);
+    /*console.log(user);
+    setuserInfo(user);*/
   };
 
   const getInnerProfile = async () => {
@@ -233,11 +229,13 @@ const executeQuery = async (query) => {
               displayName
               rol
               pfp
-              hudds(first: 10) {
+              hudds(last: 100, filters: {where: {state: {in: Active}}}) {
                 edges {
                   node {
                     id
                     name
+                    created
+                    state
                   }
                 }
               }

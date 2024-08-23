@@ -10,6 +10,7 @@ import {
   Button,
   Alert,
   NavLink, 
+  Label
 } from "reactstrap";
 /*import { useViewerRecord } from "@self.id/react";
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
@@ -17,34 +18,57 @@ import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 
  
-const AddTherapistRoom=()=> {
-  const [modalisOpen, setIsOpen] = useState(false);
+const AddTherapistRoom=(props)=> {
   const [name, setName] = useState("");
-  
+  const [state, setState] = useState("");
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
   const updateRecord = async () => {
     const now = new Date();
-    console.log(now.toISOString());
-    const strMutation = `
-    mutation {
-      createHuddle01(
-        input: {content: {name: "${name}", profileId: "${innerProfile.id}", created: "${now.toISOString()}"}}
-      ) {
-        document {
-          id
-          name
+    //console.log(now.toISOString());
+    let strMutation = '';
+    if(props.isedit) {
+      let created = '';
+      for(const hudd of innerProfile.hudds.edges) {
+        //console.log(hudd.node.id+" "+props.id);
+        if(hudd.node.id === props.id){
+          created = hudd.node.created;
         }
       }
+      
+      strMutation = `
+      mutation {
+        updateHuddle01(
+          input: {id: "${props.id}", content: {name: "${name}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", , state: ${state}}}
+        ) {
+          document {
+            id
+            name
+          }
+        }
+      }
+      `;
+    } else {
+      strMutation = `
+      mutation {
+        createHuddle01(
+          input: {content: {name: "${name}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active}}
+        ) {
+          document {
+            id
+            name
+          }
+        }
+      }
+      `;
     }
-    `;
     console.log("strMutation:");
     console.log(strMutation)
     await executeQuery(strMutation);
     await getInnerProfile();
     console.log("Profile update: ", innerProfile);
-    setIsOpen(false);
+    props.close();
   };
  
   /*useEffect(() => {
@@ -57,19 +81,19 @@ const AddTherapistRoom=()=> {
     }
   },[innerProfile]);*/
   
+  useEffect(() => {
+    if(props.show) { 
+      setName(props.name);
+      setState(props.state);
+    }
+  },[props.show]);
+
   return (
     <div>
-      <NavLink
-        href="#"
-        className="btn btn-light font-14"
-        onClick={()=>setIsOpen(true)}
-      >
-        Set Room
-      </NavLink>
       
       <ReactModal 
-        isOpen={modalisOpen}
-        onRequestClose={() => setIsOpen(false)}
+        isOpen={props.show}
+        onRequestClose={props.close}
         contentLabel="Edit Profile"
         style={{
         overlay: {
@@ -84,8 +108,8 @@ const AddTherapistRoom=()=> {
           position: 'absolute',
           top: '40px',
           left: '10px',
-          right: '10px',
-          bottom: '15%',
+          right: '60%',
+          bottom: '60%',
           border: '1px solid #ccc',
           background: '#fff',
           overflow: 'auto',
@@ -108,6 +132,29 @@ const AddTherapistRoom=()=> {
                     />
                 </FormGroup>
               </Col>
+              { props.isedit ? 
+                <Col lg="6">
+                <FormGroup className="m-t-15">
+                  <Label for="stateSelect">
+                    State
+                  </Label>
+                  <Input
+                    id="stateSelect"
+                    name="stateSelect"
+                    type="select"
+                    onChange={(e) => setState(e.target.value)}
+                    value={state}
+                  >
+                    <option>
+                      Active
+                    </option>
+                    <option>
+                      Archived
+                    </option>
+                  </Input>
+                </FormGroup>
+              </Col>
+              : ""}
               <Col lg="12">
                 <Button
                   className="btn btn-light m-t-20 btn-arrow"

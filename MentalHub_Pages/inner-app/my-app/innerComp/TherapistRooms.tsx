@@ -18,6 +18,11 @@ import AddTherapistRoom from '../innerComp/AddTherapistRoom';
  
 const TherapistRooms=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
+  const [modalAddRoomisOpen, setModalAddRoomIsOpen] = useState(false);
+  const [modalAddRoomIsEdit, setModalAddRoomIsEdit] = useState(false);
+  const [modalAddRoomState, setModalAddRoomState] = useState("");
+  const [modalAddRoomName, setModalAddRoomName] = useState("");
+  const [modalAddRoomID, setModalAddRoomID] = useState("");
   //const [hudds,setHudds] = useState(null);
   //const [hasMounted, setHasMounted] = useState(false);
 
@@ -53,21 +58,40 @@ const TherapistRooms=()=> {
     setHudds(hudds);
   };*/
 
+  const openModalAddRoom = (name,state,id) => {
+    setModalAddRoomIsEdit(true);
+    setModalAddRoomState(state);
+    setModalAddRoomName(name);
+    setModalAddRoomID(id);
+    setModalAddRoomIsOpen(true)
+  };
+
   const renderHuddsTable = () => {
     if(innerProfile.hudds != undefined){
       if(innerProfile.hudds.edges != undefined) {
         //const row = document.getElementById('huddsTableID');
-        console.log(myRef.current);
+        //console.log(myRef.current);
         if(myRef.current != null && myRef.current != undefined){
-          let str = "";
+          
+          myRef.current.innerHTML = "";
+          
           for(const hudd of innerProfile.hudds.edges) {
             if(hudd.node != undefined){
-              console.log(hudd.node.name);
-              str = str + "<tr><th>" + hudd.node.name + "</th></tr>";
+              
+              var tr = document.createElement("tr");
+              var tdName = document.createElement("th");
+              tdName.textContent = hudd.node.name;
+              var tdBut = document.createElement("td");
+              var Butt = document.createElement("button");
+              Butt.textContent = 'Edit Room';
+              Butt.onclick = () => openModalAddRoom(hudd.node.name,hudd.node.state,hudd.node.id);
+              tdBut.appendChild(Butt);
+              tr.appendChild(tdName);
+              tr.appendChild(tdBut);
+              
+              myRef.current.appendChild(tr);
             }
           }
-          console.log(str);
-          myRef.current.innerHTML = str;
         }
       }
     }
@@ -104,13 +128,7 @@ const TherapistRooms=()=> {
   }, [modalisOpen]);*/
 
   useEffect(() => {
-    console.log("modalisOpen:");
-    console.log(modalisOpen);
     if(innerProfile != undefined && innerProfile != null){
-      console.log("hudds:");
-      console.log(innerProfile.hudds);
-      console.log("myRef.current:");
-      console.log(myRef.current);
       if(modalisOpen){
         setTimeout(() => {
           // Código a ejecutar cuando el modal se abre
@@ -122,6 +140,15 @@ const TherapistRooms=()=> {
     }
   },[modalisOpen,innerProfile]);
   
+  useEffect(() => {
+    if(!modalAddRoomisOpen){
+      setModalAddRoomID("");
+      setModalAddRoomName("");
+      setModalAddRoomState("");
+      setModalAddRoomIsEdit(false);
+    }
+  },[modalAddRoomisOpen]);
+
   return (
     <div>
       <NavLink
@@ -163,13 +190,23 @@ const TherapistRooms=()=> {
       >
         <div className="contact-box p-r-40">
           <h4 className="title">Therapist Rooms</h4>
-          <AddTherapistRoom />
+          <NavLink
+            href="#"
+            className="btn btn-light font-14"
+            onClick={() => setModalAddRoomIsOpen(true)}
+          >
+            Add Room
+          </NavLink>
+          <AddTherapistRoom show={modalAddRoomisOpen} close={() => setModalAddRoomIsOpen(false)} isedit={modalAddRoomIsEdit} state={modalAddRoomState} name={modalAddRoomName} id={modalAddRoomID}/>
           <Table 
         >
           <thead>
             <tr>
               <th>
                 Name
+              </th>
+              <th>
+                Edit
               </th>
             </tr>
           </thead>
