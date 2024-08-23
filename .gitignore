@@ -1,6 +1,6 @@
 MentalHub_Pages/.vscode/settings.json
 MentalHub_Pages/inner-app/my-app/package-lock.json
 MentalHub_Pages/inner-app/my-app/src/
+MentalHub_Pages/inner-app/my-app/node_modules/
 MentalHub_Pages/inner-app/node_modules/
-MentalHub_Pages/inner-app/compose_deploy/admin_seed.txt
-MentalHub_Pages/inner-app/compose_deploy/admin_seedBk.txt
+MentalHub_Pages/inner-app/compose_deploy/admin*
