@@ -1,1 +1,13 @@
 ## Innerverse dev wallet : 0x81b7FB48C1bf438Aab66cdDc851c390DA5f2eEb5
+
+
+## huddle wallet API KEY
+NEXT_PUBLIC_PROJECT_ID=Kh1bnUNe70zLM69oWW5oc5d6VuVhv-HU
+API_KEY=g5Tcae7LDpaNHc6-sHlbuxMnahWnkcnt
+HOST_WALLET=0x81b7FB48C1bf438Aab66cdDc851c390DA5f2eEb5
+
+.env
+ALLOWED_METHODS=GET, POST, PUT, DELETE, OPTIONS
+ALLOWED_ORIGIN=*
+ALLOWED_HEADERS=Content-Type, Authorization
+DOMAIN_URL=http://localhost:3000/meet

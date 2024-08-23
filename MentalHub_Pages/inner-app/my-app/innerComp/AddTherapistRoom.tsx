@@ -16,7 +16,7 @@ import {
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
-
+import { createRoom } from '../app/meet/components/createRoom';
  
 const AddTherapistRoom=(props)=> {
   const [name, setName] = useState("");
@@ -30,17 +30,19 @@ const AddTherapistRoom=(props)=> {
     let strMutation = '';
     if(props.isedit) {
       let created = '';
+      let roomId = '';
       for(const hudd of innerProfile.hudds.edges) {
         //console.log(hudd.node.id+" "+props.id);
         if(hudd.node.id === props.id){
           created = hudd.node.created;
+          roomId = hudd.node.roomId;
         }
       }
       
       strMutation = `
       mutation {
         updateHuddle01(
-          input: {id: "${props.id}", content: {name: "${name}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", , state: ${state}}}
+          input: {id: "${props.id}", content: {name: "${name}", roomId: "${roomId}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", , state: ${state}}}
         ) {
           document {
             id
@@ -50,24 +52,29 @@ const AddTherapistRoom=(props)=> {
       }
       `;
     } else {
-      strMutation = `
-      mutation {
-        createHuddle01(
-          input: {content: {name: "${name}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active}}
-        ) {
-          document {
-            id
-            name
+      const roomId = await createRoom();
+      if (roomId){      
+        strMutation = `
+          mutation {
+            createHuddle01(
+              input: {content: {name: "${name}", roomId: "${roomId}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active}}
+            ) {
+              document {
+                id
+                name
+              }
+            }
           }
-        }
+          `;
       }
-      `;
     }
     console.log("strMutation:");
     console.log(strMutation)
-    await executeQuery(strMutation);
-    await getInnerProfile();
-    console.log("Profile update: ", innerProfile);
+    if(strMutation){
+      await executeQuery(strMutation);
+      await getInnerProfile();
+      console.log("Profile update: ", innerProfile);
+    }    
     props.close();
   };
  

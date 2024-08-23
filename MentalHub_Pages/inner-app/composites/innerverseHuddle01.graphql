@@ -8,11 +8,14 @@ type Huddle01
     {
     state: State!
     name: String! @string(minLength: 1, maxLength: 100)
+    roomId: String! @string(minLength: 1, maxLength: 15)
     edited: DateTime
     created: DateTime!
     profileId: StreamID! @documentReference(model: "InnerverProfile")
     profile: InnerverProfile! @relationDocument(property: "profileId")
 }
+
+
 
 enum State {
   Archived
