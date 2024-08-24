@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import HuddleContextProvider from './utils/HuddleContextProvider';
+import  Footer from "../../innerComp/Footer";
+import  Header from "../../innerComp/header/Header";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,7 +20,13 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={inter.className}>
-        <HuddleContextProvider>{children}</HuddleContextProvider>
+        <HuddleContextProvider>
+          <Header/>
+          <div style={{
+                  marginTop: '100px'
+                }}>{children}</div>
+          <Footer />  
+        </HuddleContextProvider>
       </body>
     </html>
   );
