@@ -15,6 +15,7 @@ import {
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 import AddTherapistRoom from '../innerComp/AddTherapistRoom';
+import { useRouter } from 'next/navigation';
  
 const TherapistRooms=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
@@ -27,6 +28,7 @@ const TherapistRooms=()=> {
   //const [hasMounted, setHasMounted] = useState(false);
 
   const myRef = useRef(null);  
+  const router = useRouter();
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
@@ -66,6 +68,13 @@ const TherapistRooms=()=> {
     setModalAddRoomIsOpen(true)
   };
 
+  const openMeet = (roomId) => {
+    /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
+    window.open(origin + "/meet/" + roomId, "_blank");*/
+    router.push(`/meet/${roomId}`);
+  };
+
   const renderHuddsTable = () => {
     if(innerProfile.hudds != undefined){
       if(innerProfile.hudds.edges != undefined) {
@@ -86,8 +95,14 @@ const TherapistRooms=()=> {
               Butt.textContent = 'Edit Room';
               Butt.onclick = () => openModalAddRoom(hudd.node.name,hudd.node.state,hudd.node.id);
               tdBut.appendChild(Butt);
+              var tdOpn = document.createElement("td");
+              var ButtOpn = document.createElement("button");
+              ButtOpn.textContent = 'Open Room';
+              ButtOpn.onclick = () => openMeet(hudd.node.roomId);
+              tdOpn.appendChild(ButtOpn);
               tr.appendChild(tdName);
               tr.appendChild(tdBut);
+              tr.appendChild(tdOpn);
               
               myRef.current.appendChild(tr);
             }
@@ -207,6 +222,9 @@ const TherapistRooms=()=> {
               </th>
               <th>
                 Edit
+              </th>
+              <th>
+                Open
               </th>
             </tr>
           </thead>
