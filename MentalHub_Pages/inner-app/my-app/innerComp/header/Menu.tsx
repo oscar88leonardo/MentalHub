@@ -20,6 +20,7 @@ const menu = () => {
 
   useEffect(() => {
     renderButton();
+    renderLogout();
   }, [isConComposeDB]);
 
 
@@ -72,15 +73,19 @@ const menu = () => {
       };
   
     const renderLogout = () => {
-    return (
-      <NavLink
-        href="#"
-        className="btn btn-light font-14"
-        onClick={logout}
-      >
-        Logout
-      </NavLink>
-    )
+      if (isConComposeDB) {
+        return (
+          <NavLink
+            href="#"
+            className="btn btn-light font-14"
+            onClick={logout}
+          >
+            Logout
+          </NavLink>
+        );
+      } else {
+        return;
+      }
   }
 
   return (
@@ -123,7 +128,7 @@ const menu = () => {
                 {renderButton()}
               </div>
               <div className="act-buttons">
-                {isConComposeDB ? renderLogout():''}
+                {renderLogout()}
                 
               </div>          
         </Collapse>

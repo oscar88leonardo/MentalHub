@@ -40,7 +40,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [AddressWeb3, setAddressWeb3] = useState(null);
   const [userInfo, setuserInfo] = useState(null);
   const [PrivateKey, setPrivateKey] = useState(null);
-  const [signer, setSigner] = useState<JsonRpcSigner | null>(null)
+  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
+  const [flagInitExec, setFlagInitExec] = useState(false);
 
   const [innerProfile, setInnerProfile] = useState();
 
@@ -55,49 +56,63 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     definition: definition as RuntimeCompositeDefinition,
   });
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const chainConfig = {
-          chainNamespace: CHAIN_NAMESPACES.EIP155,
-          chainId: "0xE9FE", // Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
-          rpcTarget: "https://sepolia.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-          // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
-          displayName: "Sepolia Testnet",
-          blockExplorerUrl: "https://sepolia-explorer.metisdevops.link/",
-          ticker: "tMETIS",
-          tickerName: "TestnetMetis",
-        }
-
-        const privateKeyProvider = new EthereumPrivateKeyProvider({
-          config: { chainConfig: chainConfig },
-        });
-
-        
-
-        const web3auth = new Web3Auth({
-          clientId, 
-          web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
-          privateKeyProvider: privateKeyProvider,
-        });
-
-        web3auth.configureAdapter(metamaskAdapter);
-        await web3auth.initModal();
-          setProvider(web3auth.provider);
-        //};
-        setWeb3auth(web3auth);
-        if(web3auth.connected)
-          setIsConected(true);
-
-
-      } catch (error) {
-        console.error(error);
+  const init = async () => {
+    try {
+      const chainConfig = {
+        chainNamespace: CHAIN_NAMESPACES.EIP155,
+        chainId: "0xe9fe", //Metis sepolia id: "0xe9fe", Metis goerli Id: "0x257", polygon mumbai id:"0x13881"
+        rpcTarget: "https://sepolia.metisdevops.link",//"https://rpc.ankr.com/metis", // This is the public RPC we have added, please pass on your own endpoint while creating an app
+        // metis RPC:"https://goerli.gateway.metisdevops.link" , polygon quicknode rpc: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/"
+        displayName: "Sepolia Testnet",
+        blockExplorerUrl: "https://sepolia-explorer.metisdevops.link/",
+        ticker: "tMETIS",
+        tickerName: "TestnetMetis",
       }
-    };
 
-    init();
+      const privateKeyProvider = new EthereumPrivateKeyProvider({
+        config: { chainConfig: chainConfig },
+      });
 
+      const web3auth_local = new Web3Auth({
+        clientId, 
+        web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
+        privateKeyProvider: privateKeyProvider,
+      });
+
+      web3auth_local.configureAdapter(metamaskAdapter);
+      await web3auth_local.initModal();
+      setWeb3auth(web3auth_local);
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    setFlagInitExec(true);
   }, []);
+
+  useEffect(() => {
+    console.log("web3auth-before-init:");
+    console.log(web3auth);
+    console.log("flagInitExec:");
+    console.log(flagInitExec);
+    if(!web3auth && flagInitExec){
+      setFlagInitExec(false);
+      init();
+    }
+  }, [flagInitExec]);
+
+  useEffect(() => {
+    if (web3auth){
+      console.log("web3auth-init:");
+      console.log(web3auth);
+      setProvider(web3auth.provider);
+      if(web3auth.connected){
+        setIsConected(true);
+      }
+    }
+  }, [web3auth])
 
   useEffect(() => {
     if (isConnected){
@@ -194,7 +209,8 @@ const executeQuery = async (query) => {
       console.info("web3auth not initialized yet");
       return;
     }
-    
+    console.log("web3auth-logout:");
+    console.log(web3auth);
     await web3auth.logout();
     setProvider(null);
     setIsConected(false);
