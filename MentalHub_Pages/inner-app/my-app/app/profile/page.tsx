@@ -10,7 +10,7 @@ import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
 import TherapistRooms  from "../../innerComp/TherapistRooms";
-
+import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
@@ -259,8 +259,9 @@ export default function Profile() {
                       <h6 className="m-b-0 customer">{userName}</h6>
                     </div>
                     <div className="m-l-20">
-                    <FormConsultante />
-                    <TherapistRooms />
+                      <FormConsultante />
+                      <TherapistRooms />
+                      <TherapistAvalSched />
                     </div>
                   </CardBody>
                 </Card>

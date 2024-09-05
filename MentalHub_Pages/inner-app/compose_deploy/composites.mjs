@@ -25,7 +25,7 @@ export const writeComposite = async (spinner) => {
     ceramic,
     "../composites/innerverseProfile.graphql"
   );
-  console.log(innerverseProfileComposite.modelIDs);
+  //console.log(innerverseProfileComposite.modelIDs);
   const huddleSchema = readFileSync("../composites/innerverseHuddle01.graphql", {
     encoding: "utf-8",
   }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
@@ -34,7 +34,7 @@ export const writeComposite = async (spinner) => {
     ceramic,
     schema: huddleSchema,
   });
-  console.log(huddleComposite.modelIDs)
+  //console.log(huddleComposite.modelIDs)
   const huddsProfileSchema = readFileSync(
     "../composites/innerverseHuddProfile.graphql",
     {
@@ -43,16 +43,70 @@ export const writeComposite = async (spinner) => {
   )
     .replace("$HUDD_ID", huddleComposite.modelIDs[1])
     .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-  console.log(huddsProfileSchema);
+  //console.log(huddsProfileSchema);
   const huddsProfileComposite = await Composite.create({
     ceramic,
     schema: huddsProfileSchema,
   });
-  console.log(huddsProfileComposite.modelIDs);
+
+  const scheduleSchema = readFileSync("../composites/innerverseSchedule.graphql", {
+    encoding: "utf-8",
+  }).replace("$HUDD_ID", huddleComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  
+  const scheduleComposite = await Composite.create({
+    ceramic,
+    schema: scheduleSchema,
+  });
+  /*console.log('scheduleComposite:')
+  console.log(scheduleComposite.modelIDs);*/
+  const schedProfileSchema = readFileSync(
+    "../composites/innerverseScheduleProfile.graphql",
+    {
+      encoding: "utf-8",
+    }
+  )
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[2])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  
+  const schedProfileComposite = await Composite.create({
+    ceramic,
+    schema: schedProfileSchema,
+  });
+
+  const schedTerapSchema = readFileSync("../composites/innerverseSchedTerapist.graphql", {
+    encoding: "utf-8",
+  }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  
+  const schedTerapComposite = await Composite.create({
+    ceramic,
+    schema: schedTerapSchema,
+  });
+  
+  const schedTerapProfileSchema = readFileSync(
+    "../composites/innerverseSchedTerapProfile.graphql",
+    {
+      encoding: "utf-8",
+    }
+  )
+    .replace("$SCHE_ID", schedTerapComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+    //console.log('schedTerapComposite:');
+    //console.log(schedTerapComposite.modelIDs);
+  //console.log(schedTerapProfileSchema);
+  const schedTerapProfileComposite = await Composite.create({
+    ceramic,
+    schema: schedTerapProfileSchema,
+  });
+
   const composite = Composite.from([
     innerverseProfileComposite,
     huddleComposite,
     huddsProfileComposite,
+    scheduleComposite,
+    schedProfileComposite,
+    schedTerapComposite,
+    schedTerapProfileComposite,
   ]);
 
   console.log("composite:");

@@ -1,0 +1,29 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    id: ID!
+}
+
+type Huddle01 @loadModel(id: "$HUDD_ID") {
+    id: ID!
+}
+
+type Schedule
+    @createModel(accountRelation: LIST, description: "Schedule Therapist") 
+    {
+    state: State!
+    date_init: DateTime!
+    date_finish: DateTime!
+    edited: DateTime
+    created: DateTime!
+    profileId: StreamID! @documentReference(model: "InnerverProfile")
+    profile: InnerverProfile! @relationDocument(property: "profileId")
+    huddId: StreamID! @documentReference(model: "Huddle01")
+    hudd: Huddle01! @relationDocument(property: "huddId")
+}
+
+
+
+enum State {
+  Pending
+  Active
+  Finished
+}

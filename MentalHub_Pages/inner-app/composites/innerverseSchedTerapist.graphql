@@ -1,0 +1,14 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    id: ID!
+}
+
+type ScheduleTerapist
+    @createModel(accountRelation: LIST, description: "Available Therapist Schedule") 
+    {
+    date_init: DateTime!
+    date_finish: DateTime!
+    edited: DateTime
+    created: DateTime!
+    profileId: StreamID! @documentReference(model: "InnerverProfile")
+    profile: InnerverProfile! @relationDocument(property: "profileId")
+}
