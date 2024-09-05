@@ -256,6 +256,16 @@ const executeQuery = async (query) => {
                   }
                 }
               }
+              sched_terap(last: 100) {
+                edges {
+                  node {
+                    id
+                    date_init
+                    date_finish
+                    created
+                  }
+                }
+              }
             }
           }
         }

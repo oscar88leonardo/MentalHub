@@ -18,7 +18,7 @@ import AddTherapistRoom from '../innerComp/AddTherapistRoom';
 import { useRouter } from 'next/navigation';
 import moment from 'moment'
 import { momentLocalizer } from 'react-big-calendar'
-import Selectable from './Selectable'
+import CalendarTheraAvalSched from './CalendarTheraAvalSched'
 import "../node_modules/react-big-calendar/lib/css/react-big-calendar.css";
  
 const localizer = momentLocalizer(moment)
@@ -67,7 +67,7 @@ const TherapistAvalSched=()=> {
           top: '40px',
           left: '10px',
           right: '10px',
-          bottom: '15%',
+          bottom: '5%',
           border: '1px solid #ccc',
           background: '#fff',
           overflow: 'auto',
@@ -80,7 +80,7 @@ const TherapistAvalSched=()=> {
       >
         <div className="contact-box p-r-40">
           <h4 className="title">Avalible Therapist Schedule</h4>
-          <Selectable localizer={localizer} />
+          <CalendarTheraAvalSched localizer={localizer} />
         </div>
       </ReactModal>
     </div>

@@ -85,7 +85,7 @@ export default [
   },
   {
     id: 11,
-    title: 'Planning Meeting with Paige',
+    //title: 'Planning Meeting with Paige',
     start: new Date(2015, 3, 13, 8, 0, 0),
     end: new Date(2015, 3, 13, 10, 30, 0),
   },
