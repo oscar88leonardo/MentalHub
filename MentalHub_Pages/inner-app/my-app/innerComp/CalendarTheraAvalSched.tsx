@@ -68,7 +68,8 @@ export default function CalendarTheraAvalSched({ localizer }) {
               if(update.data.createScheduleTerapist){
                 if(update.data.createScheduleTerapist.document){
                   if(update.data.createScheduleTerapist.document.id){
-                    setEvents((prev) => [...prev, { update.data.createScheduleTerapist.document.id, start, end }])
+                    const id = update.data.createScheduleTerapist.document.id;
+                    setEvents((prev) => [...prev, { id, start, end }]);
                   }
                 }
               }
