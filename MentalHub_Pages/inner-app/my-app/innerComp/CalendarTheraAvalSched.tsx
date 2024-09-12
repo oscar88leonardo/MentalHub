@@ -36,11 +36,11 @@ export default function CalendarTheraAvalSched({ localizer }) {
     }
   },[innerProfile]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if(innerProfile) { 
       getInnerProfile();
     }
-  },[myEvents]);
+  },[myEvents]);*/
   
   const handleSelectSlot = useCallback(
     ({ start, end }) => {
@@ -63,7 +63,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
           executeQuery(strMutation);
           console.log("Profile update: ", innerProfile);
         }
-        //setEvents((prev) => [...prev, { start, end, title }])
+        setEvents((prev) => [...prev, { start, end, id }])
       }
     },
     [setEvents]
@@ -87,7 +87,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
       <div className="height600">
         <Calendar
           defaultDate={defaultDate}
-          defaultView={Views.WEEK}
+          defaultView={Views.MONTH}
           events={myEvents}
           localizer={localizer}
           //onSelectEvent={handleSelectEvent}
