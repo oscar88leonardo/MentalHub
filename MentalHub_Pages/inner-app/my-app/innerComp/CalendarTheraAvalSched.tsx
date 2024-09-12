@@ -43,7 +43,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
   },[myEvents]);*/
   
   const handleSelectSlot = useCallback(
-    ({ start, end }) => {
+    async ({ start, end }) => {
       if(innerProfile) { 
         const now = new Date();
         const strMutation = `
@@ -60,7 +60,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
         console.log("strMutation:");
         console.log(strMutation)
         if(strMutation){
-          const update = executeQuery(strMutation);
+          const update = await executeQuery(strMutation);
           if (!update.errors) {
             console.log('update:');
             console.log(update);
@@ -69,7 +69,10 @@ export default function CalendarTheraAvalSched({ localizer }) {
                 if(update.data.createScheduleTerapist.document){
                   if(update.data.createScheduleTerapist.document.id){
                     const id = update.data.createScheduleTerapist.document.id;
-                    setEvents((prev) => [...prev, { id, start, end }]);
+                    console.log("ID:");
+                    console.log(id);
+                    //setEvents((prev) => [...prev, { id, start, end }]);
+                    getInnerProfile();
                   }
                 }
               }
@@ -97,7 +100,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
 
   return (
     <Fragment>
-      <div className="height600">
+      <div style={{height:600}}>
         <Calendar
           defaultDate={defaultDate}
           defaultView={Views.MONTH}
