@@ -60,10 +60,22 @@ export default function CalendarTheraAvalSched({ localizer }) {
         console.log("strMutation:");
         console.log(strMutation)
         if(strMutation){
-          executeQuery(strMutation);
+          const update = executeQuery(strMutation);
+          if (!update.errors) {
+            console.log('update:');
+            console.log(update);
+            if(update.data) {
+              if(update.data.createScheduleTerapist){
+                if(update.data.createScheduleTerapist.document){
+                  if(update.data.createScheduleTerapist.document.id){
+                    setEvents((prev) => [...prev, { update.data.createScheduleTerapist.document.id, start, end }])
+                  }
+                }
+              }
+            }
+          }
           console.log("Profile update: ", innerProfile);
         }
-        setEvents((prev) => [...prev, { start, end, id }])
       }
     },
     [setEvents]
