@@ -48,10 +48,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.0.17:7007");
+  const ceramic = new CeramicClient("http://192.168.1.28:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.0.17:7007",
+    ceramic: "http://192.168.1.28:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -256,13 +256,14 @@ const executeQuery = async (query) => {
                   }
                 }
               }
-              sched_terap(last: 100) {
+              sched_therap(last: 100, filters: {where: {state: {in: Active}}}) {
                 edges {
                   node {
                     id
                     date_init
                     date_finish
                     created
+                    state
                   }
                 }
               }

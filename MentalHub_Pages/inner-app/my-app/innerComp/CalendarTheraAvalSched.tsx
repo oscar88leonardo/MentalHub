@@ -3,18 +3,25 @@ import PropTypes from 'prop-types'
 import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
 //import events from './events'
 import { AppContext } from "../context/AppContext";
+import AddScheduTherapist from '../innerComp/AddScheduTherapist';
 
 export default function CalendarTheraAvalSched({ localizer }) {
-  const [myEvents, setEvents] = useState([])
+  const [myEvents, setEvents] = useState([]);
+  const [modalAddSchedTheraisOpen, setModalAddSchedTheraisOpen] = useState(false);
+  const [modalAddSchedTheraisEdit, setModalAddSchedTheraisEdit] = useState(false);
+  const [modalAddSchedTheraState, setModalAddSchedTheraState] = useState("");
+  const [modalAddSchedTheraID, setModalAddSchedTheraID] = useState("");
+  const [modalAddSchedTheraDateInit, setModalAddSchedTheraDateInit] = useState(new Date());
+  const [modalAddSchedTheraDateFinish, setModalAddSchedTheraDateFinish] = useState(new Date());
 
   const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
   useEffect(() => {
     if(innerProfile) { 
-      if(innerProfile.sched_terap != undefined){
-        if(innerProfile.sched_terap.edges != undefined) {
+      if(innerProfile.sched_therap != undefined){
+        if(innerProfile.sched_therap.edges != undefined) {
           let events = [];
-          for(const sched of innerProfile.sched_terap.edges) {
+          for(const sched of innerProfile.sched_therap.edges) {
             if(sched.node != undefined){
               console.log('sched.node.date_init:');
               console.log(sched.node.date_init);
@@ -24,6 +31,7 @@ export default function CalendarTheraAvalSched({ localizer }) {
                 id: sched.node.id,
                 start: init,
                 end: finish,
+                state: sched.node.state,
               }
               events.push(obj);
             }
@@ -48,8 +56,8 @@ export default function CalendarTheraAvalSched({ localizer }) {
         const now = new Date();
         const strMutation = `
         mutation {
-          createScheduleTerapist(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}"}}
+          createScheduleTherapist(
+            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active }}
           ) {
             document {
               id
@@ -64,19 +72,8 @@ export default function CalendarTheraAvalSched({ localizer }) {
           if (!update.errors) {
             console.log('update:');
             console.log(update);
-            if(update.data) {
-              if(update.data.createScheduleTerapist){
-                if(update.data.createScheduleTerapist.document){
-                  if(update.data.createScheduleTerapist.document.id){
-                    const id = update.data.createScheduleTerapist.document.id;
-                    console.log("ID:");
-                    console.log(id);
-                    //setEvents((prev) => [...prev, { id, start, end }]);
-                    getInnerProfile();
-                  }
-                }
-              }
-            }
+            //setEvents((prev) => [...prev, { id, start, end }]);
+            getInnerProfile();
           }
           console.log("Profile update: ", innerProfile);
         }
@@ -85,10 +82,14 @@ export default function CalendarTheraAvalSched({ localizer }) {
     [setEvents]
   )
 
-  /*const handleSelectEvent = useCallback(
-    (event) => window.alert(event.title),
+  const handleSelectEvent = useCallback(
+    (event) => {
+      console.log("event:");
+      console.log(event);
+      openModalAddSchedThera(event.state,event.id,event.start,event.end);
+    }/*window.alert(event.title)*/,
     []
-  )*/
+  );
 
   const { defaultDate, scrollToTime } = useMemo(
     () => ({
@@ -98,15 +99,35 @@ export default function CalendarTheraAvalSched({ localizer }) {
     []
   )
 
+  const openModalAddSchedThera = (state,id,dateInit,dateFinish) => {
+    setModalAddSchedTheraisEdit(true);
+    setModalAddSchedTheraState(state);
+    setModalAddSchedTheraID(id);
+    setModalAddSchedTheraDateInit(dateInit);
+    setModalAddSchedTheraDateFinish(dateFinish);
+    setModalAddSchedTheraisOpen(true)
+  };
+
+  useEffect(() => {
+    if(!modalAddSchedTheraisOpen){
+      setModalAddSchedTheraID("");
+      setModalAddSchedTheraDateInit(new Date());
+      setModalAddSchedTheraDateFinish(new Date());
+      setModalAddSchedTheraState("");
+      setModalAddSchedTheraisEdit(false);
+    }
+  },[modalAddSchedTheraisOpen]);
+
   return (
     <Fragment>
+      <AddScheduTherapist show={modalAddSchedTheraisOpen} close={() => setModalAddSchedTheraisOpen(false)} isedit={modalAddSchedTheraisEdit}  state={modalAddSchedTheraState} id={modalAddSchedTheraID} dateInit={modalAddSchedTheraDateInit} dateFinish={modalAddSchedTheraDateFinish}/>
       <div style={{height:600}}>
         <Calendar
           defaultDate={defaultDate}
           defaultView={Views.MONTH}
           events={myEvents}
           localizer={localizer}
-          //onSelectEvent={handleSelectEvent}
+          onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
           selectable
           scrollToTime={scrollToTime}

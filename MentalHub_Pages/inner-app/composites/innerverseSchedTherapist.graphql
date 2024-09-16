@@ -2,13 +2,21 @@ type InnerverProfile @loadModel(id: "$PROFILE_ID") {
     id: ID!
 }
 
-type ScheduleTerapist
+type ScheduleTherapist
     @createModel(accountRelation: LIST, description: "Available Therapist Schedule") 
+    @createIndex(fields: [{path: "state"}])
     {
+        
+    state: State!
     date_init: DateTime!
     date_finish: DateTime!
     edited: DateTime
     created: DateTime!
     profileId: StreamID! @documentReference(model: "InnerverProfile")
     profile: InnerverProfile! @relationDocument(property: "profileId")
+}
+
+enum State {
+  Archived
+  Active
 }

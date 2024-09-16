@@ -46,7 +46,7 @@ const TherapistAvalSched=()=> {
         className="btn btn-light font-14"
         onClick={()=>setIsOpen(true)}
       >
-        Avalible Schedule
+        Available Schedule
       </NavLink>
       
       <ReactModal 
@@ -79,7 +79,7 @@ const TherapistAvalSched=()=> {
       }}
       >
         <div className="contact-box p-r-40">
-          <h4 className="title">Avalible Therapist Schedule</h4>
+          <h4 className="title">Available Therapist Schedule</h4>
           <CalendarTheraAvalSched localizer={localizer} />
         </div>
       </ReactModal>

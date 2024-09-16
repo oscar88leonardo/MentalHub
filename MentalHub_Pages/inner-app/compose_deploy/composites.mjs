@@ -13,7 +13,7 @@ import { Ed25519Provider } from "key-did-provider-ed25519";
 import { getResolver } from "key-did-resolver";
 import { fromString } from "uint8arrays/from-string";
 
-const ceramic = new CeramicClient("http://192.168.0.17:7007");
+const ceramic = new CeramicClient("http://192.168.1.28:7007");
 
 /**
  * @param {Ora} spinner - to provide progress status.
@@ -74,29 +74,29 @@ export const writeComposite = async (spinner) => {
     schema: schedProfileSchema,
   });
 
-  const schedTerapSchema = readFileSync("../composites/innerverseSchedTerapist.graphql", {
+  const schedTherapSchema = readFileSync("../composites/innerverseSchedTherapist.graphql", {
     encoding: "utf-8",
   }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
   
-  const schedTerapComposite = await Composite.create({
+  const schedTherapComposite = await Composite.create({
     ceramic,
-    schema: schedTerapSchema,
+    schema: schedTherapSchema,
   });
   
-  const schedTerapProfileSchema = readFileSync(
-    "../composites/innerverseSchedTerapProfile.graphql",
+  const schedTherapProfileSchema = readFileSync(
+    "../composites/innerverseSchedTherapProfile.graphql",
     {
       encoding: "utf-8",
     }
   )
-    .replace("$SCHE_ID", schedTerapComposite.modelIDs[1])
+    .replace("$SCHE_ID", schedTherapComposite.modelIDs[1])
     .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-    //console.log('schedTerapComposite:');
-    //console.log(schedTerapComposite.modelIDs);
-  //console.log(schedTerapProfileSchema);
-  const schedTerapProfileComposite = await Composite.create({
+    //console.log('schedTherapComposite:');
+    //console.log(schedTherapComposite.modelIDs);
+  //console.log(schedTherapProfileSchema);
+  const schedTherapProfileComposite = await Composite.create({
     ceramic,
-    schema: schedTerapProfileSchema,
+    schema: schedTherapProfileSchema,
   });
 
   const composite = Composite.from([
@@ -105,8 +105,8 @@ export const writeComposite = async (spinner) => {
     huddsProfileComposite,
     scheduleComposite,
     schedProfileComposite,
-    schedTerapComposite,
-    schedTerapProfileComposite,
+    schedTherapComposite,
+    schedTherapProfileComposite,
   ]);
 
   console.log("composite:");

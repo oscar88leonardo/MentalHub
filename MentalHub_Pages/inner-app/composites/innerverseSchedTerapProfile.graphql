@@ -1,7 +1,0 @@
-type ScheduleTerapist @loadModel(id: "$SCHE_ID") {
-    id: ID!
-}
-
-type InnerverProfile @loadModel(id: "$PROFILE_ID") {
-    sched_terap: [ScheduleTerapist] @relationFrom(model: "ScheduleTerapist", property: "profileId")
-}
