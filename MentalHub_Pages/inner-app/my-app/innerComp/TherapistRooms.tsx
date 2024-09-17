@@ -149,6 +149,7 @@ const TherapistRooms=()=> {
           // Código a ejecutar cuando el modal se abre
           if(innerProfile.hudds != undefined && innerProfile.hudds != null && myRef.current != null && myRef.current != undefined) {
             renderHuddsTable();
+            renderButton();
           }
         }, 0);
       }
@@ -164,15 +165,26 @@ const TherapistRooms=()=> {
     }
   },[modalAddRoomisOpen]);
 
+  const renderButton = () => {
+    if(innerProfile != undefined && innerProfile != null){
+      if(innerProfile.rol == 'Terapeuta') {
+        return(
+          <NavLink
+            href="#"
+            className="btn btn-light font-14"
+            onClick={()=>setIsOpen(true)}
+          >
+            Rooms
+          </NavLink>
+        );
+      }
+    }
+    return("");
+  }
+
   return (
     <div>
-      <NavLink
-        href="#"
-        className="btn btn-light font-14"
-        onClick={()=>setIsOpen(true)}
-      >
-        Rooms
-      </NavLink>
+      {renderButton()}
       
       <ReactModal 
         isOpen={modalisOpen}

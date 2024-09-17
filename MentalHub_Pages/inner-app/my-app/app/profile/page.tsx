@@ -11,6 +11,7 @@ import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
 import TherapistRooms  from "../../innerComp/TherapistRooms";
 import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
+import Schedule from "@/innerComp/Schedule";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
@@ -262,6 +263,7 @@ export default function Profile() {
                       <FormConsultante />
                       <TherapistRooms />
                       <TherapistAvalSched />
+                      <Schedule />
                     </div>
                   </CardBody>
                 </Card>

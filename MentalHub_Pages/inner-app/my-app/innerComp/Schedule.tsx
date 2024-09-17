@@ -10,7 +10,8 @@ import {
   Button,
   Alert,
   NavLink, 
-  Table
+  Table,
+  Label
 } from "reactstrap";
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
@@ -23,10 +24,19 @@ import "../node_modules/react-big-calendar/lib/css/react-big-calendar.css";
  
 const localizer = momentLocalizer(moment)
 
-const TherapistAvalSched=()=> {
+const Schedule=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
+  const [therapist, setTherapist] = useState("");
+  const [therapistList, setTherapistList] = useState([]);
+  const myRef = useRef(null);  
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+
+  useEffect(() => {
+    if(therapistList){
+      renderOptionTherapist();
+    }
+  },[therapistList]);
 
   useEffect(() => {
     if(innerProfile != undefined && innerProfile != null){
@@ -34,21 +44,67 @@ const TherapistAvalSched=()=> {
         setTimeout(() => {
           // Código a ejecutar cuando el modal se abre
           renderButton();
+          getTherapists();
         }, 0);
       }
     }
   },[modalisOpen,innerProfile]);
 
+  const getTherapists = async () => {
+    const strQuery = `
+      query {
+          innerverProfileIndex(filters: {where: {rol: {in: Terapeuta}}}, last: 100) {
+            edges {
+              node {
+                name
+                id
+              }
+            }
+          }
+        }
+    `;
+    if(strQuery){
+      const query = await executeQuery(strQuery);
+      if (!query.errors) {
+        console.log('query:');
+        console.log(query);
+        if(myRef.current != null && myRef.current != undefined){
+          myRef.current.innerHTML = "";
+          console.log(myRef.current);
+          if(query.data){
+            if(query.data.innerverProfileIndex){
+              if(query.data.innerverProfileIndex.edges){
+                setTherapistList(query.data.innerverProfileIndex.edges);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const renderOptionTherapist = () => {
+    if(therapistList){
+      return(
+        { therapistList.map((item,index) =>(
+          <option value={item.id}>{item.name}</option>
+      ))}
+      );
+    }else{
+      return("");
+    }
+  }
+
   const renderButton = () => {
     if(innerProfile != undefined && innerProfile != null){
-      if(innerProfile.rol == 'Terapeuta') {
+      if(innerProfile.rol == 'Consultante') {
         return(
           <NavLink
           href="#"
           className="btn btn-light font-14"
           onClick={()=>setIsOpen(true)}
         >
-          Available Schedule
+          Schedule
         </NavLink>
         );
       }
@@ -63,7 +119,7 @@ const TherapistAvalSched=()=> {
       <ReactModal 
         isOpen={modalisOpen}
         onRequestClose={() => setIsOpen(false)}
-        contentLabel="Edit Profile"
+        contentLabel="Schedule"
         style={{
         overlay: {
           position: 'fixed',
@@ -90,7 +146,22 @@ const TherapistAvalSched=()=> {
       }}
       >
         <div className="contact-box p-r-40">
-          <h4 className="title">Available Therapist Schedule</h4>
+          <h4 className="title">Schedule</h4>
+          <FormGroup className="m-t-15">
+            <Label for="TheraSelect">
+              Terapeuta
+            </Label>
+            <Input
+              id="TheraSelect"
+              name="TheraSelect"
+              type="select"
+              onChange={(e) => setTherapist(e.target.value)}
+              value={therapist}
+              ref={myRef}
+            >
+              {renderOptionTherapist()}
+            </Input>
+          </FormGroup>
           <CalendarTheraAvalSched localizer={localizer} />
         </div>
       </ReactModal>
@@ -98,4 +169,4 @@ const TherapistAvalSched=()=> {
   );
 };
  
-export default TherapistAvalSched;
+export default Schedule;
