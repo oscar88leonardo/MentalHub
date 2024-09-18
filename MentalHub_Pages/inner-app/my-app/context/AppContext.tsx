@@ -267,6 +267,19 @@ const executeQuery = async (query) => {
                   }
                 }
               }
+              schedules(filters: {where: {state: {in: [Pending,Active]}}}, last: 100) {
+                edges {
+                  node {
+                    created
+                    date_finish
+                    date_init
+                    huddId
+                    profileId
+                    state
+                    id
+                  }
+                }
+              }
             }
           }
         }

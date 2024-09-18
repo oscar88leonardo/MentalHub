@@ -18,12 +18,30 @@ import { AppContext } from "../context/AppContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
  
-const AddScheduTherapist=(props)=> {
+const AddSchedule=(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
   const [state, setState] = useState("");
+  const [room, setRoom] = useState("");
+  const [roomList, setRoomList] = useState([]);
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+
+  useEffect(() => {
+    if(props.therapistInfo) { 
+      if(props.therapistInfo.data){
+        if(props.therapistInfo.data.nodes){
+          for(const thera of props.therapistInfo.data.nodes) {
+            if(thera.hudds){
+              if(thera.hudds.edges){
+                setRoomList(thera.hudds.edges);
+              }
+            }
+          }
+        }
+      }
+    }
+  },[props.therapistInfo]);
 
   const updateRecord = async () => {
     const now = new Date();
@@ -31,8 +49,7 @@ const AddScheduTherapist=(props)=> {
     let strMutation = '';
     if(props.isedit) {
       let created = '';
-      for(const sched of innerProfile.sched_therap.edges) {
-        
+      for(const sched of innerProfile.schedules.edges) {
         if(sched.node.id === props.id){
           created = sched.node.created;
         }
@@ -40,8 +57,8 @@ const AddScheduTherapist=(props)=> {
       
       strMutation = `
       mutation {
-        updateScheduleTherapist(
-          input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}}}
+        updateSchedule(
+          input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}"}}
         ) {
           document {
             id
@@ -49,23 +66,19 @@ const AddScheduTherapist=(props)=> {
         }
       }
       `;
-    } /*else {
-      const roomId = await createRoom();
-      if (roomId){      
-        strMutation = `
-          mutation {
-            createHuddle01(
-              input: {content: {name: "${name}", roomId: "${roomId}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active}}
-            ) {
-              document {
-                id
-                name
-              }
+    } else {
+      strMutation = `
+        mutation {
+          createSchedule(
+            input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}"}}
+          ) {
+            document {
+              id
             }
           }
-          `;
-      }
-    }*/
+        }
+        `;
+    }
     console.log("strMutation:");
     console.log(strMutation)
     if(strMutation){
@@ -81,6 +94,7 @@ const AddScheduTherapist=(props)=> {
       setDateInit(props.dateInit);
       setDateFinish(props.dateFinish);
       setState(props.state);
+      setRoom(props.huddId);
     }
   },[props.show]);
 
@@ -90,7 +104,7 @@ const AddScheduTherapist=(props)=> {
       <ReactModal 
         isOpen={props.show}
         onRequestClose={props.close}
-        contentLabel="Edit Schedule"
+        contentLabel="Edit Available Schedule"
         style={{
         overlay: {
           position: 'fixed',
@@ -117,12 +131,29 @@ const AddScheduTherapist=(props)=> {
       }}
       >
         <div className="contact-box p-r-40">
-          <h4 className="title">Edit Schedule</h4>
+          <h4 className="title">Edit Available Schedule</h4>
           <Form>
             <Row>
               <Col lg="6">
                 <FormGroup className="m-t-15">
-                  <Label for="dateInit">
+                <Label for="RoomTSelect">
+                  Therapist Room
+                </Label>
+                <Input
+                  id="RoomTSelect"
+                  name="RoomTSelect"
+                  type="select"
+                  onChange={(e) => setRoom(e.target.value)}
+                  value={room}
+                >
+                  <option>Select therapist room</option>
+                  { roomList ? roomList.map((item) =>(
+                      <option key={item.node.id} value={item.node.id}>{item.node.name}</option>
+                  ))
+                  : ""
+                }
+                </Input>
+                <Label for="dateInit">
                     Start Date
                   </Label>
                   <DatePicker selected={dateInit}
@@ -161,6 +192,9 @@ const AddScheduTherapist=(props)=> {
                     <option>
                       Archived
                     </option>
+                    <option>
+                      Pending
+                    </option>
                   </Input>
                 </FormGroup>
               </Col>
@@ -184,4 +218,4 @@ const AddScheduTherapist=(props)=> {
   );
 };
  
-export default AddScheduTherapist;
+export default AddSchedule;

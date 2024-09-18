@@ -3,5 +3,5 @@ type Schedule @loadModel(id: "$SCHE_ID") {
 }
 
 type InnerverProfile @loadModel(id: "$PROFILE_ID") {
-    schedules: [Schedule] @relationFrom(model: "Schedule", property: "huddId")
+    schedules: [Schedule] @relationFrom(model: "Schedule", property: "profileId")
 }

@@ -8,6 +8,7 @@ type Huddle01 @loadModel(id: "$HUDD_ID") {
 
 type Schedule
     @createModel(accountRelation: LIST, description: "Schedule Therapist") 
+    @createIndex(fields: [{path: "state"}])
     {
     state: State!
     date_init: DateTime!
@@ -26,4 +27,5 @@ enum State {
   Pending
   Active
   Finished
+  Archived
 }
