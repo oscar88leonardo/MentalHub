@@ -32,11 +32,11 @@ const Schedule=()=> {
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if(therapistList){
       renderOptionTherapist();
     }
-  },[therapistList]);
+  },[therapistList]);*/
 
   useEffect(() => {
     if(innerProfile != undefined && innerProfile != null){
@@ -83,17 +83,15 @@ const Schedule=()=> {
     }
   }
 
-  const renderOptionTherapist = () => {
+  /*const renderOptionTherapist = () => {
     if(therapistList){
       return(
-        { therapistList.map((item,index) =>(
-          <option value={item.id}>{item.name}</option>
-      ))}
+        
       );
     }else{
       return("");
     }
-  }
+  }*/
 
   const renderButton = () => {
     if(innerProfile != undefined && innerProfile != null){
@@ -159,7 +157,11 @@ const Schedule=()=> {
               value={therapist}
               ref={myRef}
             >
-              {renderOptionTherapist()}
+              { therapistList ? therapistList.map((item) =>(
+                  <option key={item.node.id} value={item.node.id}>{item.node.name}</option>
+               ))
+               : ""
+            }
             </Input>
           </FormGroup>
           <CalendarTheraAvalSched localizer={localizer} />
