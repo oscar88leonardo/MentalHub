@@ -19,7 +19,7 @@ import AddTherapistRoom from '../innerComp/AddTherapistRoom';
 import { useRouter } from 'next/navigation';
 import moment from 'moment'
 import { momentLocalizer } from 'react-big-calendar'
-import CalendarTheraAvalSched from './CalendarTheraAvalSched'
+import CalendarSchedule from './CalendarSchedule'
 import "../node_modules/react-big-calendar/lib/css/react-big-calendar.css";
  
 const localizer = momentLocalizer(moment)
@@ -28,16 +28,9 @@ const Schedule=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [therapist, setTherapist] = useState("");
   const [therapistList, setTherapistList] = useState([]);
-  const myRef = useRef(null);  
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
-
-  /*useEffect(() => {
-    if(therapistList){
-      renderOptionTherapist();
-    }
-  },[therapistList]);*/
-
+  
   useEffect(() => {
     if(innerProfile != undefined && innerProfile != null){
       if(modalisOpen){
@@ -68,30 +61,16 @@ const Schedule=()=> {
       if (!query.errors) {
         console.log('query:');
         console.log(query);
-        if(myRef.current != null && myRef.current != undefined){
-          myRef.current.innerHTML = "";
-          console.log(myRef.current);
-          if(query.data){
-            if(query.data.innerverProfileIndex){
-              if(query.data.innerverProfileIndex.edges){
-                setTherapistList(query.data.innerverProfileIndex.edges);
-              }
+        if(query.data){
+          if(query.data.innerverProfileIndex){
+            if(query.data.innerverProfileIndex.edges){
+              setTherapistList(query.data.innerverProfileIndex.edges);
             }
           }
         }
       }
     }
   }
-
-  /*const renderOptionTherapist = () => {
-    if(therapistList){
-      return(
-        
-      );
-    }else{
-      return("");
-    }
-  }*/
 
   const renderButton = () => {
     if(innerProfile != undefined && innerProfile != null){
@@ -155,8 +134,8 @@ const Schedule=()=> {
               type="select"
               onChange={(e) => setTherapist(e.target.value)}
               value={therapist}
-              ref={myRef}
             >
+              <option>Select therapist</option>
               { therapistList ? therapistList.map((item) =>(
                   <option key={item.node.id} value={item.node.id}>{item.node.name}</option>
                ))
@@ -164,7 +143,7 @@ const Schedule=()=> {
             }
             </Input>
           </FormGroup>
-          <CalendarTheraAvalSched localizer={localizer} />
+          <CalendarSchedule therapist={therapist} localizer={localizer} />
         </div>
       </ReactModal>
     </div>

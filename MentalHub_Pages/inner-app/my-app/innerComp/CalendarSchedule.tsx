@@ -5,8 +5,9 @@ import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
 import { AppContext } from "../context/AppContext";
 //import AddScheduTherapist from '../innerComp/AddScheduTherapist';
 
-export default function CalendarSchedule({ localizer }) {
+export default function CalendarSchedule({ therapist, localizer }) {
   const [myEvents, setEvents] = useState([]);
+  const [availTEvents, setAvailTEvents] = useState([]);
   const [modalAddScheduleisOpen, setModalAddScheduleisOpen] = useState(false);
   const [modalAddScheduleisEdit, setModalAddScheduleisEdit] = useState(false);
   const [modalAddScheduleState, setModalAddScheduleState] = useState("");
@@ -15,6 +16,69 @@ export default function CalendarSchedule({ localizer }) {
   const [modalAddScheduleDateFinish, setModalAddScheduleDateFinish] = useState(new Date());
 
   const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+
+  useEffect(() => {
+    if(therapist){
+      console.log(therapist);
+      getAvailTSche();
+    }
+  },[therapist]);
+
+  const getAvailTSche = async () => {
+    const strQuery = `
+      query {
+          nodes(ids: "` + therapist + `") {
+            ... on InnerverProfile {
+              id
+              sched_therap(filters: {where: {state: {in: Active}}}, last: 100) {
+                edges {
+                  node {
+                    date_finish
+                    date_init
+                    id
+                    state
+                  }
+                }
+              }
+            }
+          }
+        }
+    `;
+    if(strQuery){
+      const query = await executeQuery(strQuery);
+      if (!query.errors) {
+        console.log('query:');
+        console.log(query);
+        if(query.data){
+          if(query.data.nodes){
+            let Bgevents = [];
+            console.log('query.data.nodes:');
+            console.log(query.data.nodes);
+            for(const node of query.data.nodes) {
+              if(node.sched_therap){
+                if(node.sched_therap.edges){
+                  for(const sched of node.sched_therap.edges) {
+                    const init = new Date(sched.node.date_init);
+                    const finish = new Date(sched.node.date_finish);
+                    const obj = { 
+                      id: sched.node.id,
+                      start: init,
+                      end: finish,
+                      state: sched.node.state,
+                    }
+                    Bgevents.push(obj);
+                  }
+                }
+              }
+            }
+            console.log('Bgevents:');
+            console.log(Bgevents);
+            setAvailTEvents(Bgevents);
+          }
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if(innerProfile) { 
@@ -84,13 +148,14 @@ export default function CalendarSchedule({ localizer }) {
     [setEvents]
   )
 
-  /*const handleSelectEvent = useCallback(
+  const handleSelectEvent = useCallback(
     (event) => {
       console.log("event:");
       console.log(event);
-      openModalAddSchedule(event.state,event.id,event.start,event.end);
+      //openModalAddSchedule(event.state,event.id,event.start,event.end);
+    },  
     []
-  );*/
+  );
 
   const { defaultDate, scrollToTime, minTime, maxTime } = useMemo(
     () => ({
@@ -129,6 +194,7 @@ export default function CalendarSchedule({ localizer }) {
           defaultDate={defaultDate}
           defaultView={Views.MONTH}
           events={myEvents}
+          backgroundEvents={availTEvents}
           localizer={localizer}
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
