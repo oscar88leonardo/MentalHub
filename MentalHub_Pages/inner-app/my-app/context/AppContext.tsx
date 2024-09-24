@@ -274,6 +274,10 @@ const executeQuery = async (query) => {
                     date_finish
                     date_init
                     huddId
+                    hudd {
+                      roomId
+                      profileId
+                    }
                     profileId
                     state
                     id

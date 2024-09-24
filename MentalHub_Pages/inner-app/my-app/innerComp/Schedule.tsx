@@ -26,7 +26,7 @@ const localizer = momentLocalizer(moment)
 
 const Schedule=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
-  const [therapist, setTherapist] = useState("");
+  const [therapist, setTherapist] = useState(null);
   const [therapistList, setTherapistList] = useState([]);
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
@@ -143,7 +143,7 @@ const Schedule=()=> {
             }
             </Input>
           </FormGroup>
-          <CalendarSchedule therapist={therapist} localizer={localizer} />
+          <CalendarSchedule therapist={therapist} setTherapist={setTherapist} localizer={localizer} />
         </div>
       </ReactModal>
     </div>

@@ -17,15 +17,20 @@ import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useRouter } from 'next/navigation';
  
 const AddSchedule=(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
   const [state, setState] = useState("");
   const [room, setRoom] = useState("");
+  const [roomId, setRoomId] = useState("");
   const [roomList, setRoomList] = useState([]);
+  const [therapistName, setTherapistName] = useState("");
 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+
+  const router = useRouter();
 
   useEffect(() => {
     if(props.therapistInfo) { 
@@ -42,6 +47,20 @@ const AddSchedule=(props)=> {
       }
     }
   },[props.therapistInfo]);
+
+  useEffect(() => {
+    if(roomList) { 
+      for(const hudd of roomList) {
+        if(hudd.node){
+          if(hudd.node.profile){
+            if(hudd.node.profile.name){
+              setTherapistName(hudd.node.profile.name);
+            }
+          }
+        }
+      }
+    }
+  },[roomList]);
 
   const updateRecord = async () => {
     const now = new Date();
@@ -95,8 +114,16 @@ const AddSchedule=(props)=> {
       setDateFinish(props.dateFinish);
       setState(props.state);
       setRoom(props.huddId);
+      setRoomId(props.roomId);
     }
   },[props.show]);
+
+  const openMeet = (roomId) => {
+    /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
+    window.open(origin + "/meet/" + roomId, "_blank");*/
+    router.push(`/meet/${roomId}`);
+  };
 
   return (
     <div>
@@ -137,7 +164,7 @@ const AddSchedule=(props)=> {
               <Col lg="6">
                 <FormGroup className="m-t-15">
                 <Label for="RoomTSelect">
-                  Therapist Room
+                  {therapistName ? therapistName : 'Therapist' } Room 
                 </Label>
                 <Input
                   id="RoomTSelect"
@@ -210,6 +237,18 @@ const AddSchedule=(props)=> {
                   </span>
                 </Button>              
               </Col>
+              { props.isedit ? 
+                <Col lg="12">
+                  <Button
+                    className="btn btn-light m-t-20 btn-arrow"
+                    onClick={() => openMeet(roomId)}
+                  >
+                    <span>
+                      Open Room
+                    </span>
+                  </Button>              
+                </Col>
+              : ""}
             </Row>
           </Form>
         </div>

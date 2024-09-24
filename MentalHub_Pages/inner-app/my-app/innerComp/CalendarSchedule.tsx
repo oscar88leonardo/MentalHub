@@ -5,14 +5,15 @@ import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
 import { AppContext } from "../context/AppContext";
 import AddSchedule from '../innerComp/AddSchedule';
 
-export default function CalendarSchedule({ therapist, localizer }) {
+export default function CalendarSchedule({ therapist, setTherapist, localizer }) {
   const [myEvents, setEvents] = useState([]);
   const [availTEvents, setAvailTEvents] = useState([]);
-  const [therapistInfo, setTherapistInfo] = useState({});
+  const [therapistInfo, setTherapistInfo] = useState(null);
   const [modalAddScheduleisOpen, setModalAddScheduleisOpen] = useState(false);
   const [modalAddScheduleisEdit, setModalAddScheduleisEdit] = useState(false);
   const [modalAddScheduleState, setModalAddScheduleState] = useState("");
   const [modalAddScheduleHuddId, setModalAddScheduleHuddId] = useState("");
+  const [modalAddScheduleRoomId, setModalAddScheduleRoomId] = useState("");
   const [modalAddScheduleID, setModalAddScheduleID] = useState("");
   const [modalAddScheduleDateInit, setModalAddScheduleDateInit] = useState(new Date());
   const [modalAddScheduleDateFinish, setModalAddScheduleDateFinish] = useState(new Date());
@@ -79,6 +80,10 @@ export default function CalendarSchedule({ therapist, localizer }) {
                   node {
                     id
                     name
+                    roomId
+                    profile {
+                      name
+                    }
                   }
                 }
               }
@@ -107,12 +112,15 @@ export default function CalendarSchedule({ therapist, localizer }) {
               console.log(sched.node.date_init);
               const init = new Date(sched.node.date_init);
               const finish = new Date(sched.node.date_finish);
+              const roomId = "";
               const obj = { 
                 id: sched.node.id,
                 start: init,
                 end: finish,
                 state: sched.node.state,
                 huddId: sched.node.huddId,
+                roomId: sched.node.hudd.roomId,
+                profileId: sched.node.hudd.profileId,
               }
               events.push(obj);
             }
@@ -138,7 +146,19 @@ export default function CalendarSchedule({ therapist, localizer }) {
     (event) => {
       console.log("event:");
       console.log(event);
-      openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId);
+      if(!event.isBackgroundEvent){
+        if(!therapistInfo){
+          console.log("therapistInfo:");
+          console.log(therapistInfo);
+          setTherapist(event.profileId);
+          setTimeout(() => {
+            // Código a ejecutar cuando el modal se abre
+            openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId);
+          }, 0);
+        } else {
+          openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId);
+        }
+      }
     },  
     []
   );
@@ -162,14 +182,15 @@ export default function CalendarSchedule({ therapist, localizer }) {
     setModalAddScheduleisOpen(true);
   };
 
-  const openModalAddScheduleEdit = (state,id,dateInit,dateFinish,huddId) => {
+  const openModalAddScheduleEdit = (state,id,dateInit,dateFinish,huddId,roomId) => {
     setModalAddScheduleisEdit(true);
     setModalAddScheduleState(state);
     setModalAddScheduleHuddId(huddId);
+    setModalAddScheduleRoomId(roomId);
     setModalAddScheduleID(id);
     setModalAddScheduleDateInit(dateInit);
     setModalAddScheduleDateFinish(dateFinish);
-    setModalAddScheduleisOpen(true)
+    setModalAddScheduleisOpen(true);
   };
 
   useEffect(() => {
@@ -180,12 +201,21 @@ export default function CalendarSchedule({ therapist, localizer }) {
       setModalAddScheduleState("");
       setModalAddScheduleHuddId("");
       setModalAddScheduleisEdit(false);
+    } else {
+      console.log("openModalAddScheduleCreate therapist:");
+      console.log(therapist);
+      if(therapist){
+        setTherapist(therapist);
+      } else {
+        setModalAddScheduleisOpen(false);
+        alert('Select Therapist');
+      }
     }
   },[modalAddScheduleisOpen]);
   
   return (
     <Fragment>
-      <AddSchedule show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} therapistInfo={therapistInfo}/>
+      <AddSchedule show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} therapistInfo={therapistInfo}/>
       <div style={{height:600}}>
         <Calendar
           defaultDate={defaultDate}
