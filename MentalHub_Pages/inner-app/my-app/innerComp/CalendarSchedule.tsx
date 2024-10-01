@@ -133,8 +133,8 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer })
     }
   },[innerProfile]);
   
-  const handleSelectSlot = useCallback(
-    async ({ start, end }) => {
+  const handleSelectSlot = useCallback(    
+    async ({ start, end}) => {    
       console.log(start);
       console.log(end);
       openModalAddScheduleCreate(start,end);

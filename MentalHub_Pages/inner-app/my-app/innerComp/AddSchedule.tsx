@@ -65,31 +65,24 @@ const AddSchedule=(props)=> {
   const updateRecord = async () => {
     const now = new Date();
     //console.log(now.toISOString());
+    console.log("room:");
+    console.log(room);
     let strMutation = '';
-    if(props.isedit) {
-      let created = '';
-      for(const sched of innerProfile.schedules.edges) {
-        if(sched.node.id === props.id){
-          created = sched.node.created;
-        }
-      }
-      
-      strMutation = `
-      mutation {
-        updateSchedule(
-          input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}"}}
-        ) {
-          document {
-            id
+    if (room != "")
+    {
+      if(props.isedit ) {
+          
+        let created = '';
+        for(const sched of innerProfile.schedules.edges) {
+          if(sched.node.id === props.id){
+            created = sched.node.created;
           }
         }
-      }
-      `;
-    } else {
-      strMutation = `
+        
+        strMutation = `
         mutation {
-          createSchedule(
-            input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}"}}
+          updateSchedule(
+            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}"}}
           ) {
             document {
               id
@@ -97,15 +90,28 @@ const AddSchedule=(props)=> {
           }
         }
         `;
-    }
-    console.log("strMutation:");
-    console.log(strMutation)
-    if(strMutation){
-      await executeQuery(strMutation);
-      await getInnerProfile();
-      console.log("Profile update: ", innerProfile);
-    }    
-    props.close();
+      } else {
+        strMutation = `
+          mutation {
+            createSchedule(
+              input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}"}}
+            ) {
+              document {
+                id
+              }
+            }
+          }
+          `;
+      }
+      console.log("strMutation:");
+      console.log(strMutation)
+      if(strMutation){
+        await executeQuery(strMutation);
+        await getInnerProfile();
+        console.log("Profile update: ", innerProfile);
+      }    
+      props.close();
+    } else {alert("Please select a therapist room!")}  
   };
    
   useEffect(() => {
