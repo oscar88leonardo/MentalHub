@@ -17,6 +17,9 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer })
   const [modalAddScheduleID, setModalAddScheduleID] = useState("");
   const [modalAddScheduleDateInit, setModalAddScheduleDateInit] = useState(new Date());
   const [modalAddScheduleDateFinish, setModalAddScheduleDateFinish] = useState(new Date());
+  const [dateInit, setDateInit] = useState(new Date());
+  const [dateFinish, setDateFinish] = useState(new Date());
+  const [flagValidateDate, setFlagValidateDate] = useState(false);
 
   const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
@@ -133,11 +136,28 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer })
     }
   },[innerProfile]);
   
+  useEffect(() => {
+    if(flagValidateDate){
+      let validAvailEvent = availTEvents.some(({start, end}) => {
+        return dateInit >= start && dateInit <= end && dateFinish >= start && dateFinish <= end;
+      });
+      let validMyEvent = myEvents.some(({start, end}) => {
+        return (dateInit >= start && dateInit <= end) || (dateFinish >= start && dateFinish <= end);
+      });
+      if(validAvailEvent && !validMyEvent) {
+        openModalAddScheduleCreate(dateInit,dateFinish);
+      } else {
+        alert('Please, Select an available date.');
+      }
+      setFlagValidateDate(false);
+    }
+  },[flagValidateDate]);
+
   const handleSelectSlot = useCallback(    
     async ({ start, end}) => {    
-      console.log(start);
-      console.log(end);
-      openModalAddScheduleCreate(start,end);
+      setDateInit(start);
+      setDateFinish(end);
+      setFlagValidateDate(true);
     },
     [setEvents]
   )

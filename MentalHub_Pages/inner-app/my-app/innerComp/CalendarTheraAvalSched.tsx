@@ -13,6 +13,9 @@ export default function CalendarTheraAvalSched({ localizer }) {
   const [modalAddSchedTheraID, setModalAddSchedTheraID] = useState("");
   const [modalAddSchedTheraDateInit, setModalAddSchedTheraDateInit] = useState(new Date());
   const [modalAddSchedTheraDateFinish, setModalAddSchedTheraDateFinish] = useState(new Date());
+  const [dateInit, setDateInit] = useState(new Date());
+  const [dateFinish, setDateFinish] = useState(new Date());
+  const [flagValidateDate, setFlagValidateDate] = useState(false);
 
   const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
 
@@ -44,40 +47,54 @@ export default function CalendarTheraAvalSched({ localizer }) {
     }
   },[innerProfile]);
 
-  /*useEffect(() => {
+  const updateRecord = async (dateInit,dateFinish) => {
     if(innerProfile) { 
-      getInnerProfile();
-    }
-  },[myEvents]);*/
-  
-  const handleSelectSlot = useCallback(
-    async ({ start, end }) => {
-      if(innerProfile) { 
-        const now = new Date();
-        const strMutation = `
-        mutation {
-          createScheduleTherapist(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active }}
-          ) {
-            document {
-              id
-            }
+      const now = new Date();
+      const strMutation = `
+      mutation {
+        createScheduleTherapist(
+          input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Active }}
+        ) {
+          document {
+            id
           }
-        }
-        `;
-        console.log("strMutation:");
-        console.log(strMutation)
-        if(strMutation){
-          const update = await executeQuery(strMutation);
-          if (!update.errors) {
-            console.log('update:');
-            console.log(update);
-            //setEvents((prev) => [...prev, { id, start, end }]);
-            getInnerProfile();
-          }
-          console.log("Profile update: ", innerProfile);
         }
       }
+      `;
+      console.log("strMutation:");
+      console.log(strMutation)
+      if(strMutation){
+        const update = await executeQuery(strMutation);
+        if (!update.errors) {
+          console.log('update:');
+          console.log(update);
+          //setEvents((prev) => [...prev, { id, start, end }]);
+          getInnerProfile();
+        }
+        console.log("Profile update: ", innerProfile);
+      }
+    }
+  }
+
+  useEffect(() => {
+    if(flagValidateDate){
+      let validMyEvent = myEvents.some(({start, end}) => {
+        return (dateInit >= start && dateInit <= end) || (dateFinish >= start && dateFinish <= end);
+      });
+      if(!validMyEvent) {
+        updateRecord(dateInit,dateFinish);
+      } else {
+        alert('Please, Select an available date.');
+      }
+      setFlagValidateDate(false);
+    }
+  },[flagValidateDate]);
+
+  const handleSelectSlot = useCallback(
+    async ({ start, end }) => {
+      setDateInit(start);
+      setDateFinish(end);
+      setFlagValidateDate(true);
     },
     [setEvents]
   )
