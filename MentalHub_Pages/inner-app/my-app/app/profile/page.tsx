@@ -22,10 +22,15 @@ export default function Profile() {
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
-      getSigner();
-      getAccounts();
-      getInnerProfile();
-      getUserInfo();
+      if(typeof getSigner === 'function' 
+        && typeof getAccounts === 'function'
+        && typeof getInnerProfile === 'function'
+        && typeof getUserInfo === 'function'){
+        getSigner();
+        getAccounts();
+        getInnerProfile();
+        getUserInfo();
+      }
       //renderUserName();
     }
     }, [isConComposeDB]);
