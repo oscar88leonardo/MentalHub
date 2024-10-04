@@ -17,7 +17,7 @@ export default function Profile() {
   const [userName, setUserName] = useState("");
   const [pfp, setPfp] = useState("");
   // get global data from Appcontext
-  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext);
+  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext)!;
   
   // when a changue in orbis provider is detected
   useEffect(() => {
