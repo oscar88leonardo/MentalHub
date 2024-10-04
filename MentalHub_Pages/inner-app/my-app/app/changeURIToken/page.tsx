@@ -19,7 +19,7 @@ export default function Home() {
   const [gatewayTokenURI, setgatewayTokenURI] = useState("");
   const [isOwner, setIsOwner] = useState(false);
 
-  const { provider, isConnected } = useContext(AppContext!);
+  const { provider, isConnected } = useContext(AppContext)!;
 
   useEffect(() => {
     if(isConnected){
