@@ -1,8 +1,8 @@
 'use client';
 
-import ChatBox from '@/components/ChatBox/ChatBox';
-import RemotePeer from '@/components/RemotePeer';
-import { TPeerMetadata } from '@/utils/types';
+import ChatBox from '../components/ChatBox/ChatBox';
+import RemotePeer from '../components/RemotePeer';
+import { TPeerMetadata } from '../utils/types';
 import {
   useLocalAudio,
   useLocalPeer,
