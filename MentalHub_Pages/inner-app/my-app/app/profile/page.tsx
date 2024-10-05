@@ -12,25 +12,26 @@ import FormConsultante  from "../../innerComp/formConsultante";
 import TherapistRooms  from "../../innerComp/TherapistRooms";
 import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
 import Schedule from "@/innerComp/Schedule";
+import App from "next/app";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
   const [pfp, setPfp] = useState("");
+  
   // get global data from Appcontext
-  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = useContext(AppContext)!;
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = context;
   
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
-      if(typeof getSigner === 'function' 
-        && typeof getAccounts === 'function'
-        && typeof getInnerProfile === 'function'
-        && typeof getUserInfo === 'function'){
         getSigner();
         getAccounts();
         getInnerProfile();
         getUserInfo();
-      }
       //renderUserName();
     }
     }, [isConComposeDB]);
