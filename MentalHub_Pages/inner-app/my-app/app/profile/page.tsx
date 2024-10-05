@@ -17,7 +17,7 @@ import App from "next/app";
 export default function Profile() {
   const [userName, setUserName] = useState("");
   const [pfp, setPfp] = useState("");
-  
+
   // get global data from Appcontext
   const context = useContext(AppContext);
   if (context === null) {
@@ -28,7 +28,7 @@ export default function Profile() {
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
-        getSigner();
+        getSigner && getSigner();
         getAccounts();
         getInnerProfile();
         getUserInfo();
