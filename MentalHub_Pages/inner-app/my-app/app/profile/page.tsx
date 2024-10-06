@@ -28,7 +28,7 @@ export default function Profile() {
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
-        getSigner && getSigner();
+        getSigner();
         getAccounts();
         getInnerProfile();
         getUserInfo();

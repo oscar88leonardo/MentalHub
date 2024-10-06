@@ -27,9 +27,31 @@ const metamaskAdapter = new MetamaskAdapter();
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
 
-export const AppContext = createContext(null);
 
+interface AppContextType {
+  provider: SafeEventEmitterProvider | null;
+  signer: JsonRpcSigner | null;
+  AddressWeb3: string | null;
+  userInfo: any | null; // Replace 'any' with a more specific type if possible
+  PrivateKey: string | null;
+  isConnected: boolean;
+  isConComposeDB: boolean;
+  ceramic: CeramicClient;
+  composeClient: ComposeClient;
+  innerProfile: any | null; // Replace 'any' with a more specific type if possible
+  getSigner: () => Promise<void>;
+  executeQuery: (query: string) => Promise<any>; // Replace 'any' with a more specific return type if possible
+  getInnerProfile: () => Promise<void>;
+  loginComposeDB: () => Promise<void>;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  getUserInfo: () => Promise<void>;
+  getAccounts: () => Promise<void>;
+  getPrivateKey: () => Promise<void>;
+}
 
+export const AppContext = createContext<AppContextType | null>(null);
+//export const AppContext = createContext(null);
 
 const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) => 
 {
@@ -332,6 +354,31 @@ const executeQuery = async (query) => {
     setPrivateKey(privateKey);
   };
 
+  const contextValue: AppContextType = {
+    provider,
+    signer,
+    AddressWeb3,
+    userInfo,
+    PrivateKey,
+    isConnected,
+    isConComposeDB,
+    ceramic,
+    composeClient,
+    innerProfile,
+    getSigner,
+    executeQuery,
+    getInnerProfile,
+    loginComposeDB,
+    login,
+    logout,
+    getUserInfo,
+    getAccounts,
+    getPrivateKey,
+  };
+
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
+
+  /*
   return (
     <AppContext.Provider
       value={{ provider,
@@ -358,5 +405,6 @@ const executeQuery = async (query) => {
       {children}
     </AppContext.Provider>
   );
+  */
 };
 export default AppProvider;
