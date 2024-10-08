@@ -49,7 +49,7 @@ export default function Profile() {
       }
       }, [innerProfile]);
 
-    const NFTItemsInfo = [];
+    let NFTItemsInfo: any[] = [];
 
     const getNFTsOwner = async () => {
       try {
