@@ -35,21 +35,23 @@ export default function Home() {
 
   const checkIsOwner = async () => {
     try {
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      // call the owner function from the contract
-      const _owner = await nftContract.owner();
-      // We will get the signer now to extract the address of the currently connected MetaMask account
-      //const signer = await getProviderOrSigner(true);
-      // Get the address associated to the signer which is connected to  MetaMask
-      const address = await signer.getAddress();
-      if (address.toLowerCase() === _owner.toLowerCase()) {
-        setIsOwner(true);
-      } else {
-        window.alert("This wallet does not own the contract.");
+      if(provider != null){
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        const signer = await provider0.getSigner();
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+        // call the owner function from the contract
+        const _owner = await nftContract.owner();
+        // We will get the signer now to extract the address of the currently connected MetaMask account
+        //const signer = await getProviderOrSigner(true);
+        // Get the address associated to the signer which is connected to  MetaMask
+        const address = await signer.getAddress();
+        if (address.toLowerCase() === _owner.toLowerCase()) {
+          setIsOwner(true);
+        } else {
+          window.alert("This wallet does not own the contract.");
+        }
       }
     } catch (err) {
       console.error(err);
