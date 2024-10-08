@@ -59,69 +59,71 @@ export default function Profile() {
         const signer = await provider0.getSigner();*/
         // Create a new instance of the Contract with a Signer, which allows
         // update methods
-        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-        // call the mint from the contract to mint the MentalHub NFT
-        let ArrTokenIds = await nftContract.walletOfOwner(signer.getAddress()); 
-        console.log(ArrTokenIds.length);
-        for (const TkId of ArrTokenIds) {
-          try {
-            /*const response = await fetch(
-              'http://localhost:3000/api/'+ TkId.toNumber()
+        if(signer != null) {
+          const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+          // call the mint from the contract to mint the MentalHub NFT
+          let ArrTokenIds = await nftContract.walletOfOwner(signer.getAddress()); 
+          console.log(ArrTokenIds.length);
+          for (const TkId of ArrTokenIds) {
+            try {
+              /*const response = await fetch(
+                'http://localhost:3000/api/'+ TkId.toNumber()
+              );
+              const todo = await response.json(); 
+              console.log(todo);
+              const jsonContent = JSON.parse(todo);*/
+              const urlGateway = await nftContract.gatewayURI(TkId);
+              const response = await fetch(
+                urlGateway
+              );
+              const todo = await response.json(); 
+              console.log(todo);
+              //const jsonContent = JSON.parse(todo);
+              NFTItemsInfo.push(todo);
+            } catch (err) {
+              console.error(err);
+            }
+          }
+          for(const itemNFT of NFTItemsInfo) {
+            console.log(itemNFT.name);
+            const row = document.getElementById('NFTList');
+            const col = document.createElement('div');
+            const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
+              <Card className="card-shadow" key={index}>              
+                <div className='player-wrapper'>
+                  <video controls
+                      src="`+itemNFT.pathImage+`"
+                      width='300'
+                      height='300'
+                      >
+                  </video>
+                </div>
+                <CardBody>
+                  <h5 className="font-medium m-b-0">
+                    `+itemNFT.name+`
+                  </h5>
+                  <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
+                </CardBody>
+              </Card>
+            </Col>`;
+            col.innerHTML = str;
+            const element =  document.getElementById(itemNFT.name);
+            console.log(element);
+            if (!element)
+            {
+              row.appendChild(col);
+            }
+          }
+          /*try {
+            const res = await fetch(
+              'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
             );
-            const todo = await response.json(); 
-            console.log(todo);
-            const jsonContent = JSON.parse(todo);*/
-            const urlGateway = await nftContract.gatewayURI(TkId);
-            const response = await fetch(
-              urlGateway
-            );
-            const todo = await response.json(); 
-            console.log(todo);
-            //const jsonContent = JSON.parse(todo);
-            NFTItemsInfo.push(todo);
+            const data = await res.json();
+            console.log(data);
           } catch (err) {
-            console.error(err);
-          }
+            console.log(err);
+          }*/
         }
-        for(const itemNFT of NFTItemsInfo) {
-          console.log(itemNFT.name);
-          const row = document.getElementById('NFTList');
-          const col = document.createElement('div');
-          const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
-            <Card className="card-shadow" key={index}>              
-              <div className='player-wrapper'>
-                <video controls
-                    src="`+itemNFT.pathImage+`"
-                    width='300'
-                    height='300'
-                    >
-                </video>
-              </div>
-              <CardBody>
-                <h5 className="font-medium m-b-0">
-                  `+itemNFT.name+`
-                </h5>
-                <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
-              </CardBody>
-            </Card>
-          </Col>`;
-          col.innerHTML = str;
-          const element =  document.getElementById(itemNFT.name);
-          console.log(element);
-          if (!element)
-          {
-            row.appendChild(col);
-          }
-        }
-        /*try {
-          const res = await fetch(
-            'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
-          );
-          const data = await res.json();
-          console.log(data);
-        } catch (err) {
-          console.log(err);
-        }*/
       } catch (err) {
         console.error(err);
       }

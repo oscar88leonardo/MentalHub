@@ -46,40 +46,42 @@ const NFTColMembers = () => {
       const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);  
-      const whitelistContract = new Contract(WHITELIST_CONTRACT_ADDRESS, abi_w, signer);
-    
-      const iswhitelisted = await whitelistContract.whitelistedAddresses(signer.getAddress()); 
+      if(signer != null) {
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);  
+        const whitelistContract = new Contract(WHITELIST_CONTRACT_ADDRESS, abi_w, signer);
       
-      if (iswhitelisted) {
+        const iswhitelisted = await whitelistContract.whitelistedAddresses(signer.getAddress()); 
+        
+        if (iswhitelisted) {
 
-        // call the presaleMint from the contract, only whitelisted addresses would be able to mint
-        const tx = await nftContract.airdropMint({
-          // value signifies the cost of one crypto dev which is "0" eth for aridrop.
-          // We are parsing `0.` string to ether using the utils library from ethers.js
-          value: parseEther("0"),
-        });
-        setLoading(true);
-        // wait for the transaction to get mined
-        await tx.wait();
-        setLoading(false);
-        //console.log(tx);
-        let tokenIdsCurrent = await nftContract.getTokenIds(); 
-        //console.log(tokenIdsCurrent.toNumber());
-        //console.log(pathTypeContDig,pathContDigi,contSessions);
-        try {
-          const res = await fetch(
-            'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
-          );
-          const data = await res.json();
-          console.log(data);
-        } catch (err) {
-          console.log(err);
-        }
-        window.alert("You successfully minted a community member NFT!");
-      } else {
-        window.alert("Sorry friend, you're not whitelisted");
-      }  
+          // call the presaleMint from the contract, only whitelisted addresses would be able to mint
+          const tx = await nftContract.airdropMint({
+            // value signifies the cost of one crypto dev which is "0" eth for aridrop.
+            // We are parsing `0.` string to ether using the utils library from ethers.js
+            value: parseEther("0"),
+          });
+          setLoading(true);
+          // wait for the transaction to get mined
+          await tx.wait();
+          setLoading(false);
+          //console.log(tx);
+          let tokenIdsCurrent = await nftContract.getTokenIds(); 
+          //console.log(tokenIdsCurrent.toNumber());
+          //console.log(pathTypeContDig,pathContDigi,contSessions);
+          try {
+            const res = await fetch(
+              'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
+            );
+            const data = await res.json();
+            console.log(data);
+          } catch (err) {
+            console.log(err);
+          }
+          window.alert("You successfully minted a community member NFT!");
+        } else {
+          window.alert("Sorry friend, you're not whitelisted");
+        }  
+      }
     } catch (err) {
       console.error(err);
     }
@@ -93,38 +95,40 @@ const NFTColMembers = () => {
       const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-      // call the mint from the contract to mint the Crypto Dev
-      console.log("nftContract publicMint:");
-      console.log(nftContract);
-      console.log("utils.parseEther publicMint:");
-      const valueEther = parseEther('0.01');
-      console.log(valueEther);
-      const tx = await nftContract.mint({
-        // value signifies the cost of one crypto dev which is "0.01" eth.
-        // We are parsing `0.01` string to ether using the utils library from ethers.js
-        value: valueEther,
-      });
-      console.log("tx publicMint:");
-      console.log(tx);
-      setLoading(true);
-      // wait for the transaction to get mined
-      await tx.wait();
-      console.log("tx publicMint:");
-      console.log(tx);
-      setLoading(false);
-      let tokenIdsCurrent = await nftContract.getTokenIds(); 
-      /*try {
-        const res = await fetch(
-          'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
-        );
-        const data = await res.json();
-        console.log(data);
-      } catch (err) {
-        console.log(err);
-      }*/
+      if(signer != null){
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+        // call the mint from the contract to mint the Crypto Dev
+        console.log("nftContract publicMint:");
+        console.log(nftContract);
+        console.log("utils.parseEther publicMint:");
+        const valueEther = parseEther('0.01');
+        console.log(valueEther);
+        const tx = await nftContract.mint({
+          // value signifies the cost of one crypto dev which is "0.01" eth.
+          // We are parsing `0.01` string to ether using the utils library from ethers.js
+          value: valueEther,
+        });
+        console.log("tx publicMint:");
+        console.log(tx);
+        setLoading(true);
+        // wait for the transaction to get mined
+        await tx.wait();
+        console.log("tx publicMint:");
+        console.log(tx);
+        setLoading(false);
+        let tokenIdsCurrent = await nftContract.getTokenIds(); 
+        /*try {
+          const res = await fetch(
+            'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
+          );
+          const data = await res.json();
+          console.log(data);
+        } catch (err) {
+          console.log(err);
+        }*/
 
-      window.alert("You successfully minted a community member NFT!");
+        window.alert("You successfully minted a community member NFT!");
+      }
     } catch (err) {
       console.error(err);
       window.alert("Proccess failed, check your funds.");
@@ -151,22 +155,24 @@ const NFTColMembers = () => {
     //const signer = await getProviderOrSigner(true);
     /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
     const signer = await provider0.getSigner();*/
-    console.log("signer for airdrop:");
-    console.log(signer);
-    const address = await signer.getAddress();
-    console.log("address for airdrop:");
-    console.log(address);
-    // Create a new instance of the Contract with a Signer, which allows
-    // update methods
-    const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-    // call the startPresale from the contract
-    const tx = await nftContract.StartAirdrop();
-    setLoading(true);
-    // wait for the transaction to get mined
-    await tx.wait();
-    setLoading(false);
-    // set the airdrop started to true
-    await checkIfAirdropStarted();
+    if(signer != null) {
+      console.log("signer for airdrop:");
+      console.log(signer);
+      const address = await signer.getAddress();
+      console.log("address for airdrop:");
+      console.log(address);
+      // Create a new instance of the Contract with a Signer, which allows
+      // update methods
+      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+      // call the startPresale from the contract
+      const tx = await nftContract.StartAirdrop();
+      setLoading(true);
+      // wait for the transaction to get mined
+      await tx.wait();
+      setLoading(false);
+      // set the airdrop started to true
+      await checkIfAirdropStarted();
+    }
   } catch (err) {
     console.error(err);
   }
@@ -181,17 +187,20 @@ const checkIfAirdropStarted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      // call the presaleStarted from the contract
-      const _airdropStarted = await nftContract.airdropStarted();
-      if (!_airdropStarted) {
-        await getOwner();
+      if(provider != null) {
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+        // call the presaleStarted from the contract
+        const _airdropStarted = await nftContract.airdropStarted();
+        if (!_airdropStarted) {
+          await getOwner();
+        }
+        setAirdropStarted(_airdropStarted);
+        return _airdropStarted;
       }
-      setAirdropStarted(_airdropStarted);
-      return _airdropStarted;
+      return false;
     } catch (err) {
       console.error(err);
       return false;
@@ -207,30 +216,33 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      // call the presaleEnded from the contract
-      const _airdropEnded = await nftContract.airdropEnded();
-      console.log("_airdropEnded:");
-      console.log(typeof _airdropEnded);
-      console.log(_airdropEnded);
-      // _presaleEnded is a Big Number, so we are using the lt(less than function) instead of `<`
-      // Date.now()/1000 returns the current time in seconds
-      // We compare if the _presaleEnded timestamp is less than the current time
-      // which means presale has ended
-      let hasEnded = null;
-      if(_airdropEnded < Math.floor(Date.now() / 1000))
-        hasEnded = true;
-      else 
-        hasEnded = false;
-      if (hasEnded) {
-        setAirdropEnded(true);
-      } else {
-        setAirdropEnded(false);
+      if(provider != null) {
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+        // call the presaleEnded from the contract
+        const _airdropEnded = await nftContract.airdropEnded();
+        console.log("_airdropEnded:");
+        console.log(typeof _airdropEnded);
+        console.log(_airdropEnded);
+        // _presaleEnded is a Big Number, so we are using the lt(less than function) instead of `<`
+        // Date.now()/1000 returns the current time in seconds
+        // We compare if the _presaleEnded timestamp is less than the current time
+        // which means presale has ended
+        let hasEnded = null;
+        if(_airdropEnded < Math.floor(Date.now() / 1000))
+          hasEnded = true;
+        else 
+          hasEnded = false;
+        if (hasEnded) {
+          setAirdropEnded(true);
+        } else {
+          setAirdropEnded(false);
+        }
+        return hasEnded;
       }
-      return hasEnded;
+      return false;
     } catch (err) {
       console.error(err);
       return false;
@@ -246,26 +258,28 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      //const signer = await provider0.getSigner();
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      // call the owner function from the contract
-      const _owner = await nftContract.owner();
-      console.log("owner address:");
-      console.log(_owner);
-      // We will get the signer now to extract the address of the currently connected MetaMask account
-      //const signer = await getProviderOrSigner(true);
-      // Get the address associated to the signer which is connected to  MetaMask
-      const address = await signer.getAddress();
-      if (address.toLowerCase() == _owner.toLowerCase()) {
-        setIsOwner(true);        
+      if(provider != null){
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        //const signer = await provider0.getSigner();
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+        // call the owner function from the contract
+        const _owner = await nftContract.owner();
+        console.log("owner address:");
+        console.log(_owner);
+        // We will get the signer now to extract the address of the currently connected MetaMask account
+        //const signer = await getProviderOrSigner(true);
+        // Get the address associated to the signer which is connected to  MetaMask
+        const address = await signer.getAddress();
+        if (address.toLowerCase() == _owner.toLowerCase()) {
+          setIsOwner(true);        
+        }
+        console.log("Addres from wallet:");
+        console.log(address);
+        console.log("is owner");
+        console.log(isOwner);
       }
-      console.log("Addres from wallet:");
-      console.log(address);
-      console.log("is owner");
-      console.log(isOwner);
     } catch (err) {
       console.error(err.message);
     }
@@ -279,14 +293,16 @@ const getTokenIdsMinted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
-      // call the tokenIds from the contract
-      const _tokenIds = await nftContract.tokenIds();
-      //_tokenIds is a `Big Number`. We need to convert the Big Number to a string
-      setTokenIdsMinted(_tokenIds.toString());
+      if(provider != null) {
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, provider0);
+        // call the tokenIds from the contract
+        const _tokenIds = await nftContract.tokenIds();
+        //_tokenIds is a `Big Number`. We need to convert the Big Number to a string
+        setTokenIdsMinted(_tokenIds.toString());
+      }
     } catch (err) {
       console.error(err);
     }

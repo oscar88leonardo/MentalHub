@@ -60,16 +60,18 @@ export default function Home() {
 
   const addsetbaseTokenURI = async () => {
     try {
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-      console.log(baseTokenURI);
-      const tx = await nftContract.setbaseTokenURI(baseTokenURI);
-      await tx.wait();
-      const _baseTokenURI = await nftContract.tokenURI(2);
-      console.log(_baseTokenURI);
+      if(provider != null){
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        const signer = await provider0.getSigner();
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+        console.log(baseTokenURI);
+        const tx = await nftContract.setbaseTokenURI(baseTokenURI);
+        await tx.wait();
+        const _baseTokenURI = await nftContract.tokenURI(2);
+        console.log(_baseTokenURI);
+      }
 
     } catch (err) {
       console.error(err);
@@ -78,16 +80,18 @@ export default function Home() {
 
   const addsetgatewayTokenURI = async () => {
     try {
-      const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();
-      // We connect to the Contract using a Provider, so we will only
-      // have read-only access to the Contract
-      const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-      console.log(gatewayTokenURI);
-      const tx = await nftContract.setgatewayTokenURI(gatewayTokenURI);
-      await tx.wait();
-      const _gatewayTokenURI = await nftContract.gatewayURI(2);
-      console.log(_gatewayTokenURI);
+      if(provider != null) {
+        const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        const signer = await provider0.getSigner();
+        // We connect to the Contract using a Provider, so we will only
+        // have read-only access to the Contract
+        const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
+        console.log(gatewayTokenURI);
+        const tx = await nftContract.setgatewayTokenURI(gatewayTokenURI);
+        await tx.wait();
+        const _gatewayTokenURI = await nftContract.gatewayURI(2);
+        console.log(_gatewayTokenURI);
+      }
 
     } catch (err) {
       console.error(err);
