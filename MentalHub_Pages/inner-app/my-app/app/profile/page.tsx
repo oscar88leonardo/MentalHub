@@ -142,7 +142,7 @@ export default function Profile() {
       
     };
   
-    const renderNFTItems = (NFTitem, index) => {  
+    const renderNFTItems = (NFTitem: { pathImage: string | undefined; name: string | null | undefined; contSessions: number | bigint | null | undefined; }, index: number | null | undefined) => {  
       console.log(NFTitem);
       console.log(NFTItemsInfo);
       return(   
