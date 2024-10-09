@@ -120,7 +120,9 @@ export default function Profile() {
             console.log(element);
             if (!element)
             {
-              row.appendChild(col);
+              if (row != null){
+                row.appendChild(col);
+              }
             }
           }
         } catch (error) {
