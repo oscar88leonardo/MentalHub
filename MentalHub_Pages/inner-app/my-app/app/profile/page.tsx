@@ -5,7 +5,7 @@ import { AppContext } from "../../context/AppContext";
 import { Row, Col, Container, Card, CardBody} from "reactstrap";
 import Image from "next/image";
 import img0 from "../public/profile.png";
-import {  Contract } from "ethers";
+import {  Contract, JsonRpcSigner } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
@@ -51,8 +51,7 @@ export default function Profile() {
 
     let NFTItemsInfo: any[] = [];
 
-    const getNFTsOwner = async () => {
-      try {
+    const getNFTsOwner = async () => {      
         // We need a Signer here since this is a 'write' transaction.
         //const signer = await getProviderOrSigner(true);
         /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
@@ -60,10 +59,19 @@ export default function Profile() {
         // Create a new instance of the Contract with a Signer, which allows
         // update methods
         if(signer != null) {
-          const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
-          // call the mint from the contract to mint the MentalHub NFT
-          let ArrTokenIds = await nftContract.walletOfOwner(signer.getAddress()); 
+         try { 
+          // Ensure signer is the correct type
+          const ethersSigner = signer as unknown as JsonRpcSigner;
+
+          const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, ethersSigner);
+          
+          // Get the address asynchronously
+          const address = await ethersSigner.getAddress();
+
+          // call the contract method mint from the contract to mint the MentalHub NFT
+          let ArrTokenIds = await nftContract.walletOfOwner(address); 
           console.log(ArrTokenIds.length);
+          
           for (const TkId of ArrTokenIds) {
             try {
               /*const response = await fetch(
@@ -84,6 +92,7 @@ export default function Profile() {
               console.error(err);
             }
           }
+          
           for(const itemNFT of NFTItemsInfo) {
             console.log(itemNFT.name);
             const row = document.getElementById('NFTList');
@@ -114,6 +123,10 @@ export default function Profile() {
               row.appendChild(col);
             }
           }
+        } catch (error) {
+          console.error("Error interacting with NFT contract:", error);
+      }    
+
           /*try {
             const res = await fetch(
               'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
@@ -124,9 +137,7 @@ export default function Profile() {
             console.log(err);
           }*/
         }
-      } catch (err) {
-        console.error(err);
-      }
+      
     };
   
     const renderNFTItems = (NFTitem, index) => {  
