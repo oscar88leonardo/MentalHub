@@ -167,7 +167,7 @@ export default function Profile() {
           )  
     }  
 
-  const updateProfile = async (name,rol,pfp) => {
+  const updateProfile = async (name: string | undefined | null,rol: string | undefined | null,pfp: string | undefined | null) => {
 
     const strMutation = `
     mutation {
