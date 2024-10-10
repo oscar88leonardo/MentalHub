@@ -5,7 +5,7 @@ import Image from "next/image";
 import herobanner from "../../public/banner2.png";
 import styles from "../styles/Home.module.css";
 //import Web3Modal from "web3modal";
-import { Contract } from "ethers";
+import { Contract, JsonRpcSigner } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 
 import { AppContext } from "../../context/AppContext";
@@ -32,7 +32,8 @@ export default function Home() {
   const [numberOfWhitelisted, setNumberOfWhitelisted] = useState(0);
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   //const web3ModalRef = useRef();
-
+  // Signer definition as JsonRpcSigner
+  const ethersSigner = signer as unknown as JsonRpcSigner;
   /**
    * Returns a Provider or Signer object representing the Ethereum RPC with or without the
    * signing capabilities of metamask attached
@@ -82,83 +83,19 @@ export default function Home() {
    * addAddressToWhitelist: Adds the current connected address to the whitelist
    */
   const addAddressToWhitelist = async () => {
-    try {
-      // We need a Signer here since this is a 'write' transaction.
-      //const signer = await getProviderOrSigner(true);
-      /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-      const signer = await provider0.getSigner();*/
-      //await getPrivateKey();
-      /*console.log('PrivateKey:');
-      console.log(PrivateKey);
-      const signer = new Wallet(PrivateKey,provider0);*/
-      if(signer != null) {
-        console.log('signer:');
-        console.log(signer);
-        // Create a new instance of the Contract with a Signer, which allows
-        // update methods
-
-        //await provider.getFeeData();
-        /*await sendTransaction(WHITELIST_CONTRACT_ADDRESS,
-        "5000000000",
-        "6000000000000",
-        "0");
-        //await trs.wait();
-        console.log('pasa sendTransaction');*/
-        // call the addAddressToWhitelist from the contract
-        /*const destination = WHITELIST_CONTRACT_ADDRESS;
-        const amount = utils.parseEther("0"); // Convert 1 ether to wei
-        console.log('back transaction');
-        // Submit transaction to the blockchain
-        const tx0 = await signer.signTransaction({ // .sendTransaction({
-          from: signer.getAddress(),
-          to: destination,
-          value: amount,
-          maxPriorityFeePerGas: "5000000000", // Max priority fee per gas
-          maxFeePerGas: "6000000000000", // Max fee per gas
-        });
-        console.log('next transaction');
-        //await tx0.wait();
-        console.log('post transaction');*/
-
+    // We need a Signer here since this is a 'write' transaction.
+    if(signer != null) 
+    {
+      console.log('signer:');
+      console.log(signer);
+       // Interact with whitelist contract
+      try{
         const whitelistContract = new Contract(
           WHITELIST_CONTRACT_ADDRESS,
           abi,
-          signer
+          ethersSigner
         );
-        console.log('pasa new Contract');
-        /*const amount = utils.parseEther("0");
-        const estimatedGasLimit = await whitelistContract.estimateGas.addAddressToWhitelist();
-        //const withSigner = whitelistContract.connect(signer);
-        const tx = await whitelistContract.populateTransaction.addAddressToWhitelist();
-        console.log('pasa populateTransaction');
-        tx.chainId = 599;
-        tx.gasLimit = estimatedGasLimit;
-        tx.gasPrice = await provider0.getGasPrice();
-        tx.nonce = await provider0.getTransactionCount(signer.getAddress());
-        //tx.maxFeePerGas = utils.parseUnits('50','gwei');
-        
-        console.log('pasa tx');
-        console.log(tx);
-
-        const txSigned = await signer.signTransaction(tx);
-        console.log('pasa signTransaction');
-        const wallet = signer.connect(provider0);
-        const submittedTx = await wallet.sendTransaction(tx);
-        //const submittedTx = await provider0.sendTransaction(txSigned);
-        console.log('pasa sendTransaction');
-        setLoading(true);
-        console.log('pasa addAddressToWhitelist');
-        const Receipt = await submittedTx.wait();
-        if (Receipt.status === 0)
-            throw new Error("Approve transaction failed");*/
-        
-        /*const response = await signer.signTransaction(tx);
-        console.log('pasa response');
-        console.log(response);
-        const wallet = signer.connect(provider0);
-        await wallet.sendTransaction(tx);
-        setLoading(true);
-        console.log('pasa addAddressToWhitelist');*/
+        console.log('pasa new Contract');        
         setLoading(true);
         const tx = await whitelistContract.addAddressToWhitelist();
         // wait for the transaction to get mined
@@ -171,13 +108,12 @@ export default function Home() {
         await getNumberOfWhitelisted();
         setJoinedWhitelist(true);
         console.log('pasa setJoinedWhitelist');
+      } 
+      catch (error) {
+        console.error("Error adding address to with Whitelist contract:", error);
+        alert('Proccess failed, maybe check your funds.');
       }
-    } catch (err) {
-      console.error(err);
-      //console.error(err.code);
-      //console.error(err.message);
-      alert('Proccess failed, check your funds.');
-    }
+    }          
   };
 
   /**
@@ -217,7 +153,6 @@ export default function Home() {
    * checkIfAddressInWhitelist: Checks if the address is in whitelist
    */
   const checkIfAddressInWhitelist = async () => {
-    try {
       // We will need the signer later to get the user's address
       // Even though it is a read transaction, since Signers are just special kinds of Providers,
       // We can use it in it's place
@@ -226,24 +161,25 @@ export default function Home() {
       //const provider0 = new providers.Web3Provider(provider);
       const signer = await provider0.getSigner();*/
       if(signer != null) {
-        const whitelistContract = new Contract(
-          WHITELIST_CONTRACT_ADDRESS,
-          abi,
-          signer
-        );
-        // Get the address associated to the signer which is connected to  MetaMask
-        const address = await signer.getAddress();
-        // call the whitelistedAddresses from the contract
-        const _joinedWhitelist = await whitelistContract.whitelistedAddresses(
-          address
-        );
-        console.log("_joinedWhitelist:");
-        console.log(_joinedWhitelist);
-        setJoinedWhitelist(_joinedWhitelist);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+        try{
+          const whitelistContract = new Contract(
+            WHITELIST_CONTRACT_ADDRESS,
+            abi,
+            ethersSigner
+          );
+          // Get the address associated to the signer which is connected to  MetaMask
+          const address = await ethersSigner.getAddress();
+          // call the whitelistedAddresses from the contract
+          const _joinedWhitelist = await whitelistContract.whitelistedAddresses(
+            address
+          );
+          console.log("_joinedWhitelist:");
+          console.log(_joinedWhitelist);
+          setJoinedWhitelist(_joinedWhitelist);
+        } catch (error) {
+          console.error("Error checking if addres is in with Whitelist contract:", error);
+        }
+      }    
   };
 
   /*
