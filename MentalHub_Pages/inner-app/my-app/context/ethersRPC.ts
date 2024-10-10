@@ -1,5 +1,5 @@
 import type { SafeEventEmitterProvider } from "@web3auth/base";
-import { ethers,parseEther,formatEther } from "ethers";
+import { ethers,parseEther,formatEther, JsonRpcSigner } from "ethers";
 import { BrowserProvider } from "ethers/providers";
 
 export default class EthereumRpc {
@@ -25,9 +25,13 @@ export default class EthereumRpc {
     try {
       const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
       const signer = await ethersProvider.getSigner();
-
+      // Ensure signer is the correct type
+      const ethersSigner = signer as unknown as JsonRpcSigner;
+      
       // Get user's Ethereum public address
-      const address = await signer.getAddress();
+      // Get the address asynchronously
+      const address = await ethersSigner.getAddress();
+      //const address = await signer.getAddress(); //original line
 
       return address;
     } catch (error) {
@@ -40,9 +44,11 @@ export default class EthereumRpc {
       //const ethersProvider = new ethers.providers.Web3Provider(this.provider);
       const ethersProvider = new BrowserProvider(this.provider);//new ethers.providers.Web3Provider(this.provider);
       const signer = ethersProvider.getSigner();
-
+      // Ensure signer is the correct type
+      const ethersSigner = signer as unknown as JsonRpcSigner;
       // Get user's Ethereum public address
-      const address = await signer.getAddress();
+      //const address = await signer.getAddress();//original line
+      const address = await ethersSigner.getAddress();
 
       // Get user's balance in ether
       const balance = formatEther(
