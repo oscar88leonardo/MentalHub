@@ -7,7 +7,7 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
 //import { providerToBrowserProvider } from "../innerComp/providerUtility";
-import { BrowserProvider } from "ethers/providers"
+import { BrowserProvider, Eip1193Provider } from "ethers/providers"
 import { CeramicClient } from "@ceramicnetwork/http-client"
 import { ComposeClient } from "@composedb/client";
 
@@ -29,7 +29,7 @@ const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkM
 
 
 interface AppContextType {
-  provider: SafeEventEmitterProvider | null;
+  provider: SafeEventEmitterProvider | Eip1193Provider | null;
   signer: JsonRpcSigner | null;
   AddressWeb3: string | null;
   userInfo: any | null; // Replace 'any' with a more specific type if possible
@@ -70,10 +70,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://192.168.1.28:7007");
+  const ceramic = new CeramicClient("http://10.42.0.43:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://192.168.1.28:7007",
+    ceramic: "http://10.42.0.43:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
