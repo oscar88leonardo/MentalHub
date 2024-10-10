@@ -372,7 +372,7 @@ const executeQuery = async (query: string) => {
       console.info("provider not initialized yet");
       return;
     }
-    const rpc = new RPC(provider);
+    const rpc = new RPC(provider as SafeEventEmitterProvider);
     const address = await rpc.getAccounts();
     setAddressWeb3(address);
     //console.info(address);
@@ -383,7 +383,7 @@ const executeQuery = async (query: string) => {
       console.info("provider not initialized yet");
       return;
     }
-    const rpc = new RPC(provider);
+    const rpc = new RPC(provider as SafeEventEmitterProvider);
     const privateKey = await rpc.getPrivateKey();
     console.info('privateKey:');
     console.info(privateKey);
