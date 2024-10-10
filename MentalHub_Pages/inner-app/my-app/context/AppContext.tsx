@@ -28,7 +28,9 @@ const metamaskAdapter = new MetamaskAdapter();
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
 
-
+// Interfaces and types definitions :
+//
+// Appcontext types interface
 interface AppContextType {
   provider: SafeEventEmitterProvider | Eip1193Provider | null;
   signer: JsonRpcSigner | null;
@@ -51,6 +53,32 @@ interface AppContextType {
   getPrivateKey: () => Promise<void>;
 }
 
+//Types for Graphql querys
+//
+// Enum for Rol
+enum Rol {
+  Terapeuta = 'Terapeuta',
+  Consultante = 'Consultante'
+}
+
+// Interface for InnerverProfile
+interface InnerverProfile {
+  id: string; // ComposeDB typically adds an id field
+  displayName: string;
+  name: string;
+  rol: Rol;
+  pfp?: string; // Optional because it doesn't have a '!' in the schema
+}
+
+// Interface for the query result
+interface ProfileQueryResult {
+  data?: {
+    viewer?: {
+      innerverProfile?: InnerverProfile | undefined;
+    } | undefined;
+  } | null | undefined;
+}
+
 export const AppContext = createContext<AppContextType | null>(null);
 //export const AppContext = createContext(null);
 
@@ -65,8 +93,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [PrivateKey, setPrivateKey] = useState(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [flagInitExec, setFlagInitExec] = useState(false);
-
-  const [innerProfile, setInnerProfile] = useState();
+  const [innerProfile, setInnerProfile] = useState<InnerverProfile | null>(null);
 
   /**
    * Configure ceramic Client & create context.
@@ -263,7 +290,7 @@ const executeQuery = async (query: string) => {
       console.log("ceramic not initialized yet");
       return;
     }else {
-      const profile = await composeClient.executeQuery(`
+      const profile : ProfileQueryResult = await composeClient.executeQuery(`
         query {
           viewer {
             innerverProfile {
@@ -315,9 +342,13 @@ const executeQuery = async (query: string) => {
           }
         }
         `);
-        setInnerProfile(profile?.data?.viewer?.innerverProfile);
-        console.log("getInnerProfile:");
-        console.log(profile);
+        if (profile?.data?.viewer?.innerverProfile){
+          setInnerProfile(profile?.data?.viewer?.innerverProfile);
+          console.log("getInnerProfile:");
+          console.log(profile);    
+        } else {console.log('innerverProfile is undefined');}
+
+                
     }
     /*const { data, error } = await orbis.getProfile(userOrbis.did);  
     setOrbisProfile(data);
