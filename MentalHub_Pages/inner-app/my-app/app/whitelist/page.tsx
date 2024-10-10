@@ -15,7 +15,12 @@ import { WHITELIST_CONTRACT_ADDRESS, abi } from "../../constants/whitelist";
 
 export default function Home() {
   
-  const { provider, signer, getSigner, isConComposeDB } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { provider, signer, getSigner, isConComposeDB } = context;
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
