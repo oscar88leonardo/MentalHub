@@ -16,10 +16,11 @@ import { RuntimeCompositeDefinition } from "@composedb/types";
 
 import { DIDSession } from "did-session";
 import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
-
-import type {
+import { JsonRpcSigner } from "ethers/providers";
+/*import type {
   JsonRpcSigner
 } from "../node_modules/ethers/src.ts/providers/provider-jsonrpc.js";
+*/
 
 import { MetamaskAdapter } from "@web3auth/metamask-adapter";
 const metamaskAdapter = new MetamaskAdapter();
