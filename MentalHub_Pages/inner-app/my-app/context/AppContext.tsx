@@ -165,6 +165,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     }
     if (!session || (session.hasSession && session.isExpired)) {
       //const oProvider = providerToBrowserProvider(provider);      
+      if (!provider){
+        console.error("Provider is not initialized");
+        return;
+      }      
       const oProvider = new BrowserProvider(provider);
       const signer = await oProvider.getSigner();
 
