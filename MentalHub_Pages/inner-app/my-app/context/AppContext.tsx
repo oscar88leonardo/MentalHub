@@ -212,7 +212,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     
 };
 
-const executeQuery = async (query) => {
+const executeQuery = async (query: Record<string, any>) => {
   await loginComposeDB();
   console.log("exec ceramic OBJ");
   console.log(ceramic);
