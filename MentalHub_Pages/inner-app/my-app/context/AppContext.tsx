@@ -56,7 +56,7 @@ export const AppContext = createContext<AppContextType | null>(null);
 const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) => 
 {
   const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
-  const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(null);
+  const [provider, setProvider] = useState<SafeEventEmitterProvider | Eip1193Provider | null>(null);
   const [isConnected, setIsConected] = useState(false);
   const [isConComposeDB, setIsConComposeDB] = useState(false);
   const [AddressWeb3, setAddressWeb3] = useState(null);
