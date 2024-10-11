@@ -98,10 +98,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://10.42.0.43:7007");
+  const ceramic = new CeramicClient("http://192.168.1.2:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://10.42.0.43:7007",
+    ceramic: "http://192.168.1.2:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -125,7 +125,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
 
       const web3auth_local = new Web3Auth({
         clientId, 
-        web3AuthNetwork: "testnet", // mainnet, aqua, celeste, cyan or testnet
+        web3AuthNetwork: "sapphire_devnet", // mainnet, aqua, celeste, cyan or testnet
         privateKeyProvider: privateKeyProvider,
       });
 
