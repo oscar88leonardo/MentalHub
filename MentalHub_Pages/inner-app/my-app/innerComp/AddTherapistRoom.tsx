@@ -17,12 +17,27 @@ import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 import { createRoom } from '../app/meet/components/createRoom';
- 
-const AddTherapistRoom=(props)=> {
+
+// Component interface and type definitions
+interface AddTherapistRoomProps {
+  show: boolean;
+  close: () => void;
+  isedit: boolean;
+  state: string;
+  name: string;
+  id: string;
+}
+
+const AddTherapistRoom: React.FC<AddTherapistRoomProps> =(props)=> {
   const [name, setName] = useState("");
   const [state, setState] = useState("");
 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  } 
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
 
   const updateRecord = async () => {
     const now = new Date();

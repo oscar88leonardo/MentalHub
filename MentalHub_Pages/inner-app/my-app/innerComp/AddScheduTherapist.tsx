@@ -17,13 +17,29 @@ import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
- 
-const AddScheduTherapist=(props)=> {
+
+// Component interface and type definitions
+interface AddScheduTherapistProps {
+  show: boolean;
+  close: () => void;
+  isedit: boolean;
+  state: string;
+  id: string;
+  dateInit: Date;
+  dateFinish: Date;
+}
+
+const AddScheduTherapist: React.FC<AddScheduTherapistProps> =(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
   const [state, setState] = useState("");
 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }  
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
 
   const updateRecord = async () => {
     const now = new Date();
@@ -125,18 +141,29 @@ const AddScheduTherapist=(props)=> {
                   <Label for="dateInit">
                     Start Date
                   </Label>
-                  <DatePicker selected={dateInit}
-                    onChange={(date) => setDateInit(date)}
+                  <DatePicker 
+                    name="dateInit"
+                    selected={dateInit}
+                    onChange={(date: Date | null) => {
+                      if (date) {
+                        setDateInit(date)
+                      } 
+                    }}
                     timeInputLabel="Time:"
                     dateFormat="MM/dd/yyyy h:mm aa"
                     showTimeInput 
-                    name="dateInit" />
+                     />
                   <Label for="dateFinish">
                     End Date
                   </Label>
-                  <DatePicker name="dateFinish" 
+                  <DatePicker 
+                    name="dateFinish" 
                     selected={dateFinish} 
-                    onChange={(date) => setDateFinish(date)} 
+                    onChange={(date: Date | null) => {
+                      if (date) {
+                        setDateFinish(date) 
+                      } 
+                    }} 
                     timeInputLabel="Time:"
                     dateFormat="MM/dd/yyyy h:mm aa"
                     showTimeInput />

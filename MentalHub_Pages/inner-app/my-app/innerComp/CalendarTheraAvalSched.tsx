@@ -17,7 +17,12 @@ export default function CalendarTheraAvalSched({ localizer }) {
   const [dateFinish, setDateFinish] = useState(new Date());
   const [flagValidateDate, setFlagValidateDate] = useState(false);
 
-  const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }  
+  const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = context;
 
   useEffect(() => {
     if(innerProfile) { 

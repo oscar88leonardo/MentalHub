@@ -30,7 +30,12 @@ const TherapistRooms=()=> {
   const myRef = useRef(null);  
   const router = useRouter();
 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }  
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
 
   /*const getRooms = async () => {
     const strQuery = `
