@@ -18,9 +18,10 @@ import { AppContext } from "../context/AppContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from 'next/navigation';
+import { StreamID } from '@ceramicnetwork/streamid';
 
-
-// Component interface and type definitions
+/// Component interface and type definitions
+//
 interface AddScheduleProps {
   show: boolean;
   close: () => void;
@@ -34,14 +35,51 @@ interface AddScheduleProps {
   therapistInfo: any;
 }
 
+///interface for roomList
+// enum for room state
+enum State {
+  Archived = 'Archived',
+  Active = 'Active'
+}
+
+// Enum for Rol
+enum Rol {
+  Terapeuta = 'Terapeuta',
+  Consultante = 'Consultante'
+}
+
+// Interface for InnerverProfile
+interface InnerverProfile {
+  id: string; // ComposeDB typically adds an id field
+  displayName: string;
+  name: string;
+  rol: Rol;
+  pfp?: string; // Optional because it doesn't have a '!' in the schema
+}
+// interface for elements in roomList array
+interface Huddle01 {
+  state: State;
+  name: string;
+  roomId: string;
+  edited: Date;
+  created: Date;
+  profileId: StreamID;
+  profile: InnerverProfile;
+}
+
+// Interface for the node structure in the GraphQL response
+interface HuddleNode {
+  node: Huddle01;
+}
+/////////////
 
 const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
   const [state, setState] = useState("");
   const [room, setRoom] = useState("");
-  const [roomId, setRoomId] = useState("");
-  const [roomList, setRoomList] = useState([]);
+  const [roomId, setRoomId] = useState<string>("");
+  const [roomList, setRoomList] = useState<HuddleNode[]>([]);
   const [therapistName, setTherapistName] = useState("");
 
   // get global data from Appcontext
@@ -145,7 +183,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
     }
   },[props.show]);
 
-  const openMeet = (roomId) => {
+  const openMeet = (roomId: string) => {
     /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
     window.open(origin + "/meet/" + roomId, "_blank");*/
