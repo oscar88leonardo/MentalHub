@@ -5,6 +5,7 @@ import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
 import { AppContext } from "../context/AppContext";
 import AddSchedule from '../innerComp/AddSchedule';
 
+
 export default function CalendarSchedule({ therapist, setTherapist, localizer }) {
   const [myEvents, setEvents] = useState([]);
   const [availTEvents, setAvailTEvents] = useState([]);
@@ -17,11 +18,17 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer })
   const [modalAddScheduleID, setModalAddScheduleID] = useState("");
   const [modalAddScheduleDateInit, setModalAddScheduleDateInit] = useState(new Date());
   const [modalAddScheduleDateFinish, setModalAddScheduleDateFinish] = useState(new Date());
-  const [dateInit, setDateInit] = useState(new Date());
-  const [dateFinish, setDateFinish] = useState(new Date());
+  const [dateInit, setDateInit] = useState<Date>(new Date());
+  const [dateFinish, setDateFinish] = useState<Date>(new Date());
   const [flagValidateDate, setFlagValidateDate] = useState(false);
 
-  const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = context;
 
   useEffect(() => {
     if(therapist){
