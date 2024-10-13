@@ -58,6 +58,7 @@ interface InnerverProfile {
 }
 // interface for elements in roomList array
 interface Huddle01 {
+  id: string;
   state: State;
   name: string;
   roomId: string;
