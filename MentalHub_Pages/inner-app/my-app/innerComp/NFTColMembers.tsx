@@ -12,8 +12,12 @@ import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist";
 
 const NFTColMembers = () => {
-
-  const { provider, signer, getSigner,isConComposeDB } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { provider, signer, getSigner,isConComposeDB } = context;
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -38,7 +42,7 @@ const NFTColMembers = () => {
   /**
    * presaleMint: Mint an NFT during the presale
    */
-   const airdropMint = async (name, pathTypeContDig,pathContDigi,contSessions) => {
+   const airdropMint = async (name:string, pathTypeContDig:string,pathContDigi:string,contSessions:number) => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
@@ -87,7 +91,7 @@ const NFTColMembers = () => {
     }
   };
 
-  const publicMint = async (name, pathTypeContDig,pathContDigi,contSessions) => {
+  const publicMint = async (name:string, pathTypeContDig:string,pathContDigi:string,contSessions:number) => {
     try {
       // We need a Signer here since this is a 'write' transaction.
       //const signer = await getProviderOrSigner(true);
@@ -258,7 +262,7 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      if(provider != null){
+      if(provider != null && signer != null){
         const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
         //const signer = await provider0.getSigner();
         // We connect to the Contract using a Provider, so we will only
@@ -280,7 +284,7 @@ const checkIfAirdropEnded = async () => {
         console.log("is owner");
         console.log(isOwner);
       }
-    } catch (err) {
+    } catch (err:any) {
       console.error(err.message);
     }
   };  
@@ -363,7 +367,7 @@ useEffect(() => {
 
       // Check if airdrop has started and ended
       const _airdropStarted = checkIfAirdropStarted();
-      if (_airdropStarted) {
+      if (_airdropStarted != null) {
         checkIfAirdropEnded();
       }
 
@@ -400,7 +404,7 @@ const variables_state = () => {
   console.log(airdropEnded);
 } 
 
-const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
+const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
@@ -474,7 +478,7 @@ const renderButton = (name,pathTypeContDig,pathContDigi,contSessions) => {
     return NFTItemsInfo.map(renderNFTItems);
   }
   
-  const renderNFTItems = (NFTitem, index) => {  
+  const renderNFTItems = (NFTitem:any, index:number) => {  
     const RenderButtonStr = renderButton(NFTitem.name, NFTitem.pathTypeContDig, NFTitem.pathContDigi, NFTitem.contSessions);
 
     return(   
