@@ -1,5 +1,5 @@
 import ReactModal from 'react-modal';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, ChangeEvent } from 'react';
 import {
   Row,
   Col,
@@ -17,13 +17,17 @@ import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 
- 
+interface IpfsResponse {
+  IpfsHash: string;
+  [key: string]: any;
+} 
+
 const FormConsultante=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [rol, setRol] = useState("");
   const [pfp, setPfp] = useState("");
-  const [imageProfile, setImageProfile] = useState(null);
+  const [imageProfile, setImageProfile] = useState<File[]>([]);
   const [updateFlag,setupdateFlag] = useState(false);
   const [imageFlag,setimageFlag] = useState(false);
   //const record = useViewerRecord("basicProfile");
@@ -59,12 +63,19 @@ const FormConsultante=()=> {
         console.log('uploadedFile:');
         console.log(uploadedFile);   
         if (uploadedFile.status == 200){
-          await uploadedFile.json().then((object:Object) => {
+          const response = await uploadedFile.json() as IpfsResponse;
+          
+          if ('IpfsHash' in response) {
+            setPfp(response.IpfsHash);
+          } else {
+            console.error('Invalid response format - missing IpfsHash');
+          }
+          /*await uploadedFile.json().then((object:Object) => {
             console.log(object);
             if(object.hasOwnProperty('IpfsHash')){
               setPfp(object.IpfsHash);
             }
-          });
+          });*/
           //console.log(ipfshash.IpfsHash); 
           /*if(uploadedFile.result.url != undefined){
             console.log("uploaded file");
@@ -165,6 +176,16 @@ const FormConsultante=()=> {
     setimageFlag(false);
   }
   
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (fileList) {
+      const filesArray = Array.from(fileList);
+      setImageProfile(filesArray);
+    } else {
+      setImageProfile([]);
+    }
+  };
+
   return (
     <div>
       <NavLink
@@ -238,7 +259,7 @@ const FormConsultante=()=> {
               <Col lg="6">
                 <FormGroup className="m-t-15">
                   <Input type="file" placeholder="image" 
-                  onChange={(e) => setImageProfile(e.target.files)}/>
+                  onChange={handleFileChange}/>
                 </FormGroup>
               </Col>
               <Col lg="12">

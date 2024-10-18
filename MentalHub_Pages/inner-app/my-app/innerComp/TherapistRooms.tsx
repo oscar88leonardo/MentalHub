@@ -27,7 +27,7 @@ const TherapistRooms=()=> {
   //const [hudds,setHudds] = useState(null);
   //const [hasMounted, setHasMounted] = useState(false);
 
-  const myRef = useRef(null);  
+  const myRef = useRef<HTMLTableSectionElement | null>(null);  
   const router = useRouter();
 
   // get global data from Appcontext
