@@ -522,7 +522,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
           <Row>
             <div className="d-flex no-block align-items-center">
                       <span  className="thumb-img">
-                        <Image  src={ImgAuthor}  alt="wrapkit" className="circle" width="120%" height="120%"/> <br />
+                        <Image  src={ImgAuthor}  alt="wrapkit" className="circle" width="150" height="150"/> <br />
                       </span>
                       
                       <p className="text-center font-16"> 

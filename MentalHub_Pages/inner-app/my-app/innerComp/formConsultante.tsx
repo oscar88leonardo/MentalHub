@@ -28,8 +28,12 @@ const FormConsultante=()=> {
   const [imageFlag,setimageFlag] = useState(false);
   //const record = useViewerRecord("basicProfile");
   
-
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
 
   /*const updateRecordEmail = async (email) => {
     await record.merge({
@@ -38,7 +42,7 @@ const FormConsultante=()=> {
   };*/
 
 
-  const updateRecordImageProfile = async (imageProfile) => {
+  const updateRecordImageProfile = async (imageProfile:any) => {
     console.log('imageProfile:');
     console.log(imageProfile);
     if(imageProfile != null) {
@@ -126,7 +130,7 @@ const FormConsultante=()=> {
     }
   }, [imageFlag]);
 
-  const updateProfile = async (username,rol,pfp) => {
+  const updateProfile = async (username:string,rol:string,pfp:string) => {
     /*const res = await orbis.updateProfile({
       username:username,
       pfp:pfp
