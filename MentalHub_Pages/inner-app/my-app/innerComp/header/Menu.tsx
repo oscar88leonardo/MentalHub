@@ -13,7 +13,12 @@ import { AppContext } from "../../context/AppContext";
 
 
 const menu = () => {
-  const { provider, isConComposeDB, login, logout } = useContext(AppContext);
+  // get global data from Appcontext
+  const context = useContext(AppContext);
+  if (context === null) {
+    throw new Error("useContext must be used within a provider");
+  }
+  const { provider, isConComposeDB, login, logout } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
