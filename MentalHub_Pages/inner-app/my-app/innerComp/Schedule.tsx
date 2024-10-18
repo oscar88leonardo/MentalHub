@@ -22,12 +22,30 @@ import { momentLocalizer } from 'react-big-calendar'
 import CalendarSchedule from './CalendarSchedule'
 import "../node_modules/react-big-calendar/lib/css/react-big-calendar.css";
  
+// Add these interfaces at the top of the file
+interface TherapistNode {
+  id: string;
+  name: string;
+}
+
+interface TherapistEdge {
+  node: TherapistNode;
+}
+
+interface TherapistQueryResponse {
+  data?: {
+    innerverProfileIndex?: {
+      edges?: TherapistEdge[];
+    };
+  };
+}
+
 const localizer = momentLocalizer(moment)
 
 const Schedule=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [therapist, setTherapist] = useState("");
-  const [therapistList, setTherapistList] = useState([]);
+  const [therapistList, setTherapistList] = useState<TherapistEdge[]>([]);
 
   // get global data from Appcontext
   const context = useContext(AppContext);
