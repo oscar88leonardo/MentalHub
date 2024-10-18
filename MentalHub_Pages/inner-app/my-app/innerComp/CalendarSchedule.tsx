@@ -8,14 +8,52 @@ import AddSchedule from '../innerComp/AddSchedule';
 // Define the props for the CalendarSchedule component
 interface CalendarScheduleProps {
   therapist: string | null | undefined;
-  setTherapist: () => Promise<void>;
+  setTherapist: (therapist:string|null|undefined) => Promise<void>;
   localizer: DateLocalizer;
 }
 
+interface SchedTherap {
+  node: {
+    id: string;
+    date_init: string;
+    date_finish: string;
+    state: string;
+  }
+}
+
+interface TherapistNode {
+  sched_therap?: {
+    edges?: SchedTherap[]
+  }
+}
+
+interface TherapistInfo {
+  data?: {
+    nodes?: TherapistNode[]
+  }
+}
+
+interface BgEvent {
+  id: string;
+  start: Date;
+  end: Date;
+  state: string;
+}
+
+interface Event {
+  id: string;
+  start: Date;
+  end: Date;
+  state: string;
+  huddId: string;
+  roomId: string;
+  profileId: string;
+}
+
 export default function CalendarSchedule({ therapist, setTherapist, localizer }: CalendarScheduleProps) {
-  const [myEvents, setEvents] = useState([]);
-  const [availTEvents, setAvailTEvents] = useState([]);
-  const [therapistInfo, setTherapistInfo] = useState(null);
+  const [myEvents, setEvents] = useState<Event[]>([]);
+  const [availTEvents, setAvailTEvents] = useState<BgEvent[]>([]);
+  const [therapistInfo, setTherapistInfo] = useState<TherapistInfo | null>(null);
   const [modalAddScheduleisOpen, setModalAddScheduleisOpen] = useState(false);
   const [modalAddScheduleisEdit, setModalAddScheduleisEdit] = useState(false);
   const [modalAddScheduleState, setModalAddScheduleState] = useState("");
