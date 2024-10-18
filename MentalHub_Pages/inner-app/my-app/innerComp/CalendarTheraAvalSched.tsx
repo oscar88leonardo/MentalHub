@@ -5,7 +5,12 @@ import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
 import { AppContext } from "../context/AppContext";
 import AddScheduTherapist from '../innerComp/AddScheduTherapist';
 
-export default function CalendarTheraAvalSched({ localizer }) {
+// Define the props for the CalendarTheraAvalSched component
+interface CalendarTheraAvalSchedProps {
+  localizer: DateLocalizer;
+}
+
+export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSchedProps) {
   const [myEvents, setEvents] = useState([]);
   const [modalAddSchedTheraisOpen, setModalAddSchedTheraisOpen] = useState(false);
   const [modalAddSchedTheraisEdit, setModalAddSchedTheraisEdit] = useState(false);

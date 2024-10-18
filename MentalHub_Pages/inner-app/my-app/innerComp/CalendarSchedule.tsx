@@ -1,12 +1,18 @@
 import React, { Fragment, useState, useCallback, useMemo, useContext, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
+import { Calendar, Views, DateLocalizer } from 'react-big-calendar';
 //import events from './events'
 import { AppContext } from "../context/AppContext";
 import AddSchedule from '../innerComp/AddSchedule';
 
+// Define the props for the CalendarSchedule component
+interface CalendarScheduleProps {
+  therapist: string | null | undefined;
+  setTherapist: () => Promise<void>;
+  localizer: DateLocalizer;
+}
 
-export default function CalendarSchedule({ therapist, setTherapist, localizer }) {
+export default function CalendarSchedule({ therapist, setTherapist, localizer }: CalendarScheduleProps) {
   const [myEvents, setEvents] = useState([]);
   const [availTEvents, setAvailTEvents] = useState([]);
   const [therapistInfo, setTherapistInfo] = useState(null);

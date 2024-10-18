@@ -26,7 +26,7 @@ const localizer = momentLocalizer(moment)
 
 const Schedule=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
-  const [therapist, setTherapist] = useState(null);
+  const [therapist, setTherapist] = useState("");
   const [therapistList, setTherapistList] = useState([]);
 
   // get global data from Appcontext
