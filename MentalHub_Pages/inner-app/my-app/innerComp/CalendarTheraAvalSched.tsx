@@ -10,8 +10,21 @@ interface CalendarTheraAvalSchedProps {
   localizer: DateLocalizer;
 }
 
+// Define the event interface
+interface Event {
+  id: string;
+  start: Date;
+  end: Date;
+  state: string;
+}
+
+interface handleSelectSlotInterface {
+  start: Date;
+  end: Date;
+}
+
 export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSchedProps) {
-  const [myEvents, setEvents] = useState([]);
+  const [myEvents, setEvents] = useState<Event[]>([]);
   const [modalAddSchedTheraisOpen, setModalAddSchedTheraisOpen] = useState(false);
   const [modalAddSchedTheraisEdit, setModalAddSchedTheraisEdit] = useState(false);
   const [modalAddSchedTheraState, setModalAddSchedTheraState] = useState("");
@@ -57,7 +70,7 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
     }
   },[innerProfile]);
 
-  const updateRecord = async (dateInit,dateFinish) => {
+  const updateRecord = async (dateInit:Date,dateFinish:Date) => {
     if(innerProfile) { 
       const now = new Date();
       const strMutation = `
@@ -101,7 +114,7 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
   },[flagValidateDate]);
 
   const handleSelectSlot = useCallback(
-    async ({ start, end }) => {
+    async ({ start, end }:handleSelectSlotInterface) => {
       setDateInit(start);
       setDateFinish(end);
       setFlagValidateDate(true);
@@ -110,7 +123,7 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
   )
 
   const handleSelectEvent = useCallback(
-    (event) => {
+    (event:any) => {
       console.log("event:");
       console.log(event);
       openModalAddSchedThera(event.state,event.id,event.start,event.end);
@@ -128,7 +141,7 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
     []
   )
 
-  const openModalAddSchedThera = (state,id,dateInit,dateFinish) => {
+  const openModalAddSchedThera = (state:string,id:string,dateInit:Date,dateFinish:Date) => {
     setModalAddSchedTheraisEdit(true);
     setModalAddSchedTheraState(state);
     setModalAddSchedTheraID(id);

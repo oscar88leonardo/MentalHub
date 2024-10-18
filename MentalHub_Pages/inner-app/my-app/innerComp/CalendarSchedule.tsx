@@ -50,6 +50,11 @@ interface Event {
   profileId: string;
 }
 
+interface handleSelectSlotInterface {
+  start: Date;
+  end: Date;
+}
+
 export default function CalendarSchedule({ therapist, setTherapist, localizer }: CalendarScheduleProps) {
   const [myEvents, setEvents] = useState<Event[]>([]);
   const [availTEvents, setAvailTEvents] = useState<BgEvent[]>([]);
@@ -205,7 +210,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   },[flagValidateDate]);
 
   const handleSelectSlot = useCallback(    
-    async ({ start, end}) => {    
+    async ({ start, end}:handleSelectSlotInterface) => {    
       setDateInit(start);
       setDateFinish(end);
       setFlagValidateDate(true);
@@ -214,7 +219,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   )
 
   const handleSelectEvent = useCallback(
-    (event) => {
+    (event:any) => {
       console.log("event:");
       console.log(event);
       if(!event.isBackgroundEvent){
@@ -244,16 +249,16 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     []
   )
 
-  const openModalAddScheduleCreate = (dateInit,dateFinish) => {
+  const openModalAddScheduleCreate = (dateInit:Date,dateFinish:Date) => {
     setModalAddScheduleisEdit(false);
-    setModalAddScheduleState(null);
-    setModalAddScheduleID(null);
+    setModalAddScheduleState("");
+    setModalAddScheduleID("");
     setModalAddScheduleDateInit(dateInit);
     setModalAddScheduleDateFinish(dateFinish);
     setModalAddScheduleisOpen(true);
   };
 
-  const openModalAddScheduleEdit = (state,id,dateInit,dateFinish,huddId,roomId) => {
+  const openModalAddScheduleEdit = (state:string,id:string,dateInit:Date,dateFinish:Date,huddId:string,roomId:string) => {
     setModalAddScheduleisEdit(true);
     setModalAddScheduleState(state);
     setModalAddScheduleHuddId(huddId);
