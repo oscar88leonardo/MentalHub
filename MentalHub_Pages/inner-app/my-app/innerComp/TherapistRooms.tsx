@@ -65,7 +65,7 @@ const TherapistRooms=()=> {
     setHudds(hudds);
   };*/
 
-  const openModalAddRoom = (name,state,id) => {
+  const openModalAddRoom = (name:string,state:string,id:string) => {
     setModalAddRoomIsEdit(true);
     setModalAddRoomState(state);
     setModalAddRoomName(name);
@@ -73,7 +73,7 @@ const TherapistRooms=()=> {
     setModalAddRoomIsOpen(true)
   };
 
-  const openMeet = (roomId) => {
+  const openMeet = (roomId:string) => {
     /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
     window.open(origin + "/meet/" + roomId, "_blank");*/

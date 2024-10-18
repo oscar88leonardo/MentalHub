@@ -240,12 +240,20 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   );
 
   const { defaultDate, scrollToTime, minTime, maxTime } = useMemo(
-    () => ({
-      defaultDate: new Date(),
-      scrollToTime: new Date(1970, 1, 1, 6),
-      minTime: new Date().setHours(6),
-      maxTime: new Date().setHours(20)
-    }),
+    () => {
+      const min = new Date();
+      min.setHours(6, 0, 0, 0);
+      
+      const max = new Date();
+      max.setHours(20, 0, 0, 0);
+      
+      return {
+        defaultDate: new Date(),
+        scrollToTime: new Date(1970, 1, 1, 6),
+        minTime: new Date().setHours(6),
+        maxTime: new Date().setHours(20)
+      }
+    },
     []
   )
 
