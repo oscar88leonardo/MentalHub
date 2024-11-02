@@ -130,6 +130,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       });
 
       web3auth_local.configureAdapter(metamaskAdapter);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Add small delay
       await web3auth_local.initModal();
       setWeb3auth(web3auth_local);
 
