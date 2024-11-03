@@ -126,10 +126,17 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       const web3auth_local = new Web3Auth({
         clientId, 
         web3AuthNetwork: "sapphire_devnet", // mainnet, aqua, celeste, cyan or testnet
+        chainConfig,
         privateKeyProvider: privateKeyProvider,
+        enableLogging: true 
       });
 
       web3auth_local.configureAdapter(metamaskAdapter);
+
+      // Clear any stored data before initializing
+      localStorage.removeItem("openlogin_store");
+      sessionStorage.removeItem("ceramic:eth_did");
+
       await new Promise(resolve => setTimeout(resolve, 100)); // Add small delay
       await web3auth_local.initModal();
       setWeb3auth(web3auth_local);
@@ -172,72 +179,109 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   }, [isConnected])
 
   const login = async () => {
-    if (!web3auth) {
-      console.log("web3auth not initialized yet");
-      return;
-    }
-    const web3authProvider = await web3auth.connect();
-    setProvider(web3authProvider);
-    if(web3auth.connected)
-      setIsConected(true);
-    else
+    try {
+      if (!web3auth) {
+        console.error("web3auth not initialized yet");
+        return;
+      }
+  
+      console.log("Connecting to Web3Auth...");
+      const web3authProvider = await web3auth.connect();
+      
+      if (!web3authProvider) {
+        throw new Error("Failed to get provider");
+      }
+  
+      console.log("Provider received:", web3authProvider);
+      setProvider(web3authProvider);
+  
+      // Verify connection
+      const user = await web3auth.getUserInfo();
+      console.log("User info:", user);
+      setuserInfo(user);
+  
+      setIsConected(web3auth.connected);
+  
+    } catch (error) {
+      console.error("Error during login:", error);
       setIsConected(false);
+      // Clear any partial state
+      setProvider(null);
+      setuserInfo(null);
+    }
   };
   
   const loginComposeDB = async () => {
-    
-    const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
-    let session;
+    try {
+      const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
+      let session;
 
-    if (sessionStr) {
-      session = await DIDSession.fromSession(sessionStr);
-    }
-    if (!session || (session.hasSession && session.isExpired)) {
-      //const oProvider = providerToBrowserProvider(provider);      
-      if (!provider){
-        console.error("Provider is not initialized");
+      if (sessionStr) {
+        session = await DIDSession.fromSession(sessionStr);
+      }
+      if (!session || (session.hasSession && session.isExpired)) {
+        //const oProvider = providerToBrowserProvider(provider);      
+        if (!provider){
+          console.error("Provider is not initialized");
+          return;
+        }      
+        const oProvider = new BrowserProvider(provider);
+        const signer = await oProvider.getSigner();
+
+        // We enable the ethereum provider to get the user's addresses.
+        // const ethProvider = window.ethereum;
+        // request ethereum accounts.
+        
+        //setAddressWeb3(signer.address);
+        // Get the account ID with error handling
+      let accountId;
+      try {
+        accountId = await getAccountId(provider, signer.address);
+      } catch (error) {
+        console.error("Error getting account ID:", error);
         return;
-      }      
-      const oProvider = new BrowserProvider(provider);
-      const signer = await oProvider.getSigner();
+      }
 
-      // We enable the ethereum provider to get the user's addresses.
-      // const ethProvider = window.ethereum;
-      // request ethereum accounts.
-      
-      //setAddressWeb3(signer.address);
-      const accountId = await getAccountId(provider, signer.address);
-      
-      const authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
-      
-      
-      /**
-       * Create DIDSession & provide capabilities for resources that we want to access.
-       * @NOTE: The specific resources (ComposeDB data models) are provided through
-       * "compose.resources" below.
-       */
+      // Get auth method with error handling
+      let authMethod;
+      try {
+        authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
+      } catch (error) {
+        console.error("Error getting auth method:", error);
+        return;
+      }
+        
+        
+        /**
+         * Create DIDSession & provide capabilities for resources that we want to access.
+         * @NOTE: The specific resources (ComposeDB data models) are provided through
+         * "compose.resources" below.
+         */
 
-      session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
-      
-      sessionStorage.setItem("ceramic:eth_did", session.serialize());
-      // Set the session in localStorage.
-      //localStorage.setItem("ceramic:eth_did", session.serialize());
-      setSigner(signer);
-    }
+        session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
+        
+        sessionStorage.setItem("ceramic:eth_did", session.serialize());
+        // Set the session in localStorage.
+        //localStorage.setItem("ceramic:eth_did", session.serialize());
+        setSigner(signer);
+      }
 
-    // Set our Ceramic DID to be our session DID.
-    composeClient.setDID(session.did);
-    ceramic.did = session.did;
+      // Set our Ceramic DID to be our session DID.
+      composeClient.setDID(session.did);
+      ceramic.did = session.did;
 
-    /*console.log("ceramic OBJ");
-    console.log(ceramic);
-    console.log("ComposeDB OBJ");
-    console.log(composeClient);*/
+      /*console.log("ceramic OBJ");
+      console.log(ceramic);
+      console.log("ComposeDB OBJ");
+      console.log(composeClient);*/
 
-    setIsConComposeDB(true);
+      setIsConComposeDB(true);
 
-    return;
-    
+      return;
+    } catch (error) {
+      console.error("Error in loginComposeDB:", error);
+      setIsConComposeDB(false);
+    }  
 };
 
 const executeQuery = async (query: string) => {
@@ -257,22 +301,31 @@ const executeQuery = async (query: string) => {
   //getInnerProfile();
 }
 
-  const logout = async () => {
-    
-    
+const logout = async () => {
+  try {
     if (!web3auth) {
       console.info("web3auth not initialized yet");
       return;
     }
-    console.log("web3auth-logout:");
-    console.log(web3auth);
+    
+    // Clear all state and storage
     await web3auth.logout();
     setProvider(null);
     setIsConected(false);
     setIsConComposeDB(false);
+    setSigner(null);
+    setuserInfo(null);
+    setInnerProfile(null);
+    
+    // Clear storage
     sessionStorage.removeItem("ceramic:eth_did");
+    localStorage.removeItem("openlogin_store");
+    
     window.location.href = "/";
-  };
+  } catch (error) {
+    console.error("Error during logout:", error);
+  }
+};
 
 
   const getUserInfo = async () => {
