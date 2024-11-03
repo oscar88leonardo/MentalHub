@@ -214,27 +214,18 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   
   const loginComposeDB = async () => {
     try {
-      const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
-      let session;
-
-      if (sessionStr) {
-        session = await DIDSession.fromSession(sessionStr);
+      if (!provider) {
+        console.error("Provider is not initialized");
+        return;
       }
-      if (!session || (session.hasSession && session.isExpired)) {
-        //const oProvider = providerToBrowserProvider(provider);      
-        if (!provider){
-          console.error("Provider is not initialized");
-          return;
-        }      
-        const oProvider = new BrowserProvider(provider);
-        const signer = await oProvider.getSigner();
-
-        // We enable the ethereum provider to get the user's addresses.
-        // const ethProvider = window.ethereum;
-        // request ethereum accounts.
-        
-        //setAddressWeb3(signer.address);
-        // Get the account ID with error handling
+  
+      // Clear existing session
+      sessionStorage.removeItem("ceramic:eth_did");
+      
+      const oProvider = new BrowserProvider(provider);
+      const signer = await oProvider.getSigner();
+      
+      // Get the account ID with error handling
       let accountId;
       try {
         accountId = await getAccountId(provider, signer.address);
@@ -242,7 +233,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         console.error("Error getting account ID:", error);
         return;
       }
-
+  
       // Get auth method with error handling
       let authMethod;
       try {
@@ -251,40 +242,29 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         console.error("Error getting auth method:", error);
         return;
       }
-        
-        
-        /**
-         * Create DIDSession & provide capabilities for resources that we want to access.
-         * @NOTE: The specific resources (ComposeDB data models) are provided through
-         * "compose.resources" below.
-         */
-
-        session = await DIDSession.authorize(authMethod, { resources: composeClient.resources });
-        
-        sessionStorage.setItem("ceramic:eth_did", session.serialize());
-        // Set the session in localStorage.
-        //localStorage.setItem("ceramic:eth_did", session.serialize());
-        setSigner(signer);
-      }
-
-      // Set our Ceramic DID to be our session DID.
+  
+      // Create DID session
+      const session = await DIDSession.authorize(authMethod, {
+        resources: composeClient.resources,
+        expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+      });
+  
+      sessionStorage.setItem("ceramic:eth_did", session.serialize());
+      
+      // Set DID for both clients
       composeClient.setDID(session.did);
       ceramic.did = session.did;
-
-      /*console.log("ceramic OBJ");
-      console.log(ceramic);
-      console.log("ComposeDB OBJ");
-      console.log(composeClient);*/
-
+      
+      setSigner(signer);
       setIsConComposeDB(true);
-
-      return;
+  
     } catch (error) {
       console.error("Error in loginComposeDB:", error);
       setIsConComposeDB(false);
-    }  
-};
+    }
+  };
 
+  
 const executeQuery = async (query: string) => {
   await loginComposeDB();
   console.log("exec ceramic OBJ");
