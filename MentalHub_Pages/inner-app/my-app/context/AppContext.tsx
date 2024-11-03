@@ -1,5 +1,6 @@
 "use client"
 import { Web3Auth } from "@web3auth/modal";
+import type {OpenloginUserInfo } from "@web3auth/openlogin-adapter";
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import RPC from "./ethersRPC";
 import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
@@ -35,7 +36,7 @@ interface AppContextType {
   provider: SafeEventEmitterProvider | Eip1193Provider | null;
   signer: JsonRpcSigner | null;
   AddressWeb3: string | null;
-  userInfo: any | null; // Replace 'any' with a more specific type if possible
+  userInfo: Partial<OpenloginUserInfo> | null; // Replace 'any' with a more specific type if possible
   PrivateKey: string | null;
   isConnected: boolean;
   isConComposeDB: boolean;
@@ -89,7 +90,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [isConnected, setIsConected] = useState(false);
   const [isConComposeDB, setIsConComposeDB] = useState(false);
   const [AddressWeb3, setAddressWeb3] = useState(null);
-  const [userInfo, setuserInfo] = useState(null);
+  const [userInfo, setuserInfo] = useState<Partial<OpenloginUserInfo> | null>(null);
   const [PrivateKey, setPrivateKey] = useState(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [flagInitExec, setFlagInitExec] = useState(false);
