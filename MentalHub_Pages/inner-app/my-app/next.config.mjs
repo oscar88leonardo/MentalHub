@@ -47,6 +47,20 @@ const nextConfig = {
         },
       ],
     },
+    webpack: (config) => {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: 'crypto-browserify',
+        stream: 'stream-browserify',
+        http: 'stream-http',
+        https: 'https-browserify',
+        os: 'os-browserify',
+      };
+      return config;
+    },
   };
 
 export default nextConfig;
