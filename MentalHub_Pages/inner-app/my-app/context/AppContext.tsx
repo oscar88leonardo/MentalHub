@@ -260,6 +260,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
           expiresInSecs: 60 * 60 * 24 * 7, // 1 week
         });
         console.log("getting ceramic:eth_did");
+        console.log("session.serialize():");
+        console.log(session.serialize());
         sessionStorage.setItem("ceramic:eth_did", session.serialize());
         setSigner(signer);
         // Set DID for both clients
