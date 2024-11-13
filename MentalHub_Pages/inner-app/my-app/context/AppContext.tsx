@@ -225,46 +225,83 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       const oProvider = new BrowserProvider(provider);
       const signer = await oProvider.getSigner();
       
-      // Get the account ID with error handling
+      // Get the account ID with detailed error handling
       let accountId;
       try {
+        console.log("Getting account ID for address:", signer.address);
         accountId = await getAccountId(provider, signer.address);
+        console.log("Account ID obtained:", accountId);
       } catch (error) {
         console.error("Error getting account ID:", error);
+        console.error("Provider state:", provider);
+        console.error("Signer address:", signer.address);
         return;
       }
   
-      // Get auth method with error handling
+      // Get auth method with detailed error handling
       let authMethod;
       try {
-        authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
+        console.log("Getting auth method for account ID:", accountId);
+        // Ensure provider implements all required methods with proper typing
+        const providerWithMethods = {
+          ...provider,
+          request: async ({ method, params }: { method: string; params?: unknown[] }) => {
+            if (!provider.request) {
+              throw new Error("Provider doesn't implement request method");
+            }
+            return provider.request({ method, params });
+          }
+        };
+        
+        authMethod = await EthereumWebAuth.getAuthMethod(providerWithMethods, accountId);
+        console.log("Auth method obtained:", authMethod);
       } catch (error) {
         console.error("Error getting auth method:", error);
+        console.error("Account ID:", accountId);
         return;
       }
   
-      // Create DID session
-      const session = await DIDSession.authorize(authMethod, {
-        resources: composeClient.resources,
-        expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-      });
+      // Create DID session with error handling
+      let session;
+      try {
+        console.log("Creating DID session...");
+        session = await DIDSession.authorize(authMethod, {
+          resources: composeClient.resources,
+          expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+        });
+        console.log("DID session created successfully");
+      } catch (error) {
+        console.error("Error creating DID session:", error);
+        console.error("Auth method state:", authMethod);
+        return;
+      }
   
-      sessionStorage.setItem("ceramic:eth_did", session.serialize());
-      
-      // Set DID for both clients
-      composeClient.setDID(session.did);
-      ceramic.did = session.did;
-      
-      setSigner(signer);
-      setIsConComposeDB(true);
+      // Store and set session
+      try {
+        const serializedSession = session.serialize();
+        console.log("Session serialized successfully");
+        sessionStorage.setItem("ceramic:eth_did", serializedSession);
+        
+        composeClient.setDID(session.did);
+        ceramic.did = session.did;
+        console.log("DID set successfully for both clients");
+        
+        setSigner(signer);
+        setIsConComposeDB(true);
+      } catch (error) {
+        console.error("Error in final session setup:", error);
+        return;
+      }
   
     } catch (error) {
       console.error("Error in loginComposeDB:", error);
       setIsConComposeDB(false);
+      // Throw the error to ensure it's properly caught by the caller
+      throw error;
     }
   };
 
-  
+
 const executeQuery = async (query: string) => {
   await loginComposeDB();
   console.log("exec ceramic OBJ");
