@@ -14,7 +14,7 @@
     "@composedb/client": "0.6.0",
     "@composedb/devtools": "0.6.1",
     "@composedb/devtools-node": "0.6.1",
-    "@didtools/pkh-ethereum": "^0.4.1",
+    "@didtools/pkh-ethereum": "^0.5.0",
     "@huddle01/iframe": "^0.0.14",
     "@huddle01/react": "^2.0.14",
     "@huddle01/server-sdk": "^2.2.2",
