@@ -50,11 +50,11 @@ const nextConfig = {
     webpack: (config) => {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        crypto: require.resolve('crypto-browserify'),
-        stream: require.resolve('stream-browserify'),
-        http: require.resolve('stream-http'),
-        https: require.resolve('https-browserify'),
-        os: require.resolve('os-browserify'),
+        crypto: 'crypto-browserify',
+        stream: 'stream-browserify',
+        http: 'stream-http',
+        https: 'https-browserify',
+        os: 'os-browserify',
       };
       return config;
     },
