@@ -23,6 +23,7 @@ import { JsonRpcSigner } from "ethers/providers";
 } from "../node_modules/ethers/src.ts/providers/provider-jsonrpc.js";
 */
 
+
 import { MetamaskAdapter } from "@web3auth/metamask-adapter";
 const metamaskAdapter = new MetamaskAdapter();
 
@@ -211,6 +212,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       setuserInfo(null);
     }
   };
+
+
   
   const loginComposeDB = async () => {
     try {
@@ -242,37 +245,63 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       let authMethod;
       try {
         console.log("Getting auth method for account ID:", accountId);
-        // Ensure provider implements all required methods with proper typing
+        
+        // Create a properly typed provider wrapper
         const providerWithMethods = {
           ...provider,
           request: async ({ method, params }: { method: string; params?: unknown[] }) => {
             if (!provider.request) {
               throw new Error("Provider doesn't implement request method");
             }
-            return provider.request({ method, params });
+            const response = await provider.request({ method, params });
+            console.log(`Provider request - Method: ${method}, Response:`, response);
+            return response;
           }
         };
+  
+        // Explicitly create the auth method with proper typing
+        authMethod = await EthereumWebAuth.getAuthMethod(providerWithMethods, accountId );
         
-        authMethod = await EthereumWebAuth.getAuthMethod(providerWithMethods, accountId);
-        console.log("Auth method obtained:", authMethod);
+        if (typeof authMethod !== 'function') {
+          throw new Error("Invalid auth method returned");
+        }
+        
+        console.log("Auth method obtained successfully");
       } catch (error) {
         console.error("Error getting auth method:", error);
         console.error("Account ID:", accountId);
         return;
       }
   
-      // Create DID session with error handling
+      // Create DID session with error handling and additional verification
       let session;
       try {
         console.log("Creating DID session...");
+        
+        // Verify resources before creating session
+        console.log("ComposeDB resources:", composeClient.resources);
+        
+        // Create session with explicit typing and verification
         session = await DIDSession.authorize(authMethod, {
           resources: composeClient.resources,
           expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-        });
-        console.log("DID session created successfully");
+        }, );
+  
+        if (!session || !session.did) {
+          throw new Error("Invalid session created");
+        }
+        
+        console.log("DID session created successfully:", session.id);
       } catch (error) {
         console.error("Error creating DID session:", error);
         console.error("Auth method state:", authMethod);
+        if (error instanceof Error) {
+          console.error("Error details:", {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+          });
+        }
         return;
       }
   
@@ -280,6 +309,12 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       try {
         const serializedSession = session.serialize();
         console.log("Session serialized successfully");
+        
+        // Verify serialized session format
+        if (typeof serializedSession !== 'string') {
+          throw new Error("Invalid session serialization format");
+        }
+        
         sessionStorage.setItem("ceramic:eth_did", serializedSession);
         
         composeClient.setDID(session.did);
@@ -296,7 +331,6 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     } catch (error) {
       console.error("Error in loginComposeDB:", error);
       setIsConComposeDB(false);
-      // Throw the error to ensure it's properly caught by the caller
       throw error;
     }
   };
