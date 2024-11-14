@@ -333,7 +333,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         setIsConComposeDB(true);
       } catch (error) {
         console.error("Error in final session setup:", error);
-        throw new Error(`Failed to setup session: ${error.message}`);
+        throw new Error(`Failed to setup session: ${error}`);
       }
   
     } catch (error) {
