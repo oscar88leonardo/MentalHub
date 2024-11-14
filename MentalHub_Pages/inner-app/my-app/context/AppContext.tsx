@@ -99,10 +99,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://35.223.206.243:7007");
+  const ceramic = new CeramicClient("http://34.44.205.252:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://35.223.206.243:7007",
+    ceramic: "http://34.44.205.252:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -214,13 +214,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   
   const loginComposeDB = async () => {
     try {
-      const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
-      let session;
-
-      if (sessionStr) {
-        session = await DIDSession.fromSession(sessionStr);
+      if (!provider) {
+        console.error("Provider is not initialized");
+        return;
       }
-<<<<<<< HEAD
   
       // Clear existing session
       sessionStorage.removeItem("ceramic:eth_did");
@@ -296,65 +293,6 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         return;
       }
   
-=======
-      if (!session || (session.hasSession && session.isExpired)) {
-
-        if (!provider) {
-          console.error("Provider is not initialized");
-          return;
-        }
-    
-        // Clear existing session
-        sessionStorage.removeItem("ceramic:eth_did");
-        console.log("removed ceramic:eth_did");
-        const oProvider = new BrowserProvider(provider);
-        const signer = await oProvider.getSigner();
-        
-        // Get the account ID with error handling
-        console.log("getting accountId");
-        let accountId;
-        try {
-          accountId = await getAccountId(provider, signer.address);
-        } catch (error) {
-          console.error("Error getting account ID:", error);
-          return;
-        }
-    
-        // Get auth method with error handling
-        console.log("getting authMethod");
-        let authMethod;
-        try {
-          authMethod = await EthereumWebAuth.getAuthMethod(provider, accountId);
-        } catch (error) {
-          console.error("Error getting auth method:", error);
-          return;
-        }
-    
-        // Create DID session
-        console.log("getting session");
-        const session = await DIDSession.authorize(authMethod, {
-          resources: composeClient.resources,
-          expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-        });
-        console.log("getting ceramic:eth_did");
-        console.log("session.serialize():");
-        console.log(session.serialize());
-        sessionStorage.setItem("ceramic:eth_did", session.serialize());
-        setSigner(signer);
-        // Set DID for both clients
-        composeClient.setDID(session.did);
-        ceramic.did = session.did;
-        
-        setIsConComposeDB(true);
-      }else{
-        // Set DID for both clients
-        composeClient.setDID(session.did);
-        ceramic.did = session.did;
-        
-        setIsConComposeDB(true);
-      }
-  
->>>>>>> 823b1edc741b6cc8ca7d43b463b2422c1c9561e0
     } catch (error) {
       console.error("Error in loginComposeDB:", error);
       setIsConComposeDB(false);
