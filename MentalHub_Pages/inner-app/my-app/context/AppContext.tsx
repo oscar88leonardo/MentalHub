@@ -228,81 +228,85 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       const oProvider = new BrowserProvider(provider);
       const signer = await oProvider.getSigner();
       
-      // Get the account ID with detailed error handling
+      // Get the account ID
       let accountId;
       try {
-        console.log("Getting account ID for address:", signer.address);
-        accountId = await getAccountId(provider, signer.address);
+        const address = await signer.getAddress();
+        console.log("Getting account ID for address:", address);
+        accountId = await getAccountId(provider, address);
         console.log("Account ID obtained:", accountId);
       } catch (error) {
         console.error("Error getting account ID:", error);
-        console.error("Provider state:", provider);
-        console.error("Signer address:", signer.address);
-        return;
+        throw new Error(`Failed to get account ID: ${error}`);
       }
   
-      // Get auth method with detailed error handling
+      // Get auth method
       let authMethod;
       try {
         console.log("Getting auth method for account ID:", accountId);
         
-        // Create a properly typed provider wrapper
+        // Create a properly typed provider wrapper with additional logging
         const providerWithMethods = {
           ...provider,
           request: async ({ method, params }: { method: string; params?: unknown[] }) => {
             if (!provider.request) {
               throw new Error("Provider doesn't implement request method");
             }
+            console.log(`Provider request - Method: ${method}, Params:`, params);
             const response = await provider.request({ method, params });
-            console.log(`Provider request - Method: ${method}, Response:`, response);
+            console.log(`Provider response:`, response);
             return response;
           }
         };
   
-        // Explicitly create the auth method with proper typing
-        authMethod = await EthereumWebAuth.getAuthMethod(providerWithMethods, accountId );
-        
-        if (typeof authMethod !== 'function') {
-          throw new Error("Invalid auth method returned");
-        }
+        authMethod = await EthereumWebAuth.getAuthMethod(
+          providerWithMethods,
+          accountId
+        );
         
         console.log("Auth method obtained successfully");
       } catch (error) {
         console.error("Error getting auth method:", error);
-        console.error("Account ID:", accountId);
-        return;
+        throw new Error(`Failed to get auth method: ${error}`);
       }
   
-      // Create DID session with error handling and additional verification
+      // Create DID session
       let session;
       try {
         console.log("Creating DID session...");
         
-        // Verify resources before creating session
+        // Verify resources
+        if (!composeClient.resources || composeClient.resources.length === 0) {
+          throw new Error("ComposeDB resources not properly initialized");
+        }
         console.log("ComposeDB resources:", composeClient.resources);
         
-        // Create session with explicit typing and verification
+        // Create session with domain and origin from current window location
         session = await DIDSession.authorize(authMethod, {
           resources: composeClient.resources,
           expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-        }, );
+          domain: window.location.hostname
+        });
   
         if (!session || !session.did) {
           throw new Error("Invalid session created");
         }
         
-        console.log("DID session created successfully:", session.id);
+        console.log("DID session created:", {
+          id: session.id,
+          domain: window.location.hostname,
+          origin: window.location.origin
+        });
       } catch (error) {
         console.error("Error creating DID session:", error);
-        console.error("Auth method state:", authMethod);
         if (error instanceof Error) {
-          console.error("Error details:", {
+          console.error("Detailed error:", {
             message: error.message,
             stack: error.stack,
             name: error.name
           });
         }
-        return;
+        throw new Error(`Failed to create DID session: ${error}`);
       }
   
       // Store and set session
@@ -310,27 +314,32 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         const serializedSession = session.serialize();
         console.log("Session serialized successfully");
         
-        // Verify serialized session format
+        // Verify serialized session
         if (typeof serializedSession !== 'string') {
           throw new Error("Invalid session serialization format");
         }
         
+        // Store session with additional logging
+        console.log("Storing session in sessionStorage...");
         sessionStorage.setItem("ceramic:eth_did", serializedSession);
         
+        console.log("Setting DID for clients...");
         composeClient.setDID(session.did);
         ceramic.did = session.did;
-        console.log("DID set successfully for both clients");
+        
+        console.log("DID setup complete");
         
         setSigner(signer);
         setIsConComposeDB(true);
       } catch (error) {
         console.error("Error in final session setup:", error);
-        return;
+        throw new Error(`Failed to setup session: ${error.message}`);
       }
   
     } catch (error) {
-      console.error("Error in loginComposeDB:", error);
+      console.error("Fatal error in loginComposeDB:", error);
       setIsConComposeDB(false);
+      // Rethrow the error to be handled by the caller
       throw error;
     }
   };
