@@ -16,7 +16,7 @@ import { definition } from "../src/__generated__/definition.js";
 import { RuntimeCompositeDefinition } from "@composedb/types";
 
 import { DIDSession } from "did-session";
-import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
+import { EthereumNodeAuth, getAccountId } from "@didtools/pkh-ethereum";
 import { JsonRpcSigner } from "ethers/providers";
 /*import type {
   JsonRpcSigner
@@ -259,55 +259,58 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
           }
         };
   
-        authMethod = await EthereumWebAuth.getAuthMethod(
+        const appName = 'Innerverse'
+        authMethod = await EthereumNodeAuth.getAuthMethod(
           providerWithMethods,
-          accountId
+          accountId,
+          appName
         );
         
         console.log("Auth method obtained successfully");
+        console.log('Auth method:', authMethod);
       } catch (error) {
         console.error("Error getting auth method:", error);
         throw new Error(`Failed to get auth method: ${error}`);
       }
   
-      // Create DID session
-      let session;
-      try {
-        console.log("Creating DID session...");
-        
-        // Verify resources
-        if (!composeClient.resources || composeClient.resources.length === 0) {
-          throw new Error("ComposeDB resources not properly initialized");
-        }
-        console.log("ComposeDB resources:", composeClient.resources);
-        
-        // Create session with domain and origin from current window location
-        session = await DIDSession.authorize(authMethod, {
-          resources: composeClient.resources,
-          expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-          domain: window.location.hostname
-        });
-  
-        if (!session || !session.did) {
-          throw new Error("Invalid session created");
-        }
-        
-        console.log("DID session created:", {
-          id: session.id,
-          domain: window.location.hostname,
-          origin: window.location.origin
-        });
-      } catch (error) {
-        console.error("Error creating DID session:", error);
-        if (error instanceof Error) {
-          console.error("Detailed error:", {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
+        // Create DID session
+        let session;
+        try {
+          console.log("Creating DID session...");
+          
+          // Verify resources
+          if (!composeClient.resources || composeClient.resources.length === 0) {
+            throw new Error("ComposeDB resources not properly initialized");
+          }
+          console.log("ComposeDB resources:", composeClient.resources);
+          
+          // Create session with domain and origin from current window location
+          session = await DIDSession.authorize(authMethod, {
+            resources: composeClient.resources,
+            expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+            domain: window.location.hostname,
           });
+    
+          if (!session || !session.did) {
+            throw new Error("Invalid session created");
+          }
+          
+          console.log("DID session created:", {
+            id: session.id,
+            domain: window.location.hostname,
+            origin: window.location.origin
+          });
+        } catch (error) {
+          console.error("Error creating DID session:", error);
+          if (error instanceof Error) {
+            console.error("Detailed error:", {
+              message: error.message,
+              stack: error.stack,
+              name: error.name
+            });
+          }
+          throw new Error(`Failed to create DID session: ${error}`);
         }
-        throw new Error(`Failed to create DID session: ${error}`);
-      }
   
       // Store and set session
       try {
