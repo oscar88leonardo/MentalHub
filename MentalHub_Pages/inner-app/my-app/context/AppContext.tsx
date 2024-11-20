@@ -137,7 +137,7 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
 
       // Clear any stored data before initializing
       localStorage.removeItem("openlogin_store");
-      sessionStorage.removeItem("ceramic:eth_did");
+      //sessionStorage.removeItem("ceramic:eth_did");
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Add small delay
       await web3auth_local.initModal();
@@ -217,126 +217,141 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   
   const loginComposeDB = async () => {
     try {
-      if (!provider) {
-        console.error("Provider is not initialized");
-        return;
+      const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
+      let session;
+      console.log("Getting sessionStr:", sessionStr);
+      if (sessionStr) {
+        session = await DIDSession.fromSession(sessionStr);
       }
-  
-      // Clear existing session
-      sessionStorage.removeItem("ceramic:eth_did");
-      
-      const oProvider = new BrowserProvider(provider);
-      const signer = await oProvider.getSigner();
-      
-      // Get the account ID
-      let accountId;
-      try {
-        const address = await signer.getAddress();
-        console.log("Getting account ID for address:", address);
-        accountId = await getAccountId(provider, address);
-        console.log("Account ID obtained:", accountId);
-      } catch (error) {
-        console.error("Error getting account ID:", error);
-        throw new Error(`Failed to get account ID: ${error}`);
-      }
-  
-      // Get auth method
-      let authMethod;
-      try {
-        console.log("Getting auth method for account ID:", accountId);
-        
-        // Create a properly typed provider wrapper with additional logging
-        const providerWithMethods = {
-          ...provider,
-          request: async ({ method, params }: { method: string; params?: unknown[] }) => {
-            if (!provider.request) {
-              throw new Error("Provider doesn't implement request method");
-            }
-            console.log(`Provider request - Method: ${method}, Params:`, params);
-            const response = await provider.request({ method, params });
-            console.log(`Provider response:`, response);
-            return response;
-          }
-        };
-  
-        authMethod = await EthereumWebAuth.getAuthMethod(
-          providerWithMethods,
-          accountId
-        );
-        
-        console.log("Auth method obtained successfully");
-        console.log('Auth method:', authMethod);
-      } catch (error) {
-        console.error("Error getting auth method:", error);
-        throw new Error(`Failed to get auth method: ${error}`);
-      }
-  
-        // Create DID session
-        let session;
-        try {
-          console.log("Creating DID session...");
-          
-          // Verify resources
-          if (!composeClient.resources || composeClient.resources.length === 0) {
-            throw new Error("ComposeDB resources not properly initialized");
-          }
-          console.log("ComposeDB resources:", composeClient.resources);
-          
-          // Create session with domain and origin from current window location
-          session = await DIDSession.authorize(authMethod, {
-            resources: composeClient.resources,
-            expiresInSecs: 60 * 60 * 24 * 7, // 1 week
-            domain: window.location.hostname,
-          });
+      console.log("Getting session:", session);
+      if (!session || (session.hasSession && session.isExpired)) {
+        if (!provider) {
+          console.error("Provider is not initialized");
+          return;
+        }
     
-          if (!session || !session.did) {
-            throw new Error("Invalid session created");
+        // Clear existing session
+        sessionStorage.removeItem("ceramic:eth_did");
+        
+        const oProvider = new BrowserProvider(provider);
+        const signer = await oProvider.getSigner();
+        
+        // Get the account ID
+        let accountId;
+        try {
+          const address = await signer.getAddress();
+          console.log("Getting account ID for address:", address);
+          accountId = await getAccountId(provider, address);
+          console.log("Account ID obtained:", accountId);
+        } catch (error) {
+          console.error("Error getting account ID:", error);
+          throw new Error(`Failed to get account ID: ${error}`);
+        }
+    
+        // Get auth method
+        let authMethod;
+        try {
+          console.log("Getting auth method for account ID:", accountId);
+          
+          // Create a properly typed provider wrapper with additional logging
+          const providerWithMethods = {
+            ...provider,
+            request: async ({ method, params }: { method: string; params?: unknown[] }) => {
+              if (!provider.request) {
+                throw new Error("Provider doesn't implement request method");
+              }
+              console.log(`Provider request - Method: ${method}, Params:`, params);
+              const response = await provider.request({ method, params });
+              console.log(`Provider response:`, response);
+              return response;
+            }
+          };
+    
+          authMethod = await EthereumWebAuth.getAuthMethod(
+            providerWithMethods,
+            accountId
+          );
+          
+          console.log("Auth method obtained successfully");
+          console.log('Auth method:', authMethod);
+        } catch (error) {
+          console.error("Error getting auth method:", error);
+          throw new Error(`Failed to get auth method: ${error}`);
+        }
+    
+          // Create DID session
+          let session;
+          try {
+            console.log("Creating DID session...");
+            
+            // Verify resources
+            if (!composeClient.resources || composeClient.resources.length === 0) {
+              throw new Error("ComposeDB resources not properly initialized");
+            }
+            console.log("ComposeDB resources:", composeClient.resources);
+            
+            // Create session with domain and origin from current window location
+            session = await DIDSession.authorize(authMethod, {
+              resources: composeClient.resources,
+              expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+              domain: window.location.hostname,
+            });
+      
+            if (!session || !session.did) {
+              throw new Error("Invalid session created");
+            }
+            
+            console.log("DID session created:", {
+              id: session.id,
+              domain: window.location.hostname,
+              origin: window.location.origin
+            });
+          } catch (error) {
+            console.error("Error creating DID session:", error);
+            if (error instanceof Error) {
+              console.error("Detailed error:", {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+              });
+            }
+            throw new Error(`Failed to create DID session: ${error}`);
+          }
+    
+        // Store and set session
+        try {
+          const serializedSession = session.serialize();
+          console.log("Session serialized successfully");
+          
+          // Verify serialized session
+          if (typeof serializedSession !== 'string') {
+            throw new Error("Invalid session serialization format");
           }
           
-          console.log("DID session created:", {
-            id: session.id,
-            domain: window.location.hostname,
-            origin: window.location.origin
-          });
+          // Store session with additional logging
+          console.log("Storing session in sessionStorage...");
+          sessionStorage.setItem("ceramic:eth_did", serializedSession);
+          
+          console.log("Setting DID for clients...");
+          composeClient.setDID(session.did);
+          ceramic.did = session.did;
+          
+          console.log("DID setup complete");
+          
+          setSigner(signer);
+          setIsConComposeDB(true);
         } catch (error) {
-          console.error("Error creating DID session:", error);
-          if (error instanceof Error) {
-            console.error("Detailed error:", {
-              message: error.message,
-              stack: error.stack,
-              name: error.name
-            });
-          }
-          throw new Error(`Failed to create DID session: ${error}`);
+          console.error("Error in final session setup:", error);
+          throw new Error(`Failed to setup session: ${error}`);
         }
-  
-      // Store and set session
-      try {
-        const serializedSession = session.serialize();
-        console.log("Session serialized successfully");
-        
-        // Verify serialized session
-        if (typeof serializedSession !== 'string') {
-          throw new Error("Invalid session serialization format");
-        }
-        
-        // Store session with additional logging
-        console.log("Storing session in sessionStorage...");
-        sessionStorage.setItem("ceramic:eth_did", serializedSession);
-        
+      } else {
         console.log("Setting DID for clients...");
-        composeClient.setDID(session.did);
-        ceramic.did = session.did;
-        
-        console.log("DID setup complete");
-        
-        setSigner(signer);
-        setIsConComposeDB(true);
-      } catch (error) {
-        console.error("Error in final session setup:", error);
-        throw new Error(`Failed to setup session: ${error}`);
+          composeClient.setDID(session.did);
+          ceramic.did = session.did;
+          
+          console.log("DID setup complete");
+          setIsConComposeDB(true);
       }
-  
     } catch (error) {
       console.error("Fatal error in loginComposeDB:", error);
       setIsConComposeDB(false);

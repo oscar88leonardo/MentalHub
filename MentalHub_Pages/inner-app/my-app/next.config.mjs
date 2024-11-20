@@ -18,7 +18,7 @@ const nextConfig = {
       ];
     },
     reactStrictMode: false,
-    swcMinify: true,
+    swcMinify: false,
     images: {
       remotePatterns: [
         {
