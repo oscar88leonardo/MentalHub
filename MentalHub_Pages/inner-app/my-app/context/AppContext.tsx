@@ -16,7 +16,7 @@ import { definition } from "../src/__generated__/definition.js";
 import { RuntimeCompositeDefinition } from "@composedb/types";
 
 import { DIDSession } from "did-session";
-import { EthereumNodeAuth, getAccountId } from "@didtools/pkh-ethereum";
+import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
 import { JsonRpcSigner } from "ethers/providers";
 /*import type {
   JsonRpcSigner
@@ -259,11 +259,9 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
           }
         };
   
-        const appName = 'Innerverse'
-        authMethod = await EthereumNodeAuth.getAuthMethod(
+        authMethod = await EthereumWebAuth.getAuthMethod(
           providerWithMethods,
-          accountId,
-          appName
+          accountId
         );
         
         console.log("Auth method obtained successfully");
