@@ -100,10 +100,10 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   /**
    * Configure ceramic Client & create context.
    */
-  const ceramic = new CeramicClient("http://34.44.205.252:7007");
+  const ceramic = new CeramicClient("http://104.154.49.160:7007");
 
   const composeClient = new ComposeClient({
-    ceramic: "http://34.44.205.252:7007",
+    ceramic: "http://104.154.49.160:7007",
     // cast our definition as a RuntimeCompositeDefinition
     definition: definition as RuntimeCompositeDefinition,
   });
@@ -219,11 +219,11 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
     try {
       const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
       let session;
-      console.log("Getting sessionStr:", sessionStr);
+      //console.log("Getting sessionStr:", sessionStr);
       if (sessionStr) {
         session = await DIDSession.fromSession(sessionStr);
       }
-      console.log("Getting session:", session);
+      //console.log("Getting session:", session);
       if (!session || (session.hasSession && session.isExpired)) {
         if (!provider) {
           console.error("Provider is not initialized");
