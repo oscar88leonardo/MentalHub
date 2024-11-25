@@ -13,7 +13,7 @@ import { Ed25519Provider } from "key-did-provider-ed25519";
 import { getResolver } from "key-did-resolver";
 import { fromString } from "uint8arrays/from-string";
 
-const ceramic = new CeramicClient("http://34.44.205.252:7007");
+const ceramic = new CeramicClient("https://ceramicnode.innerverse.care");
 
 /**
  * @param {Ora} spinner - to provide progress status.
