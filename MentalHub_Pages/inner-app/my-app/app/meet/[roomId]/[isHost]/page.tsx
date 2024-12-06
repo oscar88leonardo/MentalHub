@@ -1,8 +1,8 @@
 'use client';
 
-import ChatBox from '../components/ChatBox/ChatBox';
-import RemotePeer from '../components/RemotePeer';
-import { TPeerMetadata } from '../utils/types';
+import ChatBox from '../../components/ChatBox/ChatBox';
+import RemotePeer from '../../components/RemotePeer';
+import { TPeerMetadata } from '../../utils/types';
 import { Video } from '@huddle01/react/components';
 import {
   useLocalAudio,
@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export default function Home({ params }: { params: { roomId: string } }) {
+export default function Home({ params }: { params: { roomId: string, isHost: string } }) {
   const [displayName, setDisplayName] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
@@ -38,7 +38,7 @@ export default function Home({ params }: { params: { roomId: string } }) {
   const { peerIds } = usePeerIds();
 
   const getToken = async () => {
-    const tokenResponse = await fetch(`token?roomId=${params.roomId}`);
+    const tokenResponse = await fetch(`/meet/token?isHost=${params.isHost}&roomId=${params.roomId}`);
     const token = await tokenResponse.text();
     return token;
   };

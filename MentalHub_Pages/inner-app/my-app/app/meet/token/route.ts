@@ -25,15 +25,23 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const roomId = searchParams.get('roomId');
+  const isHost = searchParams.get('isHost');
+  console.log('roomId:' + roomId);
+  console.log('isHost:' + isHost);
 
   if (!roomId) {
     return new Response('Missing roomId', { status: 400 });
   }
-
+  let role;
+  if (isHost == '1'){
+    role = Role.HOST;
+  } else {
+    role = Role.GUEST;
+  }
   const accessToken = new AccessToken({
     apiKey: process.env.API_KEY!,
     roomId: roomId as string,
-    role: Role.HOST,
+    role: role,
     permissions: {
       admin: true,
       canConsume: true,

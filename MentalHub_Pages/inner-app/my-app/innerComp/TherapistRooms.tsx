@@ -77,7 +77,7 @@ const TherapistRooms=()=> {
     /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
     window.open(origin + "/meet/" + roomId, "_blank");*/
-    router.push(`/meet/${roomId}`);
+    router.push(`/meet/${roomId}/1`);
   };
 
   const renderHuddsTable = () => {
