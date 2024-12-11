@@ -13,15 +13,18 @@ import {
   useRoom,
 } from '@huddle01/react/hooks';
 import { Inter } from 'next/font/google';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export default function Home({ params }: { params: { roomId: string, isHost: string } }) {
+export default function Home({ params }: { params: { roomId: string; isHost: string } }) {
   const [displayName, setDisplayName] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
 
-  const { joinRoom, state } = useRoom({
+  const router = useRouter();
+
+  const { joinRoom, leaveRoom, state } = useRoom({
     onJoin: (room) => {
       console.log('onJoin', room);
       updateMetadata({ displayName });
@@ -32,8 +35,7 @@ export default function Home({ params }: { params: { roomId: string, isHost: str
   });
   const { enableVideo, isVideoOn, stream, disableVideo } = useLocalVideo();
   const { enableAudio, disableAudio, isAudioOn } = useLocalAudio();
-  const { startScreenShare, stopScreenShare, shareStream } =
-    useLocalScreenShare();
+  const { startScreenShare, stopScreenShare, shareStream } = useLocalScreenShare();
   const { updateMetadata } = useLocalPeer<TPeerMetadata>();
   const { peerIds } = usePeerIds();
 
@@ -44,121 +46,132 @@ export default function Home({ params }: { params: { roomId: string, isHost: str
   };
 
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center p-4 ${inter.className}`}
-    >
-      <div className='z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex'>
-        <p className='fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30'>
-          <code className='font-mono font-bold'>{state}</code>
-        </p>
-        <div className='fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none'>
-          {state === 'idle' && (
-            <>
-              <input
-                disabled={state !== 'idle'}
-                placeholder='Display Name'
-                type='text'
-                className='border-2 border-blue-400 rounded-lg p-2 mx-2 bg-black text-white'
-                value={displayName}
-                onChange={(event) => setDisplayName(event.target.value)}
-              />
+    <main className={`min-h-screen p-4 ${inter.className}`}>
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-2xl font-bold text-center">Video Conference</h1>
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            Room Status: <span className="font-semibold">{state}</span>
+          </p>
+        </header>
 
-              <button
-                disabled={!displayName}
-                type='button'
-                className='bg-blue-500 p-2 mx-2 rounded-lg'
-                onClick={async () => {
-                  const token = await getToken();
-                  await joinRoom({
-                    roomId: params.roomId as string,
-                    token,
-                  });
-                }}
-              >
-                Join Room
-              </button>
-            </>
-          )}
-
-          {state === 'connected' && (
-            <>
-              <button
-                type='button'
-                className='bg-blue-500 p-2 mx-2 rounded-lg'
-                onClick={async () => {
-                  isVideoOn ? await disableVideo() : await enableVideo();
-                }}
-              >
-                {isVideoOn ? 'Disable Video' : 'Enable Video'}
-              </button>
-              <button
-                type='button'
-                className='bg-blue-500 p-2 mx-2 rounded-lg'
-                onClick={async () => {
-                  isAudioOn ? await disableAudio() : await enableAudio();
-                }}
-              >
-                {isAudioOn ? 'Disable Audio' : 'Enable Audio'}
-              </button>
-              <button
-                type='button'
-                className='bg-blue-500 p-2 mx-2 rounded-lg'
-                onClick={async () => {
-                  shareStream
-                    ? await stopScreenShare()
-                    : await startScreenShare();
-                }}
-              >
-                {shareStream ? 'Disable Screen' : 'Enable Screen'}
-              </button>
-              <button
-                type='button'
-                className='bg-blue-500 p-2 mx-2 rounded-lg'
-                onClick={async () => {
-                  const status = isRecording
-                    ? await fetch(`/stopRecording?roomId=${params.roomId}`)
-                    : await fetch(`/startRecording?roomId=${params.roomId}`);
-
-                  const data = await status.json();
-                  console.log({ data });
-                  setIsRecording(!isRecording);
-                }}
-              >
-                {isRecording ? 'Stop Recording' : 'Start Recording'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className='w-full mt-8 flex gap-4 justify-between items-stretch'>
-        <div className='flex-1 justify-between items-center flex flex-col'>
-          <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-            <div className='relative flex gap-2'>
-              {stream && (
-                <div className='w-1/2 mx-auto border-2 rounded-xl border-blue-400'>
-                  <Video stream={stream} className='aspect-video rounded-xl' />
-                </div>
-              )}
-              {shareStream && (
-                <div className='w-1/2 mx-auto border-2 rounded-xl border-blue-400'>
-                  <Video
-                    stream={shareStream}
-                    className='aspect-video rounded-xl'
+        <div className="space-y-8">
+          <div className="w-full">
+            <div className="mb-4">
+              {state === 'idle' ? (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <input
+                    disabled={state !== 'idle'}
+                    placeholder="Display Name"
+                    type="text"
+                    className="w-full sm:w-auto border-2 border-blue-400 rounded-lg p-2 bg-black text-white"
+                    value={displayName}
+                    onChange={(event) => setDisplayName(event.target.value)}
                   />
+                  <button
+                    disabled={!displayName}
+                    type="button"
+                    className="w-full sm:w-auto bg-blue-500 p-2 rounded-lg text-white disabled:opacity-50"
+                    onClick={async () => {
+                      const token = await getToken();
+                      await joinRoom({
+                        roomId: params.roomId as string,
+                        token,
+                      });
+                    }}
+                  >
+                    Join Room
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    className="bg-blue-500 p-2 rounded-lg text-white"
+                    onClick={async () => {
+                      isVideoOn ? await disableVideo() : await enableVideo();
+                    }}
+                  >
+                    {isVideoOn ? 'Disable Video' : 'Enable Video'}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-blue-500 p-2 rounded-lg text-white"
+                    onClick={async () => {
+                      isAudioOn ? await disableAudio() : await enableAudio();
+                    }}
+                  >
+                    {isAudioOn ? 'Disable Audio' : 'Enable Audio'}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-blue-500 p-2 rounded-lg text-white"
+                    onClick={async () => {
+                      shareStream ? await stopScreenShare() : await startScreenShare();
+                    }}
+                  >
+                    {shareStream ? 'Stop Sharing' : 'Share Screen'}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-blue-500 p-2 rounded-lg text-white"
+                    onClick={async () => {
+                      const status = isRecording
+                        ? await fetch(`/meet/stopRecording?roomId=${params.roomId}`)
+                        : await fetch(`/meet/startRecording?roomId=${params.roomId}`);
+
+                      const data = await status.json();
+                      console.log({ data });
+                      setIsRecording(!isRecording);
+                    }}
+                  >
+                    {isRecording ? 'Stop Recording' : 'Start Recording'}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-red-500 p-2 rounded-lg text-white"
+                    onClick={async () => {
+                      await leaveRoom();
+                      router.push(`/profile`);
+                    }}
+                  >
+                    Disconnect
+                  </button>
                 </div>
               )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {stream && (
+                <div className="border-2 rounded-xl border-blue-400 overflow-hidden">
+                  <Video stream={stream} className="w-full h-full object-cover" />
+                </div>
+              )}
+              {shareStream && (
+                <div className="border-2 rounded-xl border-blue-400 overflow-hidden">
+                  <Video stream={shareStream} className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {peerIds.map((peerId) => (peerId ? <RemotePeer key={peerId} peerId={peerId} /> : null))}
+            </div>
           </div>
 
-          <div className='mt-8 mb-32 grid gap-2 text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left'>
-            {peerIds.map((peerId) =>
-              peerId ? <RemotePeer key={peerId} peerId={peerId} /> : null
-            )}
-          </div>
+          {state === 'connected' && (
+            <div className="w-full max-w-3xl mx-auto">
+              <ChatBox />
+            </div>
+          )}
         </div>
-        {state === 'connected' && <ChatBox />}
       </div>
     </main>
   );
 }
+
+
+
+
+
+
