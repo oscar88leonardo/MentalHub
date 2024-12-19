@@ -33,8 +33,10 @@ export async function GET(request: Request) {
     return new Response('Missing roomId', { status: 400 });
   }
   let role;
+  let admin = false;
   if (isHost == '1'){
     role = Role.HOST;
+    admin = true;
   } else {
     role = Role.GUEST;
   }
@@ -43,7 +45,7 @@ export async function GET(request: Request) {
     roomId: roomId as string,
     role: role,
     permissions: {
-      admin: true,
+      admin: admin,
       canConsume: true,
       canProduce: true,
       canProduceSources: {
