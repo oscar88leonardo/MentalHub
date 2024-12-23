@@ -80,7 +80,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = context;
 
   useEffect(() => {
-    if(therapist){
+    if(therapist && therapist != "Select therapist"){
       console.log(therapist);
       getTherapistInfo();
     }
@@ -203,14 +203,18 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       if(validAvailEvent && !validMyEvent) {
         openModalAddScheduleCreate(dateInit,dateFinish);
       } else {
-        alert('Please, Select an available date.');
+        alert('Please, Select a therapist and an available date.');
       }
       setFlagValidateDate(false);
     }
   },[flagValidateDate]);
 
   const handleSelectSlot = useCallback(    
-    async ({ start, end}:handleSelectSlotInterface) => {    
+    async ({ start, end}:handleSelectSlotInterface) => {
+      if (!therapist || therapist === "" || therapist ===  "Select therapist") {
+        alert('Please, select a therapist before schedule a date');
+        return;
+      }    
       setDateInit(start);
       setDateFinish(end);
       setFlagValidateDate(true);
@@ -256,8 +260,33 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     },
     []
   )
+  // Check if an event is within a background event
+  const isEventWithinBackgroundEvent = (event: Event, bgEvent: BgEvent) => {
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
+    const bgStart = new Date(bgEvent.start);
+    const bgEnd = new Date(bgEvent.end);
+
+    return eventStart >= bgStart && eventEnd <= bgEnd;
+  }
+
+  //Modify the events before rendering the calendar
+  const filteredEvents = useMemo(() => {
+    if (!therapist || !myEvents || !availTEvents) return [];
+    
+    return myEvents.filter(event =>
+      availTEvents.some(bgEvent => 
+        isEventWithinBackgroundEvent(event, bgEvent))
+    );
+  }, [myEvents, availTEvents, therapist]); 
+
 
   const openModalAddScheduleCreate = (dateInit:Date,dateFinish:Date) => {
+    if (!therapist || therapist === "" || therapist === "Select therapist") {
+      alert('Please, select a therapist before schedule a date');
+      return;
+    }  
+
     setModalAddScheduleisEdit(false);
     setModalAddScheduleState("");
     setModalAddScheduleID("");
@@ -300,16 +329,22 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   return (
     <Fragment>
       <AddSchedule show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} therapistInfo={therapistInfo}/>
+      {!therapist && (
+        <div className="alert alert-info m-b-20">
+          Please, select a therapist to check his/her availability.
+        </div>
+      )
+      }
       <div style={{height:600}}>
         <Calendar
           defaultDate={defaultDate}
           defaultView={Views.MONTH}
-          events={myEvents}
+          events={filteredEvents} // use filteredEvents instead of myEvents
           backgroundEvents={availTEvents}
           localizer={localizer}
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
-          selectable
+          selectable={!!therapist} // solo permitir selección si hay un terapeuta seleccionado
           scrollToTime={scrollToTime}
           min={minTime}
           max={maxTime}
