@@ -194,16 +194,29 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   
   useEffect(() => {
     if(flagValidateDate){
+      console.log('Fecha inicio seleccionada:', dateInit);
+      console.log('Fecha fin seleccionada:', dateFinish);
+
       let validAvailEvent = availTEvents.some(({start, end}) => {
         return dateInit >= start && dateInit <= end && dateFinish >= start && dateFinish <= end;
       });
+
+      // Nueva logica para validar superposición de eventos
       let validMyEvent = myEvents.some(({start, end}) => {
-        return (dateInit >= start && dateInit <= end) || (dateFinish >= start && dateFinish <= end);
+        //verifica si hay superposicion real, excluyendo los casos donde solo coinciden los limites
+        return (dateInit < end && dateFinish > start) &&
+               !(dateInit.getTime() === end.getTime() || dateFinish.getTime() === start.getTime());
+        // logica previa
+        //return (dateInit >= start && dateInit <= end) || (dateFinish >= start && dateFinish <= end);
       });
+
+      console.log('Evento disponible:', validAvailEvent);
+      console.log('Conflicto con evento existente:', validMyEvent);
+
       if(validAvailEvent && !validMyEvent) {
         openModalAddScheduleCreate(dateInit,dateFinish);
       } else {
-        alert('Please, Select a therapist and an available date.');
+        alert('Please, Select an available date.');
       }
       setFlagValidateDate(false);
     }
@@ -219,7 +232,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       setDateFinish(end);
       setFlagValidateDate(true);
     },
-    [setEvents]
+    [setEvents, therapist]
   )
 
   const handleSelectEvent = useCallback(
