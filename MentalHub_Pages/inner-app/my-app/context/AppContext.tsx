@@ -438,6 +438,23 @@ const logout = async () => {
                     roomId
                     created
                     state
+                    schedules(filters: {where: {state: {in: [Pending,Active]}}}, last: 100) {
+                      edges {
+                        node {
+                          created
+                          date_finish
+                          date_init
+                          profileId
+                          profile {
+                            id
+                            name
+                            displayName
+                          }
+                          state
+                          id
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -477,7 +494,7 @@ const logout = async () => {
           setInnerProfile(profile?.data?.viewer?.innerverProfile);
           console.log("getInnerProfile:");
           console.log(profile);    
-        } else {console.log('innerverProfile is undefined');}
+        } else {console.log(profile);console.log('innerverProfile is undefined');}
 
                 
     }

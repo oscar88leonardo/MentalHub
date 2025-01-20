@@ -1,0 +1,7 @@
+type Schedule @loadModel(id: "$SCHE_ID") {
+    id: ID!
+}
+
+type Huddle01 @loadModel(id: "$HUDD_ID") {
+    schedules: [Schedule] @relationFrom(model: "Schedule", property: "huddId")
+}

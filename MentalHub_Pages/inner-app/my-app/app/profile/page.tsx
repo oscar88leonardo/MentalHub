@@ -13,6 +13,7 @@ import TherapistRooms  from "../../innerComp/TherapistRooms";
 import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
 import Schedule from "@/innerComp/Schedule";
 import App from "next/app";
+import SchedTherapist from "@/innerComp/SchedTherapist";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
@@ -285,6 +286,7 @@ export default function Profile() {
                       <TherapistRooms />
                       <TherapistAvalSched />
                       <Schedule />
+                      <SchedTherapist />
                     </div>
                   </CardBody>
                 </Card>

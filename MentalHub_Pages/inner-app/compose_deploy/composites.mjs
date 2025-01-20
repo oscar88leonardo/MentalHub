@@ -74,6 +74,20 @@ export const writeComposite = async (spinner) => {
     schema: schedProfileSchema,
   });
 
+  const SchedHuddle01Schema = readFileSync(
+    "../composites/innerverseSchedHuddle01.graphql",
+    {
+      encoding: "utf-8",
+    }
+  )
+    .replace("$HUDD_ID", huddleComposite.modelIDs[1])
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[2])
+  //console.log(huddsProfileSchema);
+  const SchedHuddle01Composite = await Composite.create({
+    ceramic,
+    schema: SchedHuddle01Schema,
+  });
+
   const schedTherapSchema = readFileSync("../composites/innerverseSchedTherapist.graphql", {
     encoding: "utf-8",
   }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
@@ -105,6 +119,7 @@ export const writeComposite = async (spinner) => {
     huddsProfileComposite,
     scheduleComposite,
     schedProfileComposite,
+    SchedHuddle01Composite,
     schedTherapComposite,
     schedTherapProfileComposite,
   ]);
