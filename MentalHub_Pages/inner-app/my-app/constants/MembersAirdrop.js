@@ -1,8 +1,9 @@
 // METIS GOERLI TESTNET
  //export const NFT_CONTRACT_ADDRESS = "0xcAf1501488f3F985d1bA6420a48661A881f01061"; //Metis goerli testnet address IPFS
 
- // METIS GOERLI SEPOLIA
- export const NFT_CONTRACT_ADDRESS = "0x19451F0CcB5B4F5181D9b27dc9c00A3c9A2c937d"; //Metis goerli testnet address IPFS
+ // METIS  SEPOLIA TESTNET
+ export const NFT_CONTRACT_ADDRESS = "0x217d9EdC4e5701aB92a95d742Bd6597BeF531f38"; 
+                                         
 
 // POLYGON MUMBAI TESTNET
 // export const NFT_CONTRACT_ADDRESS ="0xd97533D7a552e2c793cdC477C0DcA64e76c76E3b"  //MUMBAI TESTNET address IPFS
@@ -161,6 +162,24 @@ export const abi = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_sessionsToAdd",
+        "type": "uint256"
+      }
+    ],
+    "name": "addSessions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "airdropEnded",
     "outputs": [
@@ -234,6 +253,19 @@ export const abi = [
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "decrementSessions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
       }
@@ -263,6 +295,25 @@ export const abi = [
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAvailableSessions",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -319,7 +370,13 @@ export const abi = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_numSessions",
+        "type": "uint256"
+      }
+    ],
     "name": "mint",
     "outputs": [],
     "stateMutability": "payable",
@@ -644,32 +701,6 @@ export const abi = [
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "baseURI",
-        "type": "string"
-      }
-    ],
-    "name": "setbaseTokenURI",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "gateURI",
-        "type": "string"
-      }
-    ],
-    "name": "setgatewayTokenURI",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_owner",
         "type": "address"
@@ -698,4 +729,3 @@ export const abi = [
     "type": "receive"
   }
 ];
-

@@ -406,6 +406,7 @@ const variables_state = () => {
 
 const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
+  console.log('isOwner');console.log(isOwner);
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
     if (isConComposeDB) {         

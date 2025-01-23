@@ -21,7 +21,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     // _paused is used to pause the contract in case of an emergency
     bool public _paused;
 
-    // max number of CryptoDevs
+    // max number of collection memebers
     uint256 public maxTokenIds = 100;
 
     // total number of tokenIds minted
@@ -36,8 +36,21 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     // timestamp for when presale would end
     uint256 public airdropEnded;
 
+    // Agregar después de las variables de estado existentes
+    mapping(uint256 => uint256) private tokenIdToSessions;
+
+
     modifier onlyWhenNotPaused() {
         require(!_paused, "Contract currently paused");
+        _;
+    }
+
+    // Agregar modifier
+    modifier onlyTokenOwnerOrContract(uint256 _tokenId) {
+        require(
+            ownerOf(_tokenId) == msg.sender || owner() == msg.sender,
+            "Caller is not token owner or contract owner"
+        );
         _;
     }
 
@@ -114,10 +127,31 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         _safeMint(msg.sender, tokenIds);
     }
 
+    // Función para obtener número de sesiones disponibles
+    function getAvailableSessions(uint256 _tokenId) public view returns (uint256) {
+        require(_exists(_tokenId), "Token ID does not exist");
+        return tokenIdToSessions[_tokenId];
+    }
+
+    // Función actualizada para decrementar sesiones
+    function decrementSessions(uint256 _tokenId) public onlyTokenOwnerOrContract(_tokenId) {
+        require(_exists(_tokenId), "Token ID does not exist");
+        require(tokenIdToSessions[_tokenId] > 0, "No sessions available");
+        tokenIdToSessions[_tokenId] -= 1;
+        //emit SessionsUpdated(_tokenId, tokenIdToSessions[_tokenId]);
+    }
+
+    // Función para agregar sesiones (solo owner del contrato)
+    function addSessions(uint256 _tokenId, uint256 _sessionsToAdd) public onlyTokenOwnerOrContract(_tokenId) {
+        require(_exists(_tokenId), "Token ID does not exist");
+        tokenIdToSessions[_tokenId] += _sessionsToAdd;
+        //emit SessionsUpdated(_tokenId, tokenIdToSessions[_tokenId]);
+    }
+
     /**
      * @dev mint allows a user to mint 1 NFT per transaction after the presale has ended.
      */
-    function mint() public payable onlyWhenNotPaused {
+    function mint(uint256 _numSessions) public payable onlyWhenNotPaused {
         require(
             airdropStarted && block.timestamp >= airdropEnded,
             "Airdrop period has not ended yet"
@@ -127,8 +161,11 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
             "Exceed maximum MentalHub Members supply"
         );
         require(msg.value >= _price, "Ether sent is not correct");
+        
         tokenIds += 1;
         _safeMint(msg.sender, tokenIds);
+        // Actualizar el mapping con el número de sesiones
+        tokenIdToSessions[tokenIds] = _numSessions;
     }
 
     /**

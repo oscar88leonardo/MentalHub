@@ -1,7 +1,4 @@
 // Address of the Whitelist Contract that you deployed
-
-
-
 // METIS SEPOLIA TESTNET
 const WHITELIST_CONTRACT_ADDRESS = "0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88";
 // POLYGON MUMBAI TESTNET
