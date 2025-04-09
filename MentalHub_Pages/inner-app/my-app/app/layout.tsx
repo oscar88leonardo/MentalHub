@@ -4,6 +4,7 @@ import "../styles/scss/style.scss";
 import  Footer from "../innerComp/Footer";
 import  Header from "../innerComp/header/Header";
 import AppProvider from "../context/AppContext";  
+import { ThirdwebProvider } from "thirdweb/react";
 
 const roboto = Roboto({
   weight: '300',
@@ -27,17 +28,19 @@ export default function RootLayout({
     <html lang="en" className={roboto.className}>
       <body>        
           <div id="main-wrapper">
-          <AppProvider>
-                <Header/>
-                <div className="page-wrapper"
-                style={{
-                  marginTop: '50px'
-                }}
-                >
-                <div className="container-fluid">{children}</div>
-                </div>  
-                <Footer />                
-          </AppProvider>
+          <ThirdwebProvider>
+            <AppProvider>
+                  <Header/>
+                  <div className="page-wrapper"
+                  style={{
+                    marginTop: '50px'
+                  }}
+                  >
+                  <div className="container-fluid">{children}</div>
+                  </div>  
+                  <Footer />                
+            </AppProvider>
+          </ThirdwebProvider>
           </div>        
       </body>
   </html>

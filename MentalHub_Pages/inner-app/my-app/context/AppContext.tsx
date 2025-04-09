@@ -27,6 +27,10 @@ import { JsonRpcSigner } from "ethers/providers";
 import { MetamaskAdapter } from "@web3auth/metamask-adapter";
 const metamaskAdapter = new MetamaskAdapter();
 
+import { createThirdwebClient,defineChain } from "thirdweb";
+import { ConnectButton } from "thirdweb/react";
+import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
+
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 //const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
 const clientId = "BAQR0_ynGoFJSpg2ubIe1K_p7p2aMUrioGISxq8aUoTSRuKiU14AmoAFQQOA6p5GZsgd_543D8LdKMBlu8zJ-sk"
@@ -142,6 +146,35 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
       await new Promise(resolve => setTimeout(resolve, 100)); // Add small delay
       await web3auth_local.initModal();
       setWeb3auth(web3auth_local);
+
+      /*const wallets = [
+        inAppWallet(),
+        createWallet("io.metamask"),
+      ];
+
+      const client = createThirdwebClient({
+        secretKey: process.env.THIRDWEB_SECRET_KEY as string,
+      });
+
+      const personalAccount = privateKeyToAccount({
+        client,
+        privateKey: process.env.PRIVATE_KEY_SMART_ACCOUNT as string,
+      });
+
+      const myChain = defineChain({
+        id: 59902,
+        rpc: "https://59902.rpc.thirdweb.com/"+process.env.THIRDWEB_SECRET_KEY,
+      })
+
+      const walletSmartAccount = smartWallet({
+        chain: myChain,
+        sponsorGas: true,
+      });
+
+      const smartAccount = await walletSmartAccount.connect({
+        client,
+        personalAccount,
+      });*/
 
     } catch (error) {
       console.error(error);
