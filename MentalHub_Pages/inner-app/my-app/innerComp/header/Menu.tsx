@@ -11,9 +11,8 @@ import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
 import { AppContext } from "../../context/AppContext";
 
-import { createThirdwebClient,defineChain } from "thirdweb";
-import { ConnectButton,useActiveWallet } from "thirdweb/react";
-import { getWalletBalance } from "thirdweb/wallets";
+import { createThirdwebClient } from "thirdweb";
+import { ConnectButton } from "thirdweb/react";
 
 import {
   inAppWallet,
@@ -32,7 +31,7 @@ const menu = () => {
   const toggle = () => setIsOpen(!isOpen);
 
   const clientThridweb = createThirdwebClient({
-    clientId: "....",
+    clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
   });
   
   const walletsThirdweb = [
@@ -127,29 +126,6 @@ const menu = () => {
       }
   }
 
-  // Usar useActiveWallet dentro del componente
-  const activeWallet = useActiveWallet();
-
-  const testThirdweb = async () => {
-    if (activeWallet) {
-      console.log(activeWallet);
-      const account = await activeWallet.getAccount();
-      console.log(account);
-      const myChain = defineChain({
-        id: 59902,
-        rpc: "https://59902.rpc.thirdweb.com/"+process.env.THIRDWEB_SECRET_KEY,
-      })
-      // Get the balance of the account
-      const balance = await getWalletBalance({
-        account: account,
-        chain: myChain,
-      });
-      console.log("Balance:", balance.displayValue, balance.symbol);
-    } else {
-      console.log("No hay una billetera activa.");
-    }
-  };
-
   return (
     <div>
         <NavbarToggler onClick={toggle}>
@@ -192,13 +168,6 @@ const menu = () => {
               wallets={walletsThirdweb}
               connectModal={{ size: "compact" }}
             />
-            <NavLink
-              href="#"
-              className="btn btn-light font-14"
-              onClick={testThirdweb}
-            >
-              Test Thirdweb
-            </NavLink>
             </div>
             <div className="act-buttons">
                 {renderButton()}

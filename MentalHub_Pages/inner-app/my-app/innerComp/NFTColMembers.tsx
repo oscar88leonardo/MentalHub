@@ -1,4 +1,4 @@
-import { Row, Col, Container, Card, CardBody } from "reactstrap";
+import { Row, Col, Container, Card, CardBody, NavLink } from "reactstrap";
 import Image from "next/image";
 import ImgAuthor from "../public/NFT_Authors/MentalHubAuthor.png";
 import React, { useEffect, useRef, useState, useContext } from "react";
@@ -10,6 +10,10 @@ import { AppContext } from "../context/AppContext";
 
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist";
+
+import { createThirdwebClient,defineChain } from "thirdweb";
+import { ConnectButton,useActiveWallet } from "thirdweb/react";
+import { getWalletBalance } from "thirdweb/wallets";
 
 const NFTColMembers = () => {
   // get global data from Appcontext
@@ -32,6 +36,34 @@ const NFTColMembers = () => {
   const [tokenIdsMinted, setTokenIdsMinted] = useState("0");
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   //const web3ModalRef = useRef();
+
+  const clientThridweb = createThirdwebClient({
+    secretKey: "...",
+  });
+
+// Usar useActiveWallet dentro del componente
+  const activeWallet = useActiveWallet();
+
+  const testThirdweb = async () => {
+    if (activeWallet) {
+      console.log(activeWallet);
+      const account = await activeWallet.getAccount();
+      console.log(account);
+      const myChain = defineChain({
+        id: 59902,
+        rpc: "https://59902.rpc.thirdweb.com/"+process.env.NETXT_PUBLIC_THIRDWEB_CLIENTID,
+      })
+      // Get the balance of the account
+      const balance = await getWalletBalance({
+        address: account?.address || "",
+        chain: myChain,
+        client: clientThridweb,
+      });
+      console.log("Balance:", balance.displayValue, balance.symbol);
+    } else {
+      console.log("No hay una billetera activa.");
+    }
+  };
 
   useEffect(() => {
     if (isConComposeDB) {
@@ -99,6 +131,7 @@ const NFTColMembers = () => {
       const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
+
       if(signer != null){
         const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
         // call the mint from the contract to mint the Crypto Dev
@@ -535,6 +568,13 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
             <h3 className="subtitle text-center">
               {tokenIdsMinted} Tokens minted
             </h3>
+            <NavLink
+              href="#"
+              className="btn btn-light font-14"
+              onClick={testThirdweb}
+            >
+              Test Thirdweb
+            </NavLink>
           </Row>
           <Row className="justify-content-center">
           {renderNFT()}
