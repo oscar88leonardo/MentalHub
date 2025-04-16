@@ -11,8 +11,14 @@ import { AppContext } from "../context/AppContext";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist";
 
-import { createThirdwebClient,defineChain } from "thirdweb";
-import { ConnectButton,useActiveWallet } from "thirdweb/react";
+import { createThirdwebClient,
+  defineChain,
+  getContract, 
+  prepareContractCall, 
+  toWei,
+  resolveMethod,
+  sendTransaction } from "thirdweb";
+import { useActiveWallet } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
 
 const NFTColMembers = () => {
@@ -43,16 +49,16 @@ const NFTColMembers = () => {
 
 // Usar useActiveWallet dentro del componente
   const activeWallet = useActiveWallet();
+  const myChain = defineChain({
+    id: 59902,
+    rpc: "https://59902.rpc.thirdweb.com/e7b10fdbf32bdb18fe8d3545bac07a5d",
+  });
 
   const testThirdweb = async () => {
     if (activeWallet) {
       console.log(activeWallet);
       const account = await activeWallet.getAccount();
       console.log(account);
-      const myChain = defineChain({
-        id: 59902,
-        rpc: "https://59902.rpc.thirdweb.com/"+process.env.NETXT_PUBLIC_THIRDWEB_CLIENTID,
-      })
       // Get the balance of the account
       const balance = await getWalletBalance({
         address: account?.address || "",
@@ -131,8 +137,45 @@ const NFTColMembers = () => {
       const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
+      
+      const contract = getContract({
+        client: clientThridweb,
+        chain: myChain,
+        address: NFT_CONTRACT_ADDRESS,
+        // The ABI for the contract is defined here
+        abi: abi as [],
+      });
+      console.log("contract publicMint:");
+      console.log(contract);
+       
+      const tx = prepareContractCall({
+        contract,
+        // We get auto-completion for all the available functions on the contract ABI
+        method: resolveMethod("mint"),
+        // including full type-safety for the params
+        params: [2],
+        value: toWei("0.01"),
+      });
 
-      if(signer != null){
+      console.log("tx publicMint:");
+      console.log(tx);
+      if (activeWallet) {
+        console.log(activeWallet);
+        const account = await activeWallet.getAccount();
+        console.log(account);
+        const { transactionHash } = await sendTransaction({
+          account: account!,
+          transaction: tx,
+        });
+        console.log("transactionHash publicMint:");
+        console.log(transactionHash);
+
+        window.alert("You successfully minted a community member NFT!");
+      } else {
+        console.log("No hay una billetera activa.");
+      }
+
+      /*if(signer != null){
         const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);
         // call the mint from the contract to mint the Crypto Dev
         console.log("nftContract publicMint:");
@@ -154,34 +197,14 @@ const NFTColMembers = () => {
         console.log(tx);
         setLoading(false);
         let tokenIdsCurrent = await nftContract.getTokenIds(); 
-        /*try {
-          const res = await fetch(
-            'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
-          );
-          const data = await res.json();
-          console.log(data);
-        } catch (err) {
-          console.log(err);
-        }*/
 
         window.alert("You successfully minted a community member NFT!");
-      }
+      }*/
     } catch (err) {
       console.error(err);
       window.alert("Proccess failed, check your funds.");
     }
   };
-
-  /*const connectWallet = async () => {
-    try {
-      // Get the provider from web3Modal, which in our case is MetaMask
-      // When used for the first time, it prompts the user to connect their wallet
-      await getProviderOrSigner();
-      setWalletConnected(true);
-    } catch (err) {
-      console.error(err);
-    }
-  };*/
   
 /**
    * startAirdrop: starts the presale for the NFT Collection
