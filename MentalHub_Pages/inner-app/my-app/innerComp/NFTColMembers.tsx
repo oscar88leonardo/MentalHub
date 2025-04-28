@@ -443,6 +443,9 @@ useEffect(() => {
       });
       connectWallet();*/
 
+
+      getOwner();
+
       // Check if airdrop has started and ended
       const _airdropStarted = checkIfAirdropStarted();
       if (_airdropStarted != null) {
@@ -482,9 +485,12 @@ const variables_state = () => {
   console.log(airdropEnded);
 } 
 
-const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {
+
+
+const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {  
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
   console.log('isOwner');console.log(isOwner);
+  console.log('connected wallet');console.log(signer?.address);
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
     if (isConComposeDB) {         
@@ -494,7 +500,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       }
 
       // If connected user is the owner, and airdrop hasnt started yet, allow them to start the airdrop
-      if ((isOwner && !airdropStarted) || (isOwner && airdropStarted && airdropEnded)) {
+      else if ((isOwner && !airdropStarted) || (isOwner && airdropStarted && airdropEnded)) {
         return (
           <button className="btn btn-light font-16 hcenter" onClick={startAirdrop}>
             Start Airdrop!
@@ -503,7 +509,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       }
 
       // If connected user is not the owner but presale hasn't started yet, tell them that
-      if (!airdropStarted) {
+      else if (!airdropStarted) {
         return (
           <div>
             <h6 className="text-center">Airdrop coming S o O n!</h6>
@@ -512,7 +518,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       }
 
       // If presale started, but hasn't ended yet, allow for minting during the presale period
-      if (airdropStarted && !airdropEnded) {
+      else if (airdropStarted && !airdropEnded) {
         return (
           <div>
             <h6 className="text-center">
@@ -526,7 +532,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       }
 
       // If presale started and has ended, its time for public minting
-      if (airdropStarted && airdropEnded) {
+      else if (airdropStarted && airdropEnded) {
         return (          
           <button className="btn btn-light font-16 hcenter" onClick={() => publicMint(name, pathTypeContDig,pathContDigi,contSessions)}>
             Public Mint 🚀!
