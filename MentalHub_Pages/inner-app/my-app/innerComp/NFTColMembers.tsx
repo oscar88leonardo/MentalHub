@@ -43,18 +43,22 @@ const NFTColMembers = () => {
   // Create a reference to the Web3 Modal (used for connecting to Metamask) which persists as long as the page is open
   //const web3ModalRef = useRef();
 
-  const clientThridweb = createThirdwebClient({
-    secretKey: "...",
-  });
-
-// Usar useActiveWallet dentro del componente
+  // Usar useActiveWallet dentro del componente
+  console.log("process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID");
+  console.log(process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID);
   const activeWallet = useActiveWallet();
   const myChain = defineChain({
     id: 59902,
-    rpc: "https://59902.rpc.thirdweb.com/e7b10fdbf32bdb18fe8d3545bac07a5d",
+    rpc: "https://59902.rpc.thirdweb.com/" + process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
+  });
+  // Create a new instance of Thirdweb client
+  
+  const clientThridweb = createThirdwebClient({
+    clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
   });
 
   const testThirdweb = async () => {
+    
     if (activeWallet) {
       console.log(activeWallet);
       const account = await activeWallet.getAccount();
@@ -63,7 +67,7 @@ const NFTColMembers = () => {
       const balance = await getWalletBalance({
         address: account?.address || "",
         chain: myChain,
-        client: clientThridweb,
+        client: clientThridweb!,
       });
       console.log("Balance:", balance.displayValue, balance.symbol);
     } else {
@@ -138,8 +142,10 @@ const NFTColMembers = () => {
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
       
+      console.log("minting");
+  
       const contract = getContract({
-        client: clientThridweb,
+        client: clientThridweb!,
         chain: myChain,
         address: NFT_CONTRACT_ADDRESS,
         // The ABI for the contract is defined here
@@ -147,7 +153,7 @@ const NFTColMembers = () => {
       });
       console.log("contract publicMint:");
       console.log(contract);
-       
+        
       const tx = prepareContractCall({
         contract,
         // We get auto-completion for all the available functions on the contract ABI
@@ -157,12 +163,28 @@ const NFTColMembers = () => {
         value: toWei("0.01"),
       });
 
-      console.log("tx publicMint:");
-      console.log(tx);
       if (activeWallet) {
+        //let tx = null;
         console.log(activeWallet);
         const account = await activeWallet.getAccount();
         console.log(account);
+        // const response = await fetch("/api/mint", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({ address: account?.address }),
+        // });
+
+        // const data = await response.json();
+        // tx = data.transaction;
+
+        // console.log("data publicMint:");
+        // console.log(data);
+        
+        // console.log("tx publicMint:");
+        // console.log(tx);
+        
         const { transactionHash } = await sendTransaction({
           account: account!,
           transaction: tx,
@@ -472,7 +494,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       }
 
       // If connected user is the owner, and airdrop hasnt started yet, allow them to start the airdrop
-      if (isOwner && !airdropStarted) {
+      if ((isOwner && !airdropStarted) || (isOwner && airdropStarted && airdropEnded)) {
         return (
           <button className="btn btn-light font-16 hcenter" onClick={startAirdrop}>
             Start Airdrop!
@@ -531,40 +553,28 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
                         }
                         ]
   
-  const renderNFT = () => {
-    return NFTItemsInfo.map(renderNFTItems);
-  }
-  
-  const renderNFTItems = (NFTitem:any, index:number) => {  
-    const RenderButtonStr = renderButton(NFTitem.name, NFTitem.pathTypeContDig, NFTitem.pathContDigi, NFTitem.contSessions);
-
-    return(   
-      <Col md="4">
-        <Card className="card-shadow" key={index}>              
-          <div className='player-wrapper'>
-            <video controls
-              
-              width='100%'
-              height='50%'
-              > 
-              <source src={NFTitem.animation} type="video/mp4" />
-              Your browser does not support the video tag.
+const renderNFT = () => {
+  return NFTItemsInfo.map((NFTitem, index) => (
+    <Col md="4" key={index}>
+      <Card className="card-shadow">
+        <div className='player-wrapper'>
+          <video controls width='100%' height='50%'>
+            <source src={NFTitem.animation} type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
-          </div>
-          <CardBody>
-            <h3 className="font-bold m-b-0 text-center">
-              {NFTitem.id}
-            </h3>
-              <p className="m-b-0 font-18 text-center">
-                          {NFTitem.usecase} 
-                          <br/><br/>
-              </p> 
-            {RenderButtonStr}            
-          </CardBody>
-        </Card>
-        </Col>
-        )  
-  }
+        </div>
+        <CardBody>
+          <h3 className="font-bold m-b-0 text-center">{NFTitem.id}</h3>
+          <p className="m-b-0 font-18 text-center">
+            {NFTitem.usecase}
+            <br /><br />
+          </p>
+          {renderButton(NFTitem.name, NFTitem.pathTypeContDig, NFTitem.pathContDigi, NFTitem.contSessions)}
+        </CardBody>
+      </Card>
+    </Col>
+  ));
+}
 
   return (
     <div>     
