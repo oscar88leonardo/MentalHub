@@ -18,8 +18,9 @@ import { createThirdwebClient,
   toWei,
   resolveMethod,
   sendTransaction } from "thirdweb";
-import { useActiveWallet } from "thirdweb/react";
+import { useActiveWallet, useReadContract } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
+import { owner } from "thirdweb/extensions/common";
 
 const NFTColMembers = () => {
   // get global data from Appcontext
@@ -27,7 +28,7 @@ const NFTColMembers = () => {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { provider, signer, getSigner,isConComposeDB } = context;
+  const { /*provider, signer, getSigner,*/isConComposeDB } = context;
 
   // walletConnected keep track of whether the user's wallet is connected or not
   //const [walletConnected, setWalletConnected] = useState(false);
@@ -47,6 +48,7 @@ const NFTColMembers = () => {
   console.log("process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID");
   console.log(process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID);
   const activeWallet = useActiveWallet();
+  const account = activeWallet ? activeWallet.getAccount() : null;
   const myChain = defineChain({
     id: 59902,
     rpc: "https://59902.rpc.thirdweb.com/" + process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
@@ -55,6 +57,46 @@ const NFTColMembers = () => {
   
   const clientThridweb = createThirdwebClient({
     clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
+  });
+
+  const contract = getContract({
+    client: clientThridweb!,
+    chain: myChain,
+    address: NFT_CONTRACT_ADDRESS,
+    // The ABI for the contract is defined here
+    abi: abi as [],
+  });
+
+  const contractWhitelist = getContract({
+    client: clientThridweb!,
+    chain: myChain,
+    address: WHITELIST_CONTRACT_ADDRESS,
+    // The ABI for the contract is defined here
+    abi: abi_w as [],
+  });
+
+  const dataWhitelist = useReadContract({
+    contract: contractWhitelist,
+    method: "whitelistedAddresses",
+    params: [account?.address || ""],
+  });
+
+  const dataAirdropStarted = useReadContract({
+    contract: contract,
+    method: "airdropStarted",
+    params: [],
+  });
+
+  const dataAirdropEnded = useReadContract({
+    contract: contract,
+    method: "airdropEnded",
+    params: [],
+  });
+
+  const datatokenIds = useReadContract({
+    contract: contract,
+    method: "getTokenIds",
+    params: [],
   });
 
   const testThirdweb = async () => {
@@ -75,11 +117,11 @@ const NFTColMembers = () => {
     }
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (isConComposeDB) {
       getSigner();
     }
-    }, [isConComposeDB]);
+    }, [isConComposeDB]);*/
 
   /**
    * presaleMint: Mint an NFT during the presale
@@ -92,7 +134,51 @@ const NFTColMembers = () => {
       const signer = await provider0.getSigner();*/
       // Create a new instance of the Contract with a Signer, which allows
       // update methods
-      if(signer != null) {
+
+      console.log("dataWhitelist:");
+      console.log(dataWhitelist);
+
+      if(dataWhitelist.isLoading) {
+        console.log("Loading whitelist data...");
+        return;
+      } else if(dataWhitelist.data) {
+
+        console.log("minting");
+  
+        console.log("contract airdropMint:");
+        console.log(contract);
+          
+        const tx = prepareContractCall({
+          contract,
+          // We get auto-completion for all the available functions on the contract ABI
+          method: resolveMethod("airdropMint"),
+          // including full type-safety for the params
+          params: [],
+          value: toWei("0"),
+        });
+
+        if (activeWallet) {
+          //let tx = null;
+          console.log(activeWallet);
+          console.log(account);
+          
+          const { transactionHash } = await sendTransaction({
+            account: account!,
+            transaction: tx,
+          });
+          console.log("transactionHash publicMint:");
+          console.log(transactionHash);
+
+          window.alert("You successfully minted a community member NFT!");
+        } else {
+          console.log("No hay una billetera activa.");
+        }
+      } else {
+        window.alert("Sorry friend, you're not whitelisted");
+      }
+      
+
+      /*if(signer != null) {
         const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, signer);  
         const whitelistContract = new Contract(WHITELIST_CONTRACT_ADDRESS, abi_w, signer);
       
@@ -127,7 +213,7 @@ const NFTColMembers = () => {
         } else {
           window.alert("Sorry friend, you're not whitelisted");
         }  
-      }
+      }*/
     } catch (err) {
       console.error(err);
     }
@@ -144,13 +230,6 @@ const NFTColMembers = () => {
       
       console.log("minting");
   
-      const contract = getContract({
-        client: clientThridweb!,
-        chain: myChain,
-        address: NFT_CONTRACT_ADDRESS,
-        // The ABI for the contract is defined here
-        abi: abi as [],
-      });
       console.log("contract publicMint:");
       console.log(contract);
         
@@ -166,7 +245,6 @@ const NFTColMembers = () => {
       if (activeWallet) {
         //let tx = null;
         console.log(activeWallet);
-        const account = await activeWallet.getAccount();
         console.log(account);
         // const response = await fetch("/api/mint", {
         //   method: "POST",
@@ -237,7 +315,39 @@ const NFTColMembers = () => {
     //const signer = await getProviderOrSigner(true);
     /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
     const signer = await provider0.getSigner();*/
-    if(signer != null) {
+    
+    console.log("starting airdrop");
+  
+    console.log("contract startAirdrop:");
+    console.log(contract);
+      
+    const tx = prepareContractCall({
+      contract,
+      // We get auto-completion for all the available functions on the contract ABI
+      method: resolveMethod("StartAirdrop"),
+      // including full type-safety for the params
+      params: [],
+      value: toWei("0"),
+    });
+
+    if (activeWallet) {
+      //let tx = null;
+      console.log(activeWallet);
+      console.log(account);
+      
+      const { transactionHash } = await sendTransaction({
+        account: account!,
+        transaction: tx,
+      });
+      console.log("transactionHash publicMint:");
+      console.log(transactionHash);
+
+      window.alert("You successfully started Airdrop!");
+    } else {
+      console.log("No hay una billetera activa.");
+    }
+    
+    /*if(signer != null) {
       console.log("signer for airdrop:");
       console.log(signer);
       const address = await signer.getAddress();
@@ -254,7 +364,7 @@ const NFTColMembers = () => {
       setLoading(false);
       // set the airdrop started to true
       await checkIfAirdropStarted();
-    }
+    }*/
   } catch (err) {
     console.error(err);
   }
@@ -269,7 +379,21 @@ const checkIfAirdropStarted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      if(provider != null) {
+      
+      console.log("dataAirdropStarted:");
+      console.log(dataAirdropStarted);
+
+      if(dataAirdropStarted.isLoading) {
+        console.log("Loading AirdropStarted data...");
+        return;
+      } else if(!dataAirdropStarted.data) {
+        await getOwner();
+      }
+      
+      setAirdropStarted(!!dataAirdropStarted.data);
+      return !!dataAirdropStarted.data;
+
+      /*if(provider != null) {
         const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
         // We connect to the Contract using a Provider, so we will only
         // have read-only access to the Contract
@@ -282,7 +406,7 @@ const checkIfAirdropStarted = async () => {
         setAirdropStarted(_airdropStarted);
         return _airdropStarted;
       }
-      return false;
+      return false;*/
     } catch (err) {
       console.error(err);
       return false;
@@ -298,7 +422,35 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      if(provider != null) {
+      
+      console.log("dataAirdropEnded:");
+      console.log(dataAirdropEnded);
+
+      if(dataAirdropEnded.isLoading) {
+        console.log("Loading dataAirdropEnded data...");
+        return;
+      } else if(dataAirdropEnded.data) {
+        const _airdropEnded = dataAirdropEnded.data
+        console.log("_airdropEnded:");
+        console.log(typeof _airdropEnded);
+        console.log(_airdropEnded);
+
+        let hasEnded = null;
+        if (typeof _airdropEnded === "number" && _airdropEnded < Math.floor(Date.now() / 1000))
+          hasEnded = true;
+        else 
+          hasEnded = false;
+        if (hasEnded) {
+          setAirdropEnded(true);
+        } else {
+          setAirdropEnded(false);
+        }
+        return hasEnded;
+      }
+      return false;
+      
+      
+      /*if(provider != null) {
         const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
         // We connect to the Contract using a Provider, so we will only
         // have read-only access to the Contract
@@ -324,13 +476,12 @@ const checkIfAirdropEnded = async () => {
         }
         return hasEnded;
       }
-      return false;
+      return false;*/
     } catch (err) {
       console.error(err);
       return false;
     }
   };    
-
 
   /**
    * getOwner: calls the contract to retrieve the owner
@@ -340,7 +491,28 @@ const checkIfAirdropEnded = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      if(provider != null && signer != null){
+
+      console.log("contract publicMint:");
+      console.log(contract);
+
+      const _owner = await owner({
+        contract,
+      });
+      console.log("result _owner:");
+      console.log(_owner);
+      if(activeWallet) {
+        const account = await activeWallet.getAccount();
+        const address = account?.address || "";
+        if (address.toLowerCase() == _owner.toLowerCase()) {
+          setIsOwner(true);        
+        }
+        console.log("Addres from wallet:");
+        console.log(address);
+        console.log("is owner");
+        console.log(isOwner);
+      }
+
+      /*if(provider != null && signer != null){
         const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
         //const signer = await provider0.getSigner();
         // We connect to the Contract using a Provider, so we will only
@@ -361,7 +533,7 @@ const checkIfAirdropEnded = async () => {
         console.log(address);
         console.log("is owner");
         console.log(isOwner);
-      }
+      }*/
     } catch (err:any) {
       console.error(err.message);
     }
@@ -375,7 +547,19 @@ const getTokenIdsMinted = async () => {
       // Get the provider from web3Modal, which in our case is MetaMask
       // No need for the Signer here, as we are only reading state from the blockchain
       //const provider = await getProviderOrSigner();
-      if(provider != null) {
+      
+      console.log("datatokenIds:");
+      console.log(datatokenIds);
+
+      if(datatokenIds.isLoading) {
+        console.log("Loading datatokenIds data...");
+        return;
+      } else if(datatokenIds.data) {
+        const _tokenIds = datatokenIds.data;
+        setTokenIdsMinted(_tokenIds.toString());
+      }
+      
+      /*if(provider != null) {
         const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
         // We connect to the Contract using a Provider, so we will only
         // have read-only access to the Contract
@@ -384,7 +568,7 @@ const getTokenIdsMinted = async () => {
         const _tokenIds = await nftContract.tokenIds();
         //_tokenIds is a `Big Number`. We need to convert the Big Number to a string
         setTokenIdsMinted(_tokenIds.toString());
-      }
+      }*/
     } catch (err) {
       console.error(err);
     }
@@ -433,7 +617,7 @@ useEffect(() => {
   // check connect
   //checkConnect();  
   // if wallet is not connected, create a new instance of Web3Modal and connect the MetaMask wallet
-    if (signer != null) {
+    if (account) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
       // The `current` value is persisted throughout as long as this page is open
       /*web3ModalRef.current = new Web3Modal({
@@ -447,15 +631,15 @@ useEffect(() => {
       getOwner();
 
       // Check if airdrop has started and ended
-      const _airdropStarted = checkIfAirdropStarted();
+      /*const _airdropStarted = checkIfAirdropStarted();
       if (_airdropStarted != null) {
         checkIfAirdropEnded();
-      }
+      }*/
 
-      getTokenIdsMinted();
+      //getTokenIdsMinted();
 
       // Set an interval which gets called every 5 seconds to check airdrop has ended
-      const airdropEndedInterval = setInterval(async function () {
+      /*const airdropEndedInterval = setInterval(async function () {
         const _airdropStarted = await checkIfAirdropStarted();
         if (_airdropStarted) {
           const _airdropEnded = await checkIfAirdropEnded();
@@ -468,13 +652,25 @@ useEffect(() => {
       // set an interval to get the number of token Ids minted every 5 seconds
       setInterval(async function () {
         await getTokenIdsMinted();
-      }, 5 * 1000);
+      }, 5 * 1000);*/
       renderNFT();
     }
   /*} else {
     window.alert("Wellcome Friend!, MentalHub is a web3 application, please install Metamask https://metamask.io/ for full fetures. (working on making this a frictionless experience!) ");
   }*/
-  }, [signer]);
+  }, [account]);
+
+  useEffect(() => {
+    getTokenIdsMinted();
+  }, [datatokenIds]);
+  
+  useEffect(() => {
+    // Check if airdrop has started and ended
+    const _airdropStarted = checkIfAirdropStarted();
+    if (_airdropStarted != null) {
+      checkIfAirdropEnded();
+    }
+  }, [dataAirdropStarted]);
 
 
 const variables_state = () => {
@@ -490,7 +686,7 @@ const variables_state = () => {
 const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {  
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
   console.log('isOwner');console.log(isOwner);
-  console.log('connected wallet');console.log(signer?.address);
+  console.log('connected wallet');//console.log(signer?.address);
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
     if (isConComposeDB) {         
