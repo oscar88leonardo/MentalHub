@@ -105,7 +105,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     /**
      * @dev AirdropMint allows a user to mint one NFT per transaction during the airdrop at $0 mint cost.
      */
-    function airdropMint() public payable onlyWhenNotPaused {
+    function airdropMint(uint256 _numSessions) public payable onlyWhenNotPaused {
         require(
             airdropStarted && block.timestamp < airdropEnded,
             "Airdrop Running!"
@@ -125,6 +125,8 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         // if the address being minted to is a contract, then it knows how to deal with ERC721 tokens
         // If the address being minted to is not a contract, it works the same way as _mint
         _safeMint(msg.sender, tokenIds);
+        // Actualizar el mapping con el número de sesiones
+        tokenIdToSessions[tokenIds] = _numSessions;
     }
 
     // Función para obtener número de sesiones disponibles
