@@ -19,6 +19,9 @@ import {
   createWallet,
 } from "thirdweb/wallets";
 
+import {client as clientThridweb} from "../client";
+import { myChain } from "../myChain";
+
 const menu = () => {
   // get global data from Appcontext
   const context = useContext(AppContext);
@@ -30,9 +33,9 @@ const menu = () => {
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
 
-  const clientThridweb = createThirdwebClient({
+  /*const clientThridweb = createThirdwebClient({
     clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
-  });
+  });*/
   
   const walletsThirdweb = [
     inAppWallet({
@@ -167,6 +170,10 @@ const menu = () => {
               client={clientThridweb}
               wallets={walletsThirdweb}
               connectModal={{ size: "compact" }}
+              accountAbstraction= {{
+                chain: myChain,
+                sponsorGas: true,
+              }}
             />
             </div>
             <div className="act-buttons">

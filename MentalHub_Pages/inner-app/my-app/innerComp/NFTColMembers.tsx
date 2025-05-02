@@ -21,6 +21,8 @@ import { createThirdwebClient,
 import { useActiveWallet, useReadContract } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
 import { owner } from "thirdweb/extensions/common";
+import {client as clientThridweb} from "./client";
+import { myChain } from "./myChain";
 
 const NFTColMembers = () => {
   // get global data from Appcontext
@@ -49,15 +51,17 @@ const NFTColMembers = () => {
   console.log(process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID);
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
+  
+  /*
   const myChain = defineChain({
     id: 59902,
     rpc: "https://59902.rpc.thirdweb.com/" + process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
-  });
-  // Create a new instance of Thirdweb client
+  });*/
   
+  /*Create a new instance of Thirdweb client
   const clientThridweb = createThirdwebClient({
     clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
-  });
+  });*/
 
   const contract = getContract({
     client: clientThridweb!,
