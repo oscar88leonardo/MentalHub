@@ -53,6 +53,16 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         );
         _;
     }
+    
+    // variable para controlar si el mint es sponsoreado
+    bool public isSponsoredMint;
+
+    // Enum para especificar la unidad de tiempo en el airdrop
+    enum TimeUnit { MINUTES, DAYS }
+
+    // Evento para tracking de mints sponsoreados
+    event SponsoredMint(address indexed user , uint256 tokenId, uint256 sessions);
+    event AirdropStarted(uint256 endTime, uint256 duration, uint8 timeUnit);
 
     /**
      * @dev ERC721 constructor takes in a `name` and a `symbol` to the token collection.
@@ -65,6 +75,11 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         _baseTokenURI = baseURI;
         _gatewayTokenURI = gateURI;
         whitelist = IWhitelist(whitelistContract);
+        isSponsoredMint = true; // Por defecto, el mint es sponsoreado
+    }
+
+    function toggleSponsoredMint() public onlyOwner {
+        isSponsoredMint = !isSponsoredMint;
     }
 
     function setbaseTokenURI(string memory baseURI) public onlyOwner {
@@ -93,13 +108,30 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     }
 
     /**
-     * @dev startPresale starts a presale for the whitelisted addresses
+     * @dev Inicia el airdrop con una duración específica
+     * @param _duration Duración del airdrop
+     * @param _timeUnit Unidad de tiempo (0 = MINUTES, 1 = DAYS)
+     * Requirements:
+     * - Solo puede ser llamado por el owner
+     * - La duración debe ser mayor a 0
+     * - La unidad de tiempo debe ser válida (0 o 1)
      */
-    function StartAirdrop() public onlyOwner {
-        airdropStarted = true;
+    function StartAirdrop(uint256 _duration, uint8 _timeUnit) public onlyOwner {
+        require(_duration > 0, "Duration must be greater than 0");
+        require( _timeUnit <= uint8(TimeUnit.DAYS), "Invalid time unit");
+                        
+        // calcular el tiempo de finalización según la unidad de tiempo
+        if (_timeUnit == uint8(TimeUnit.MINUTES)) {
+            airdropEnded = block.timestamp + (_duration * 1 minutes);
+        } else if (_timeUnit == uint8(TimeUnit.DAYS)) {
+            airdropEnded = block.timestamp + (_duration * 1 days);
+        }
         // Set presaleEnded time as current timestamp + 5 minutes
         // Solidity has cool syntax for timestamps (seconds, minutes, hours, days, years)
-        airdropEnded = block.timestamp + 7 days;
+        // airdropEnded = block.timestamp + 7 days;
+        emit AirdropStarted(airdropEnded, _duration, _timeUnit);
+        airdropStarted = true;
+
     }
 
     /**
@@ -156,18 +188,27 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     function mint(uint256 _numSessions) public payable onlyWhenNotPaused {
         require(
             airdropStarted && block.timestamp >= airdropEnded,
-            "Airdrop period has not ended yet"
+            "Airdrop for whitelisted users has not ended yet"
         );
         require(
             tokenIds < maxTokenIds,
             "Exceed maximum MentalHub Members supply"
         );
-        require(msg.value >= _price, "Ether sent is not correct");
+        
+        //require(msg.value >= _price, "Ether sent is not correct");
+        // veroficar si el mint es sponsoreado
+        if (!isSponsoredMint) {
+            require(msg.value >= _price, "Funds sent are not correct");
+        }
         
         tokenIds += 1;
         _safeMint(msg.sender, tokenIds);
         // Actualizar el mapping con el número de sesiones
         tokenIdToSessions[tokenIds] = _numSessions;
+
+        if(isSponsoredMint) {
+            emit SponsoredMint(msg.sender, tokenIds, _numSessions);
+        }
     }
 
     /**

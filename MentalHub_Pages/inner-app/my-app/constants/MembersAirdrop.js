@@ -2,8 +2,8 @@
  //export const NFT_CONTRACT_ADDRESS = "0xcAf1501488f3F985d1bA6420a48661A881f01061"; //Metis goerli testnet address IPFS
 
  // METIS  SEPOLIA TESTNET
- export const NFT_CONTRACT_ADDRESS = "0x217d9EdC4e5701aB92a95d742Bd6597BeF531f38"; 
-                                         
+ //export const NFT_CONTRACT_ADDRESS = "0x217d9EdC4e5701aB92a95d742Bd6597BeF531f38"; 
+ export const NFT_CONTRACT_ADDRESS = "0xcAf1501488f3F985d1bA6420a48661A881f01061";                                        
 
 // POLYGON MUMBAI TESTNET
 // export const NFT_CONTRACT_ADDRESS ="0xd97533D7a552e2c793cdC477C0DcA64e76c76E3b"  //MUMBAI TESTNET address IPFS
@@ -29,6 +29,31 @@ export const abi = [
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endTime",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "duration",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "timeUnit",
+        "type": "uint8"
+      }
+    ],
+    "name": "AirdropStarted",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -105,6 +130,31 @@ export const abi = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "sessions",
+        "type": "uint256"
+      }
+    ],
+    "name": "SponsoredMint",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -129,7 +179,18 @@ export const abi = [
     "type": "fallback"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_duration",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_timeUnit",
+        "type": "uint8"
+      }
+    ],
     "name": "StartAirdrop",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -193,7 +254,13 @@ export const abi = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_numSessions",
+        "type": "uint256"
+      }
+    ],
     "name": "airdropMint",
     "outputs": [],
     "stateMutability": "payable",
@@ -346,6 +413,19 @@ export const abi = [
       }
     ],
     "name": "isApprovedForAll",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isSponsoredMint",
     "outputs": [
       {
         "internalType": "bool",
@@ -572,6 +652,13 @@ export const abi = [
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "toggleSponsoredMint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -25,12 +25,28 @@ async function main() {
   await deployedMembersAirdropContract.deployed();
     
   // print the address of the deployed contract
-  console.log(
-    "MembersAirdrop contract Address:",
-    deployedMembersAirdropContract.address
-  ); 
+  const contractAddress = deployedMembersAirdropContract.address;
+  console.log("MembersAirdrop contract Address:", contractAddress);
   
-    
+   // Esperar unos bloques para la verificación
+   console.log("Esperando bloques...");
+   await new Promise(resolve => setTimeout(resolve, 30000));
+ 
+   // Verificar el contrato
+   console.log("Verificando contrato...");
+   try {
+   await hre.run("verify:verify", {
+     address: contractAddress,
+     constructorArguments: [
+       METADATA_URL,
+       GATEWAY_URI,
+       whitelistContract
+     ],
+   });
+   console.log("Contrato verificado con éxito");
+  } catch (error) {
+   console.error("Error al verificar el contrato:", error);
+  } 
   /*
   // WHITELIST DEPLOY
   //A ContractFactory in ethers.js is an abstraction used to deploy new smart contracts,

@@ -15,7 +15,7 @@ import { createThirdwebClient,
   toWei,
   resolveMethod,
   sendTransaction } from "thirdweb";
-import { useActiveWallet, useReadContract } from "thirdweb/react";
+import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
 import { owner } from "thirdweb/extensions/common";
 import {client as clientThridweb} from "./client";
@@ -46,8 +46,10 @@ const NFTColMembers = () => {
   console.log("process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID");
   console.log(process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID);
   const activeWallet = useActiveWallet();
+  const adminWallet = useAdminWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
-  
+  const adminAccount = adminWallet ? adminWallet.getAccount() : null;
+
   const contract = getContract({
     client: clientThridweb!,
     chain: myChain,
@@ -85,6 +87,12 @@ const NFTColMembers = () => {
   const datatokenIds = useReadContract({
     contract: contract,
     method: "getTokenIds",
+    params: [],
+  });
+
+  const dataisSponsoredMint = useReadContract({
+    contract: contract,
+    method: "isSponsoredMint",
     params: [],
   });
 
@@ -148,14 +156,21 @@ const NFTColMembers = () => {
   
       console.log("contract publicMint:");
       console.log(contract);
-        
+      
+      // verificar si el mint es sponsoreado
+     // const isSponsoredMint = await contract.read("isSponsoredMint");
+      console.log("dataisSponsoredMint:");
+      console.log(dataisSponsoredMint.data);
+     
+
       const tx = prepareContractCall({
         contract,
         // We get auto-completion for all the available functions on the contract ABI
         method: resolveMethod("mint"),
         // including full type-safety for the params
         params: [2],
-        value: toWei("0.01"),
+        // solo enviar valor si no es sponsoreado
+        value: dataisSponsoredMint.data ? toWei("0") : toWei("0.01"),
       });
 
       if (activeWallet) {
@@ -185,42 +200,45 @@ const NFTColMembers = () => {
 /**
    * startAirdrop: starts the presale for the NFT Collection
    */
- const startAirdrop = async () => {
+ const startAirdrop = async (duration: number, isMinutes: boolean) => {
   try {
     
     console.log("starting airdrop");
   
     console.log("contract startAirdrop:");
     console.log(contract);
-      
+    
+    const timeUnit = isMinutes ? 0 : 1;// 0 para minutos, 1 para dias
+    
     const tx = prepareContractCall({
       contract,
       // We get auto-completion for all the available functions on the contract ABI
       method: resolveMethod("StartAirdrop"),
       // including full type-safety for the params
-      params: [],
-      value: toWei("0"),
+      params: [duration, timeUnit],
+      //value: toWei("0"),
     });
 
-    if (activeWallet) {
+    if (adminWallet) {
       //let tx = null;
-      console.log(activeWallet);
-      console.log(account);
+      //console.log(activeWallet);
+      //console.log(account);
       
       const { transactionHash } = await sendTransaction({
-        account: account!,
+        account: adminAccount!,
         transaction: tx,
       });
-      console.log("transactionHash publicMint:");
-      console.log(transactionHash);
 
-      window.alert("You successfully started Airdrop!");
+      console.log(`Airdrop iniciado por ${duration} ${isMinutes ? 'minutos' : 'días'}`);
+      console.log("Transaction Hash:", transactionHash);
+      window.alert("You successfully started the Airdrop!");
+
     } else {
       console.log("No hay una billetera activa.");
     }
     
   } catch (err) {
-    console.error(err);
+    console.error("Error al iniciar airdrop:", err);
   }
 };
 
@@ -307,14 +325,14 @@ const checkIfAirdropEnded = async () => {
       });
       console.log("result _owner:");
       console.log(_owner);
-      if(activeWallet) {
-        const account = await activeWallet.getAccount();
-        const address = account?.address || "";
-        if (address.toLowerCase() == _owner.toLowerCase()) {
+      if(adminWallet) {
+        const adminAddress = adminAccount?.address || "";
+        console.log("Admin Address (EOA):", adminAddress);
+        if (adminAddress.toLowerCase() == _owner.toLowerCase()) {
           setIsOwner(true);        
         }
-        console.log("Addres from wallet:");
-        console.log(address);
+        console.log("Admin Addres from smart wallet:");
+        console.log(adminAddress);
         console.log("is owner");
         console.log(isOwner);
       }
@@ -390,6 +408,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
   console.log(name, pathTypeContDig, pathContDigi, contSessions);  
   console.log('isOwner');console.log(isOwner);
   console.log('connected wallet');//console.log(signer?.address);
+  
 
     // If wallet is not connected, return a button which allows them to connect their wllet        
     if (account) {         
@@ -401,7 +420,7 @@ const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,con
       // If connected user is the owner, and airdrop hasnt started yet, allow them to start the airdrop
       else if ((isOwner && !airdropStarted) || (isOwner && airdropStarted && airdropEnded)) {
         return (
-          <button className="btn btn-light font-16 hcenter" onClick={startAirdrop}>
+          <button className="btn btn-light font-16 hcenter" onClick={() => startAirdrop(5, true)}>
             Start Airdrop!
           </button>
         );

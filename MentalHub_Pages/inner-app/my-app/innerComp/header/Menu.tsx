@@ -50,7 +50,7 @@ const menu = () => {
           "passkey",
           "phone",
         ],
-      },
+      },     
     }),
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -172,7 +172,7 @@ const menu = () => {
               connectModal={{ size: "compact" }}
               accountAbstraction= {{
                 chain: myChain,
-                sponsorGas: true,
+                sponsorGas: true, 
               }}
             />
             </div>

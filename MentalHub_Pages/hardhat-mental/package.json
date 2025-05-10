@@ -14,8 +14,9 @@
   },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@nomiclabs/hardhat-etherscan": "^3.1.8",
     "@openzeppelin/contracts": "^4.7.3",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.5.0",
     "flat": "^5.0.2"
   }
 }
