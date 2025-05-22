@@ -30,6 +30,10 @@ const metamaskAdapter = new MetamaskAdapter();
 import { createThirdwebClient,defineChain } from "thirdweb";
 import { ConnectButton } from "thirdweb/react";
 import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
+import { useActiveWallet, useReadContract } from "thirdweb/react";
+import {client as clientThridweb} from "../innerComp/client";
+import { EIP1193 } from "thirdweb/wallets";
+import { myChain } from "../innerComp/myChain";
 
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 //const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
@@ -100,7 +104,16 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [flagInitExec, setFlagInitExec] = useState(false);
   const [innerProfile, setInnerProfile] = useState<InnerverProfile | null>(null);
-
+// define thirdweb hook to use the active wallet and get the account
+const activeWallet = useActiveWallet();
+const account = activeWallet ? activeWallet.getAccount() : null;
+const providerThirdweb = activeWallet
+  ? EIP1193.toProvider({
+      wallet: activeWallet,
+      chain: myChain,
+      client: clientThridweb,
+    })
+  : null;
   /**
    * Configure ceramic Client & create context.
    */
@@ -449,7 +462,29 @@ const logout = async () => {
   };
 
   const getInnerProfile = async () => {
-    await loginComposeDB();
+    //await loginComposeDB();
+    if (account != null) {
+      let accountId = await getAccountId(providerThirdweb, account.address);
+      console.log("accountId:");
+      console.log(accountId);
+
+      let authMethod = await EthereumWebAuth.getAuthMethod(
+            providerThirdweb,
+            accountId
+          );
+      console.log("authMethod:");
+      console.log(authMethod);
+
+      let session = await DIDSession.authorize(authMethod, {
+              resources: composeClient.resources,
+              expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+              domain: window.location.hostname,
+            });
+      console.log("session:");
+      console.log(session);
+      composeClient.setDID(session.did);
+      ceramic.did = session.did;
+    }
     if (ceramic.did == undefined) {
       console.log("ceramic not initialized yet");
       return;

@@ -21,6 +21,7 @@ import {
 
 import {client as clientThridweb} from "../client";
 import { myChain } from "../myChain";
+import { useActiveWallet } from "thirdweb/react";
 
 const menu = () => {
   // get global data from Appcontext
@@ -32,7 +33,8 @@ const menu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
-
+  const activeWallet = useActiveWallet();
+  const account = activeWallet ? activeWallet.getAccount() : null;
   /*const clientThridweb = createThirdwebClient({
     clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
   });*/
@@ -91,7 +93,7 @@ const menu = () => {
       //console.log("provider:");
       //console.log(provider);
 
-        if (isConComposeDB) {
+        if (account != null) {
           return (
             <NavLink
               href="./profile"

@@ -14,6 +14,7 @@ import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
 import Schedule from "@/innerComp/Schedule";
 import App from "next/app";
 import SchedTherapist from "@/innerComp/SchedTherapist";
+import { useActiveWallet, useReadContract } from "thirdweb/react";
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
@@ -26,6 +27,20 @@ export default function Profile() {
   }
   const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = context;
   
+// define thirdweb hook to use the active wallet and get the account
+  const activeWallet = useActiveWallet();
+  const account = activeWallet ? activeWallet.getAccount() : null;
+
+// Detect account
+  useEffect(() => {
+    if(account != null){
+      console.log("account connected:");
+      console.log(account);
+      getInnerProfile();
+      //getUserInfo();
+    }
+  },[account]);
+
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
