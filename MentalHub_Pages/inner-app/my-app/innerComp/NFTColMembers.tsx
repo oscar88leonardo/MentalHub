@@ -50,6 +50,7 @@ const NFTColMembers = () => {
   const account = activeWallet ? activeWallet.getAccount() : null;
   const adminAccount = adminWallet ? adminWallet.getAccount() : null;
 
+
   const contract = getContract({
     client: clientThridweb!,
     chain: myChain,
@@ -232,6 +233,8 @@ const NFTColMembers = () => {
       console.log(`Airdrop iniciado por ${duration} ${isMinutes ? 'minutos' : 'días'}`);
       console.log("Transaction Hash:", transactionHash);
       window.alert("You successfully started the Airdrop!");
+      setAirdropStarted(true);
+      setAirdropEnded(false);
 
     } else {
       console.log("No hay una billetera activa.");
@@ -274,39 +277,33 @@ const checkIfAirdropStarted = async () => {
    */
 const checkIfAirdropEnded = async () => {
     try {
-      // Get the provider from web3Modal, which in our case is MetaMask
-      // No need for the Signer here, as we are only reading state from the blockchain
-      
-      console.log("dataAirdropEnded:");
-      console.log(dataAirdropEnded);
-
-      if(dataAirdropEnded.isLoading) {
+      if (dataAirdropEnded.isLoading) {
         console.log("Loading dataAirdropEnded data...");
         return;
-      } else if(dataAirdropEnded.data) {
-        const _airdropEnded = dataAirdropEnded.data
-        console.log("_airdropEnded:");
-        console.log(typeof _airdropEnded);
-        console.log(_airdropEnded);
+      }
 
-        let hasEnded = null;
-        if (typeof _airdropEnded === "number" && _airdropEnded < Math.floor(Date.now() / 1000))
-          hasEnded = true;
-        else 
-          hasEnded = false;
-        if (hasEnded) {
-          setAirdropEnded(true);
-        } else {
-          setAirdropEnded(false);
-        }
+      if (dataAirdropEnded.data) {
+        // dataAirdropEnded.data es el timestamp de finalización del airdrop
+        const endTimestamp = Number(dataAirdropEnded.data);
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        
+        const hasEnded = currentTimestamp >= endTimestamp;
+        console.log({
+          endTimestamp,
+          currentTimestamp,
+          hasEnded,
+          timeDifference: endTimestamp - currentTimestamp
+        });
+
+        setAirdropEnded(hasEnded);
         return hasEnded;
       }
-      return false;
       
-    } catch (err) {
-      console.error(err);
       return false;
-    }
+    } catch (err) {
+      console.error("Error checking airdrop end:", err);
+      return false;
+    }      
   };    
 
   /**
@@ -381,83 +378,100 @@ useEffect(() => {
     }
   }, [account]);
 
+
   useEffect(() => {
     getTokenIdsMinted();
   }, [datatokenIds]);
+ 
   
   useEffect(() => {
     // Check if airdrop has started and ended
-    const _airdropStarted = checkIfAirdropStarted();
-    if (_airdropStarted != null) {
-      checkIfAirdropEnded();
-    }
-  }, [dataAirdropStarted]);
+    const checkAirdropStatus = async () => {
+        if (dataAirdropStarted.data) {
+          //si el airdrop está iniciado, verificar si ha terminado
+          await checkIfAirdropEnded();
+        }
+    
+    };
 
-
-const variables_state = () => {
-  //console.log(walletConnected);
-  console.log(loading);
-  console.log(isOwner);
-  console.log(airdropStarted);
-  console.log(airdropEnded);
-} 
-
+    checkAirdropStatus();
+  }, [dataAirdropStarted.data, dataAirdropEnded.data]);
 
 
 const renderButton = (name:string,pathTypeContDig:string,pathContDigi:string,contSessions:number) => {  
-  console.log(name, pathTypeContDig, pathContDigi, contSessions);  
-  console.log('isOwner');console.log(isOwner);
-  console.log('connected wallet');//console.log(signer?.address);
-  
+    
+    
 
-    // If wallet is not connected, return a button which allows them to connect their wllet        
-    if (account) {         
-      // If we are currently waiting for something, return a loading button
-      if (loading) {
-        return <button className="btn btn-light font-16 hcenter">Loading...</button>;
-      }
+    if (!account) {
+      return null;
+    }
 
-      // If connected user is the owner, and airdrop hasnt started yet, allow them to start the airdrop
-      else if ((isOwner && !airdropStarted) || (isOwner && airdropStarted && airdropEnded)) {
-        return (
-          <button className="btn btn-light font-16 hcenter" onClick={() => startAirdrop(5, true)}>
-            Start Airdrop!
+    if (loading) {
+      return <button className="btn btn-light font-16 hcenter">Loading...</button>;
+    }
+
+    // Debug de estados
+    console.log("Estado del airdrop:", {
+      owner: isOwner,
+      airdropStarted: !!dataAirdropStarted.data,
+      airdropEndTimestamp: dataAirdropEnded.data ? Number(dataAirdropEnded.data) : 0,
+      currentTimestamp: Math.floor(Date.now() / 1000),
+      airdropEnded: airdropEnded,
+    });
+
+
+    // Caso 1: El owner puede iniciar/reiniciar el airdrop
+    if (isOwner && (!airdropStarted || airdropEnded)) {
+      return (
+        <button 
+          className="btn btn-light font-16 hcenter" 
+          onClick={() => startAirdrop(5, true)}
+        >
+          Start Airdrop!
+        </button>
+      );
+    }
+
+    // Caso 2: Airdrop no ha iniciado  y no ha finalizado
+    if (!airdropStarted && !airdropEnded) {
+      return (
+        <div>
+          <h6 className="text-center">Airdrop coming S o O n!</h6>
+        </div>
+      );
+    }
+
+    // Caso 3: Airdrop activo para whitelist
+    if (airdropStarted && !airdropEnded) {
+      return (
+        <div>
+          <h6 className="text-center">
+            Airdrop has started for whitelisted addresses!
+          </h6>
+          <button 
+            className="btn btn-light font-16 hcenter" 
+            onClick={() => airdropMint(name, pathTypeContDig, pathContDigi, contSessions)}
+          >
+            Claim 🚀!
           </button>
-        );
-      }
+        </div>
+      );
+    }
 
-      // If connected user is not the owner but presale hasn't started yet, tell them that
-      else if (!airdropStarted) {
-        return (
-          <div>
-            <h6 className="text-center">Airdrop coming S o O n!</h6>
-          </div>
-        );
-      }
+    // Caso 4: Airdrop finalizado, mint público disponible
+    if (airdropEnded){
+    return (
+      <button 
+        className="btn btn-light font-16 hcenter" 
+        onClick={() => publicMint(name, pathTypeContDig, pathContDigi, contSessions)}
+      >
+        Public Mint 🚀!
+      </button>
+    );
+    }   
 
-      // If presale started, but hasn't ended yet, allow for minting during the presale period
-      else if (airdropStarted && !airdropEnded) {
-        return (
-          <div>
-            <h6 className="text-center">
-              Airdrop has started for whitelisted addresses!
-            </h6>
-            <button className="btn btn-light font-16 hcenter" onClick={() =>airdropMint(name, pathTypeContDig,pathContDigi,contSessions)}>
-              Claim 🚀!
-            </button>
-          </div>
-        );
-      }
-
-      // If presale started and has ended, its time for public minting
-      else if (airdropStarted && airdropEnded) {
-        return (          
-          <button className="btn btn-light font-16 hcenter" onClick={() => publicMint(name, pathTypeContDig,pathContDigi,contSessions)}>
-            Public Mint 🚀!
-          </button>
-        );
-      }
-    } 
+    // caso por defecto
+    return <div>Loading state ...</div>
   };
 
 
