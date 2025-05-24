@@ -29,7 +29,7 @@ const menu = () => {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { provider, isConComposeDB, login, logout } = context;
+  const { isConComposeDB, logout } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
@@ -39,6 +39,20 @@ const menu = () => {
     clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
   });*/
   
+  type LoginPayload = {
+  address: string;
+  chain_id?: string;
+  domain: string;
+  expiration_time: string;
+  invalid_before: string;
+  issued_at: string;
+  nonce: string;
+  resources?: Array<string>;
+  statement: string;
+  uri?: string;
+  version: string;
+};
+
   const walletsThirdweb = [
     inAppWallet({
       auth: {
@@ -63,7 +77,6 @@ const menu = () => {
 
   useEffect(() => {
     renderButton();
-    renderLogout();
   }, [isConComposeDB]);
 
 
@@ -102,34 +115,9 @@ const menu = () => {
               Profile
             </NavLink>
           );
-        } else {
-          return (
-            <NavLink
-              href="#"
-              className="btn btn-light font-14"
-              onClick={login}
-            >
-              Connect wallet
-            </NavLink>
-          );
-        }
+        } 
       };
   
-    const renderLogout = () => {
-      if (isConComposeDB) {
-        return (
-          <NavLink
-            href="#"
-            className="btn btn-light font-14"
-            onClick={logout}
-          >
-            Logout
-          </NavLink>
-        );
-      } else {
-        return;
-      }
-  }
 
   return (
     <div>
@@ -176,15 +164,39 @@ const menu = () => {
                 chain: myChain,
                 sponsorGas: true, 
               }}
+               auth={{
+                isLoggedIn: async (address: string) => {
+                  // Implement your logic to check if the user is logged in
+                  // For now, return false or true as needed
+                  return !!account;
+                },
+                doLogin: async (params) => {
+                  console.log("logging in!");
+                  //await login(params);
+                },
+                getLoginPayload: async () => ({
+                  address: "0x0000000000000000000000000000000000000000",  // Dirección vacía
+                  chain_id: "0x1",  // Ethereum Mainnet (pero no se usará)
+                  domain: "dummy",
+                  uri: "https://dummy.com",
+                  version: "1",
+                  nonce: "0",
+                  issued_at: new Date().toISOString(),
+                  expiration_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+                  invalid_before: new Date().toISOString(),
+                  statement: "Sign in to Innerverse",
+                  resources: [],
+                }),
+                doLogout: async () => {
+                  console.log("logging out!");
+                  await logout();
+                },
+              }}
             />
             </div>
             <div className="act-buttons">
                 {renderButton()}
-              </div>
-              <div className="act-buttons">
-                {renderLogout()}
-                
-              </div>          
+              </div>       
         </Collapse>
     </div>
   )

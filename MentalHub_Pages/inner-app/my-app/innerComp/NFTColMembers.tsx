@@ -8,15 +8,13 @@ import { AppContext } from "../context/AppContext";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 import { abi as abi_w, WHITELIST_CONTRACT_ADDRESS } from "../constants/whitelist";
 
-import { createThirdwebClient,
-  defineChain,
+import { 
   getContract, 
   prepareContractCall, 
   toWei,
   resolveMethod,
   sendTransaction } from "thirdweb";
 import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
-import { getWalletBalance } from "thirdweb/wallets";
 import { owner } from "thirdweb/extensions/common";
 import {client as clientThridweb} from "./client";
 import { myChain } from "./myChain";

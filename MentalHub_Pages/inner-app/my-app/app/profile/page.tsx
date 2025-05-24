@@ -1,20 +1,27 @@
 "use client"
 import Head from "next/head";
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useEffect, useRef, useState, useContext, use } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Row, Col, Container, Card, CardBody} from "reactstrap";
 import Image from "next/image";
-import img0 from "../public/profile.png";
-import {  Contract, JsonRpcSigner } from "ethers";
-import { BrowserProvider } from "ethers/providers";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../constants/MembersAirdrop";
 import FormConsultante  from "../../innerComp/formConsultante";
 import TherapistRooms  from "../../innerComp/TherapistRooms";
 import TherapistAvalSched  from "../../innerComp/TherapistAvalSched";
 import Schedule from "@/innerComp/Schedule";
-import App from "next/app";
 import SchedTherapist from "@/innerComp/SchedTherapist";
+
+// thirdweb imports
+import { 
+  getContract, 
+  prepareContractCall, 
+  toWei,
+  resolveMethod,
+  sendTransaction } from "thirdweb";
 import { useActiveWallet, useReadContract } from "thirdweb/react";
+import {client as clientThridweb} from "../../innerComp/client";
+import { myChain } from "../../innerComp/myChain";
+
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
@@ -25,11 +32,20 @@ export default function Profile() {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { provider, signer, getSigner, innerProfile, getInnerProfile, executeQuery, isConnected, isConComposeDB, AddressWeb3, userInfo, getUserInfo, getAccounts } = context;
+  const { innerProfile, getInnerProfile, executeQuery, isConComposeDB } = context;
   
 // define thirdweb hook to use the active wallet and get the account
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
+
+const contract = getContract({
+    client: clientThridweb!,
+    chain: myChain,
+    address: NFT_CONTRACT_ADDRESS,
+    // The ABI for the contract is defined here
+    abi: abi as [],
+  });
+
 
 // Detect account
   useEffect(() => {
@@ -44,20 +60,13 @@ export default function Profile() {
   // when a changue in orbis provider is detected
   useEffect(() => {
     if (isConComposeDB) {
-        getSigner();
-        getAccounts();
         getInnerProfile();
-        getUserInfo();
+        //getUserInfo();
       //renderUserName();
     }
     }, [isConComposeDB]);
     
-    useEffect(() => {
-      if (signer != null) {
-        getNFTsOwner();
-      }
-      }, [signer]);
-
+   
     useEffect(() => {
       if (innerProfile != undefined) {
         renderUserName();
@@ -74,87 +83,110 @@ export default function Profile() {
         const signer = await provider0.getSigner();*/
         // Create a new instance of the Contract with a Signer, which allows
         // update methods
-        if(signer != null) {
+        if(account != null) {
          try { 
           // Ensure signer is the correct type
-          const ethersSigner = signer as unknown as JsonRpcSigner;
+          //const ethersSigner = signer as unknown as JsonRpcSigner;
 
-          const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, ethersSigner);
+          //const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, ethersSigner);
           
+
+
           // Get the address asynchronously
-          const address = await ethersSigner.getAddress();
+          const address = account?.address || "";
+          
+          // call the contract method walletofOwner 
+          const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
+            contract,
+            method: "walletOfOwner",
+            params: [account?.address || ""],
+          });
 
-          // call the contract method mint from the contract to mint the MentalHub NFT
-          let ArrTokenIds = await nftContract.walletOfOwner(address); 
-          console.log(ArrTokenIds.length);
-          
-          for (const TkId of ArrTokenIds) {
-            try {
-              /*const response = await fetch(
-                'http://localhost:3000/api/'+ TkId.toNumber()
-              );
-              const todo = await response.json(); 
-              console.log(todo);
-              const jsonContent = JSON.parse(todo);*/
-              const urlGateway = await nftContract.gatewayURI(TkId);
-              const response = await fetch(
-                urlGateway
-              );
-              const todo = await response.json(); 
-              console.log(todo);
-              //const jsonContent = JSON.parse(todo);
-              NFTItemsInfo.push(todo);
-            } catch (err) {
-              console.error(err);
-            }
-          }
-          
-          for(const itemNFT of NFTItemsInfo) {
-            console.log(itemNFT.name);
-            const row = document.getElementById('NFTList');
-            const col = document.createElement('div');
-            const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
-              <Card className="card-shadow" key={index}>              
-                <div className='player-wrapper'>
-                  <video controls
-                      src="`+itemNFT.pathImage+`"
-                      width='300'
-                      height='300'
-                      >
-                  </video>
-                </div>
-                <CardBody>
-                  <h5 className="font-medium m-b-0">
-                    `+itemNFT.name+`
-                  </h5>
-                  <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
-                </CardBody>
-              </Card>
-            </Col>`;
-            col.innerHTML = str;
-            const element =  document.getElementById(itemNFT.name);
-            console.log(element);
-            if (!element)
-            {
-              if (row != null){
-                row.appendChild(col);
+          useEffect(() => {
+            if (ArrTokenIds !== undefined) {
+              console.log("isArrTokenIds:");
+              console.log(isCheckingArrTokenIds);
+
+                if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
+                  console.log(ArrTokenIds.length); 
+                  for (const TkId of ArrTokenIds) {
+                    try {
+                    /*const response = await fetch(
+                      'http://localhost:3000/api/'+ TkId.toNumber()
+                    );
+                    const todo = await response.json(); 
+                    console.log(todo);
+                    const jsonContent = JSON.parse(todo);*/
+                  
+                   // call the contract method gatewayURI 
+                    const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
+                      contract,
+                      method: "gatewayURI",
+                      params: [TkId],
+                    });
+                    
+                    useEffect(() => {
+                      console.log("urlGateway:", urlGateway);
+                      if (typeof urlGateway === "string" && urlGateway) {
+                        fetch(urlGateway)
+                          .then(response => response.json())
+                          .then(todo => {
+                            console.log(todo);
+                            //const jsonContent = JSON.parse(todo);
+                            NFTItemsInfo.push(todo);
+                            for(const itemNFT of NFTItemsInfo) {
+                              console.log(itemNFT.name);
+                              const row = document.getElementById('NFTList');
+                              const col = document.createElement('div');
+                              const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
+                                <Card className="card-shadow" key={index}>              
+                                  <div className='player-wrapper'>
+                                    <video controls
+                                        src="`+itemNFT.pathImage+`"
+                                        width='300'
+                                        height='300'
+                                        >
+                                    </video>
+                                  </div>
+                                  <CardBody>
+                                    <h5 className="font-medium m-b-0">
+                                      `+itemNFT.name+`
+                                    </h5>
+                                    <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
+                                  </CardBody>
+                                </Card>
+                              </Col>`;
+                              col.innerHTML = str;
+                              const element =  document.getElementById(itemNFT.name);
+                              console.log(element);
+                              if (!element)
+                              {
+                                if (row != null){
+                                  row.appendChild(col);
+                                }
+                              }
+                            }
+                          })
+                          .catch(err => console.error(err));
+                      }
+                    }, [urlGateway]);
+                    //const urlGateway = await nftContract.gatewayURI(TkId);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }
               }
             }
-          }
+
+          }, [ArrTokenIds]);
+          
+          //let ArrTokenIds = await nftContract.walletOfOwner(address); 
+         
+      
         } catch (error) {
           console.error("Error interacting with NFT contract:", error);
-      }    
-
-          /*try {
-            const res = await fetch(
-              'http://localhost:3000/api/'+tokenIdsCurrent.toNumber()+'/'+name+' '+tokenIdsCurrent.toNumber()+'/'+pathTypeContDig+'/'+pathContDigi+'/'+contSessions
-            );
-            const data = await res.json();
-            console.log(data);
-          } catch (err) {
-            console.log(err);
-          }*/
-        }
+          }    
+      }
       
     };
   
@@ -217,10 +249,7 @@ export default function Profile() {
 //    const update = await composeClient.executeQuery(strMutation);
     console.log("Profile update: ", innerProfile);
     
-    /*const res = await orbis.updateProfile({
-      username:username,
-      pfp:pfp
-    });*/
+
   }
 
 
@@ -250,8 +279,8 @@ export default function Profile() {
       console.log("Data on ceramic");
       console.log(innerProfile);
       if(innerProfile.name != undefined) {
-        setUserName(innerProfile.name + " - " + innerProfile.rol + " - " + AddressWeb3);
-      } else if(userInfo != undefined) {
+        setUserName(innerProfile.name + " - " + innerProfile.rol + " - " + account?.address);
+      } /*else if(userInfo != undefined) {
         console.log("userInfo:");
         console.log(userInfo);
         if(userInfo.name != undefined){
@@ -260,17 +289,9 @@ export default function Profile() {
           console.log(userInfo.profileImage);
           updateProfile(userInfo.name,innerProfile.rol,userInfo.profileImage);
         }
-      }
+      }*/
     }
-    /*if (provider && AddressWeb3 && userInfo) {
-    
-      if(AddressWeb3 && userInfo){
-        userName = AddressWeb3; 
-        if(userInfo.name != undefined) {
-          userName = userInfo.name + '\n' + userName;
-        }     
-      }
-    }*/
+
   }
 
   return (
