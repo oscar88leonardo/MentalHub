@@ -66,7 +66,7 @@ const menu = () => {
           "passkey",
           "phone",
         ],
-      },     
+      }, 
     }),
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -164,7 +164,21 @@ const menu = () => {
                 chain: myChain,
                 sponsorGas: true, 
               }}
-               auth={{
+            />
+            </div>
+            <div className="act-buttons">
+                {renderButton()}
+              </div>       
+        </Collapse>
+    </div>
+  )
+}
+
+export default menu
+
+/*
+
+auth={{
                 isLoggedIn: async (address: string) => {
                   // Implement your logic to check if the user is logged in
                   // For now, return false or true as needed
@@ -192,14 +206,5 @@ const menu = () => {
                   await logout();
                 },
               }}
-            />
-            </div>
-            <div className="act-buttons">
-                {renderButton()}
-              </div>       
-        </Collapse>
-    </div>
-  )
-}
 
-export default menu
+*/

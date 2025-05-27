@@ -330,8 +330,35 @@ const logout = async () => {
     setuserInfo(user);
   }; */
 
+
+
+
   const getInnerProfile = async () => {
     await loginComposeDB(); 
+    /* 
+    if (account != null) {
+      let accountId = await getAccountId(providerThirdweb, account.address);
+      console.log("accountId:");
+      console.log(accountId);
+
+      let authMethod = await EthereumWebAuth.getAuthMethod(
+            providerThirdweb,
+            accountId
+          );
+      console.log("authMethod:");
+      console.log(authMethod);
+
+      let session = await DIDSession.authorize(authMethod, {
+              resources: composeClient.resources,
+              expiresInSecs: 60 * 60 * 24 * 7, // 1 week
+              domain: window.location.hostname,
+            });
+      console.log("session:");
+      console.log(session);
+      composeClient.setDID(session.did);
+      ceramic.did = session.did;
+    } 
+    */
     if (ceramic.did == undefined) {
       console.log("ceramic not initialized yet");
       return;

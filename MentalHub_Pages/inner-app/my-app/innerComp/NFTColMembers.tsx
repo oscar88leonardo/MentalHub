@@ -18,6 +18,7 @@ import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react
 import { owner } from "thirdweb/extensions/common";
 import {client as clientThridweb} from "./client";
 import { myChain } from "./myChain";
+import { prepareEvent, watchContractEvents } from "thirdweb";
 
 const NFTColMembers = () => {
   // get global data from Appcontext
@@ -94,6 +95,34 @@ const NFTColMembers = () => {
     method: "isSponsoredMint",
     params: [],
   });
+
+  /*const airdropEvent = prepareEvent({
+    event: "event AirdropStarted(uint256 endTime, uint256 duration, uint8 timeUnit);",
+    });*/
+
+  useEffect(() => {
+    const setupEventWatcher = async () => {
+        try {
+          const unwatch = watchContractEvents({
+          contract: contract,
+          onEvents: (events) => {
+            console.log("NFTMembers events:", events);
+            
+          },
+        });
+        // clean up
+        return () => {
+          if (unwatch) {
+            unwatch();
+          }
+        };         
+      } catch (error) {
+          console.error("Error configurando event watcher:", error);
+        }
+    };
+  // execute async function to set up event watcher
+    setupEventWatcher();
+  }, [contract]);
 
   /**
    * presaleMint: Mint an NFT during the presale
