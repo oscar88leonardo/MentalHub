@@ -1,30 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    async headers() {
+    async rewrites() {
       return [
         {
-          source: '/:path*',
-          headers: [
-            {
-              key: 'Cross-Origin-Opener-Policy',
-              value: 'same-origin-allow-popups',
-            },
-            {
-              key: 'Cross-Origin-Embedder-Policy',
-              value: 'unsafe-none',
-            }
-          ],
+          source: '/ceramic/:path*',
+          destination: 'https://ceramicnode.innerverse.care/:path*',
         },
+      ];  
+    },  
+    async headers() {
+      return [
+        
         {
-        source: '/ceramicnode.innerverse.care/:path*',
+         source: "/ceramic/:path*",
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT' },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-          }
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
+          { key: "Access-Control-Allow-Headers", value: "Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date" },
         ]
       }
       ];

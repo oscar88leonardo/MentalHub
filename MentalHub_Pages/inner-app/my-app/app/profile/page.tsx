@@ -1,6 +1,6 @@
 "use client"
 import Head from "next/head";
-import React, { useEffect, useRef, useState, useContext, use } from "react";
+import React, { useEffect, useRef, useState, useContext, use, useMemo } from "react";
 import { AppContext } from "../../context/AppContext";
 import { Row, Col, Container, Card, CardBody} from "reactstrap";
 import Image from "next/image";
@@ -26,6 +26,7 @@ import { myChain } from "../../innerComp/myChain";
 export default function Profile() {
   const [userName, setUserName] = useState("");
   const [pfp, setPfp] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // get global data from Appcontext
   const context = useContext(AppContext);
@@ -38,41 +39,61 @@ export default function Profile() {
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
 
-const contract = getContract({
-    client: clientThridweb!,
-    chain: myChain,
-    address: NFT_CONTRACT_ADDRESS,
-    // The ABI for the contract is defined here
-    abi: abi as [],
-  });
+  // incializacion del contrato
+const contract =   getContract({
+      client: clientThridweb!,
+      chain: myChain,
+      address: NFT_CONTRACT_ADDRESS,
+      // The ABI for the contract is defined here
+      abi: abi as [],
+    });
 
 
-// Detect account
+// Efecto para manejar la conexion inicial
   useEffect(() => {
-    if(account != null){
-      console.log("account connected:");
-      console.log(account);
-      getInnerProfile();
-      //getUserInfo();
-    }
-  },[account]);
+    const initializeProfile = async () => {
+      setLoading(true);
+      try {
+        if (account && isConComposeDB) {
+          await getInnerProfile();
+        }
+      } catch (error) {
+        console.error("Error initializing profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // when a changue in orbis provider is detected
-  useEffect(() => {
-    if (isConComposeDB) {
-        getInnerProfile();
-        //getUserInfo();
-      //renderUserName();
-    }
-    }, [isConComposeDB]);
-    
-   
+    initializeProfile();
+  }, [account, isConComposeDB]);
+
+  // Efecto para actualizar UI cuando cambia el perfil
+  
     useEffect(() => {
-      if (innerProfile != undefined) {
+      if (innerProfile) {
         renderUserName();
         renderUrlProfilePicture();
       }
       }, [innerProfile]);
+
+
+      /*
+  // Render condicional basado en el estado de carga
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <h3>Loading profile...</h3>
+      </div>
+    );
+  }
+
+  if (!account) {
+    return (
+      <div className="connect-wallet-message">
+        <h3>Please connect your wallet to view your profile</h3>
+      </div>
+    );
+  }    */
 
     let NFTItemsInfo: any[] = [];
 

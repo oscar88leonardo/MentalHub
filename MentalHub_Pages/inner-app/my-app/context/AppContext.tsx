@@ -23,13 +23,14 @@ import { JsonRpcSigner } from "ethers/providers";
 //import { MetamaskAdapter } from "@web3auth/metamask-adapter";
 //const metamaskAdapter = new MetamaskAdapter();
 
-import { createThirdwebClient,defineChain } from "thirdweb";
-import { ConnectButton } from "thirdweb/react";
-import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
-import { useActiveWallet, useReadContract } from "thirdweb/react";
+//import { createThirdwebClient,defineChain } from "thirdweb";
+//import { ConnectButton } from "thirdweb/react";
+//import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
+import { useActiveWallet } from "thirdweb/react";
 import {client as clientThridweb} from "../innerComp/client";
 import { EIP1193 } from "thirdweb/wallets";
 import { myChain } from "../innerComp/myChain";
+import { set } from "react-datepicker/dist/date_utils";
 
 //const clientId = "BKBATVOuFf8Mks55TJCB-XTEbms0op9eKowob9zVKCsQ8BUyRw-6AJpuMCejYMrsCQKvAlGlUHQruJJSe0mvMe0"; // get from https://dashboard.web3auth.io
 //const clientId = "BAejqiv6dLQmUrf5ap4mv8Pg57G2imeabR9Cr7sZgbF_ZN1dxtoStZIS49sdkMlb7stGzlhxwIwBybo_iXz1oZs";
@@ -90,19 +91,14 @@ export const AppContext = createContext<AppContextType | null>(null);
 
 const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) => 
 {
-  //const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
-  //const [provider, setProvider] = useState<EIP1193.EIP1193Provider| null>(null);
-  //const [isConnected, setIsConected] = useState(false);
   const [isConComposeDB, setIsConComposeDB] = useState(false);
-  //const [AddressWeb3, setAddressWeb3] = useState(null);
-  //const [userInfo, setuserInfo] = useState<Partial<OpenloginUserInfo> | null>(null);
-  //const [PrivateKey, setPrivateKey] = useState(null);
-  //const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [flagInitExec, setFlagInitExec] = useState(false);
   const [innerProfile, setInnerProfile] = useState<InnerverProfile | null>(null);
-// define thirdweb hook to use the active wallet and get the account
+  const [ceramicClient, setCeramicClient]=useState<CeramicClient | null>(null);
+  const [composeDBClient, setComposeDBClient] = useState<ComposeClient | null>(null);
+  // define thirdweb hook 
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
+  
   const providerThirdweb = activeWallet
     ? EIP1193.toProvider({
         wallet: activeWallet,
@@ -110,34 +106,69 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
         client: clientThridweb,
       })
     : null;
-  /**
-   * Configure ceramic Client & create context.
-   */
-  const ceramic = new CeramicClient("https://ceramicnode.innerverse.care");
+  
+   // initialize ceramic & composeDB
+  useEffect(() => {
+    const initCeramicClients = () => {
+      const ceramic = new CeramicClient("https://ceramicnode.innerverse.care");      
+      const compose = new ComposeClient({
+            ceramic: "https://ceramicnode.innerverse.care",
+            // cast our definition as a RuntimeCompositeDefinition
+            definition: definition as RuntimeCompositeDefinition,
+          });
 
-  const composeClient = new ComposeClient({
-    ceramic: "https://ceramicnode.innerverse.care",
-    // cast our definition as a RuntimeCompositeDefinition
-    definition: definition as RuntimeCompositeDefinition,
-  });
+      setCeramicClient(ceramic);
+      setComposeDBClient(compose);    
+    };
+
+    initCeramicClients();
+
+  }, []);
 
 
+// lllamdo a login composeDB cuando se detecta una cuenta y los clientes de Ceramic y ComposeDB están listo
 useEffect(() => {
   
-    if (account) {
-      loginComposeDB();
+    if (account && ceramicClient && composeDBClient) {
+      const initAuth = async () => {
+      try {
+        console.log("Account detected:", account);
+        // Esperar a que ThirdWeb esté listo
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log("Ceramic and ComposeDB clients ready, attempting loginComposeDB");
+        await loginComposeDB();
+      } catch (error) {
+        console.error("init logincomposeDB error:", error);
+      }
+    };
+      initAuth();
     }
-  }, [account]);
+  }, [account, ceramicClient, composeDBClient]);
 
   const loginComposeDB = async () => {
     try {
+      if( !ceramicClient || !composeDBClient) {
+        throw new Error("Ceramic clients not initialized");
+      }
+
+      if (isConComposeDB){
+        console.log("Already connected to ComposeDB");
+        return; // Already connected, no need to re-login
+      }
+
+      if (!account){
+        throw new Error("No account detected. Connect your wallet first.");  
+      }
+
       const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
       let session;
-      //console.log("Getting sessionStr:", sessionStr);
+      console.log("LoginComposeDB sessionStr:", sessionStr);
       if (sessionStr) {
         session = await DIDSession.fromSession(sessionStr);
+        console.log("Getting session:", session);
       }
-      //console.log("Getting session:", session);
+      
       if (!session || (session.hasSession && session.isExpired)) {
         if (!providerThirdweb) {
           console.error("Provider is not initialized");
@@ -202,14 +233,14 @@ useEffect(() => {
             console.log("Creating DID session...");
             
             // Verify resources
-            if (!composeClient.resources || composeClient.resources.length === 0) {
+            if (!composeDBClient.resources || composeDBClient.resources.length === 0) {
               throw new Error("ComposeDB resources not properly initialized");
             }
-            console.log("ComposeDB resources:", composeClient.resources);
+            console.log("ComposeDB resources:", composeDBClient.resources);
             
             // Create session with domain and origin from current window location
             session = await DIDSession.authorize(authMethod, {
-              resources: composeClient.resources,
+              resources: composeDBClient.resources,
               expiresInSecs: 60 * 60 * 24 * 1, // 1 day
               domain: window.location.hostname,
             });
@@ -250,12 +281,11 @@ useEffect(() => {
           sessionStorage.setItem("ceramic:eth_did", serializedSession);
           
           console.log("Setting DID for clients...");
-          composeClient.setDID(session.did);
-          ceramic.did = session.did;
           
-          console.log("DID setup complete");
-          
+          composeDBClient.setDID(session.did);
+          ceramicClient.did = session.did;
           setIsConComposeDB(true);
+          console.log("DID setup complete");
 
         } catch (error) {
           console.error("Error in final session setup:", error);
@@ -263,16 +293,14 @@ useEffect(() => {
         }
       } else {
         console.log("Setting DID for clients...");
-          composeClient.setDID(session.did);
-          ceramic.did = session.did;
-          
-          console.log("DID setup complete");
+          composeDBClient.setDID(session.did);
+          ceramicClient.did = session.did;
           setIsConComposeDB(true);
+          console.log("DID setup complete");
       }
     } catch (error) {
-      console.error("Fatal error in loginComposeDB:", error);
+      console.error("Error in loginComposeDB:", error);
       setIsConComposeDB(false);
-      // Rethrow the error to be handled by the caller
       throw error;
     }
   };
@@ -280,12 +308,12 @@ useEffect(() => {
 
 const executeQuery = async (query: string) => {
   await loginComposeDB();
-  console.log("exec ceramic OBJ", ceramic)
-  console.log("exec ComposeDB OBJ", composeClient);
-  const update = await composeClient.executeQuery(query);
+  console.log("exec ceramic OBJ", ceramicClient)
+  console.log("exec ComposeDB OBJ", composeDBClient);
+  const update = await composeDBClient?.executeQuery(query);
   console.log("update:", update)
   
-  if (update.errors) {
+  if (update?.errors) {
     console.log("errors:");
     console.log(update.errors);
   }
@@ -334,7 +362,7 @@ const logout = async () => {
 
 
   const getInnerProfile = async () => {
-    await loginComposeDB(); 
+    //await loginComposeDB(); 
     /* 
     if (account != null) {
       let accountId = await getAccountId(providerThirdweb, account.address);
@@ -359,11 +387,17 @@ const logout = async () => {
       ceramic.did = session.did;
     } 
     */
-    if (ceramic.did == undefined) {
-      console.log("ceramic not initialized yet");
-      return;
-    }else {
-      const profile : ProfileQueryResult = await composeClient.executeQuery(`
+  try{ 
+    if (!ceramicClient?.did) {
+        console.log("Waiting for Ceramic initialization...");
+        await loginComposeDB();
+      }
+
+    if (!composeDBClient) {
+      throw new Error("ComposeDB client not initialized");
+    }
+
+    const profile : ProfileQueryResult = await composeDBClient.executeQuery(`
         query {
           viewer {
             innerverProfile {
@@ -432,23 +466,26 @@ const logout = async () => {
           }
         }
         `);
-        if (profile?.data?.viewer?.innerverProfile){
-          setInnerProfile(profile?.data?.viewer?.innerverProfile);
-          console.log("getInnerProfile:");
-          console.log(profile);    
-        } else {console.log(profile);console.log('innerverProfile is undefined');}
 
-                
-    }
-   
+      if (profile?.data?.viewer?.innerverProfile){
+        setInnerProfile(profile?.data?.viewer?.innerverProfile);
+        console.log("getInnerProfile:");
+        console.log(profile);    
+      } else {
+        console.log(profile);console.log('innerverProfile is undefined');
+      }                    
+    } catch (error) {
+      console.error("Error in getInnerProfile:", error); 
+      throw error; 
+    }  
   };
   
 
   const contextValue: AppContextType = {    
     //userInfo, 
     isConComposeDB,
-    ceramic,
-    composeClient,
+    ceramic: ceramicClient!,
+    composeClient: composeDBClient!,
     innerProfile,
     executeQuery,
     getInnerProfile,
