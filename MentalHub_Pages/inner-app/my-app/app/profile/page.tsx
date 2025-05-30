@@ -56,6 +56,7 @@ const contract =   getContract({
       try {
         if (account && isConComposeDB) {
           await getInnerProfile();
+          await getNFTsOwner ();
         }
       } catch (error) {
         console.error("Error initializing profile:", error);
@@ -211,6 +212,7 @@ const contract =   getContract({
       
     };
   
+    /*
     const renderNFTItems = (NFTitem: { pathImage: string | undefined; name: string | null | undefined; contSessions: number | bigint | null | undefined; }, index: number | null | undefined) => {  
       console.log(NFTitem);
       console.log(NFTItemsInfo);
@@ -235,45 +237,7 @@ const contract =   getContract({
           </Col>
           )  
     }  
-
-  const updateProfile = async (name: string | undefined | null,rol: string | undefined | null,pfp: string | undefined | null) => {
-
-    const strMutation = `
-    mutation {
-      setInnerverProfile(input: {
-        content: {
-          name: "${name}"
-          displayName: "${name}"
-          rol: ${rol}
-          pfp: ${pfp}
-        }
-      }) 
-      {
-        document {
-          name
-          displayName
-          rol
-          pfp
-        }
-      }
-    }
-    `;
-    console.log("strMutation:");
-    console.log(strMutation);
-    await executeQuery(strMutation);
-    await getInnerProfile();
-    /*console.log("composeClient:")
-    console.log(composeClient)
-    const isAuth = await composeClient.context.isAuthenticated();
-    console.log("isAuth:")
-    console.log(isAuth)*/
-//    const update = await composeClient.executeQuery(strMutation);
-    console.log("Profile update: ", innerProfile);
-    
-
-  }
-
-
+*/
 
   const renderUrlProfilePicture = () => {
     if(innerProfile != undefined){
