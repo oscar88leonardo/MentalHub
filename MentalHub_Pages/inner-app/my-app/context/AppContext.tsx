@@ -27,6 +27,7 @@ import { JsonRpcSigner } from "ethers/providers";
 //import { ConnectButton } from "thirdweb/react";
 //import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
 import { useActiveWallet, useAdminWallet } from "thirdweb/react";
+import type { Wallet, WalletId, Account } from "thirdweb/wallets";
 import {client as clientThridweb} from "../innerComp/client";
 import { EIP1193 } from "thirdweb/wallets";
 import { myChain } from "../innerComp/myChain";
@@ -49,6 +50,10 @@ interface AppContextType {
   ceramic: CeramicClient;
   composeClient: ComposeClient;
   innerProfile: any | null; // Replace 'any' with a more specific type if possible
+  activeWallet: Wallet<WalletId> | undefined; // Use the correct type for active wallet
+  account: Account | undefined; // Use the correct type for account
+  adminWallet: Wallet<WalletId> | undefined; // Use the correct type for admin wallet
+  adminAccount: Account | undefined; // Use the correct type for admin account
   //getSigner: () => Promise<void>;
   executeQuery: (query: string) => Promise<any>; // Replace 'any' with a more specific return type if possible
   getInnerProfile: () => Promise<void>;
@@ -97,12 +102,14 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [composeDBClient, setComposeDBClient] = useState<ComposeClient | null>(null);
   // define thirdweb hook 
   //const activeWallet = useActiveWallet();
-  const activeWallet = useAdminWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
+  const activeWallet = useActiveWallet();
+  const account = activeWallet ? activeWallet.getAccount() : undefined;
+  const adminWallet = useAdminWallet();
+  const adminAccount = adminWallet ? adminWallet.getAccount() : undefined;
   
-  const providerThirdweb = activeWallet
+  const providerThirdweb = adminWallet
     ? EIP1193.toProvider({
-        wallet: activeWallet,
+        wallet: adminWallet,
         chain: myChain,
         client: clientThridweb,
       })
@@ -185,7 +192,7 @@ useEffect(() => {
         // Get the account ID
         let accountId;
         try {
-          const address = account?.address || "";
+          const address = adminAccount?.address || "";
           console.log("Getting account ID for address:", address);
           accountId = await getAccountId(providerThirdweb, address);
           console.log("Account ID obtained:", accountId);
@@ -489,10 +496,14 @@ const logout = async () => {
     ceramic: ceramicClient!,
     composeClient: composeDBClient!,
     innerProfile,
+    activeWallet,
+    account,
+    adminWallet,
+    adminAccount,
     executeQuery,
     getInnerProfile,
     loginComposeDB,
-    logout,
+    logout
     //getUserInfo
   };
 

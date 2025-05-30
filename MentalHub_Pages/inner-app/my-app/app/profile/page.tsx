@@ -33,11 +33,11 @@ export default function Profile() {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { innerProfile, getInnerProfile, executeQuery, isConComposeDB } = context;
+  const { innerProfile, activeWallet,account, adminWallet, adminAccount, getInnerProfile, executeQuery, isConComposeDB } = context;
   
 // define thirdweb hook to use the active wallet and get the account
-  const activeWallet = useActiveWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
+  //const activeWallet = useActiveWallet();
+  //const account = activeWallet ? activeWallet.getAccount() : null;
 
   // incializacion del contrato
 const contract =   getContract({
@@ -120,7 +120,7 @@ const contract =   getContract({
           const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
             contract,
             method: "walletOfOwner",
-            params: [account?.address || ""],
+            params: [address],
           });
 
           useEffect(() => {
