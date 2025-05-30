@@ -26,7 +26,7 @@ import { JsonRpcSigner } from "ethers/providers";
 //import { createThirdwebClient,defineChain } from "thirdweb";
 //import { ConnectButton } from "thirdweb/react";
 //import { createWallet, inAppWallet, privateKeyToAccount,smartWallet } from "thirdweb/wallets";
-import { useActiveWallet } from "thirdweb/react";
+import { useActiveWallet, useAdminWallet } from "thirdweb/react";
 import {client as clientThridweb} from "../innerComp/client";
 import { EIP1193 } from "thirdweb/wallets";
 import { myChain } from "../innerComp/myChain";
@@ -96,7 +96,8 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [ceramicClient, setCeramicClient]=useState<CeramicClient | null>(null);
   const [composeDBClient, setComposeDBClient] = useState<ComposeClient | null>(null);
   // define thirdweb hook 
-  const activeWallet = useActiveWallet();
+  //const activeWallet = useActiveWallet();
+  const activeWallet = useAdminWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
   
   const providerThirdweb = activeWallet
@@ -216,8 +217,9 @@ useEffect(() => {
           };
     
           authMethod = await EthereumWebAuth.getAuthMethod(
-            providerWithMethods,
-            accountId
+            //providerWithMethods,
+            providerThirdweb,
+            accountId,           
           );
           
           console.log("Auth method obtained successfully");
