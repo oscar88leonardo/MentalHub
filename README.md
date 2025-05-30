@@ -26,3 +26,18 @@ Metis Goerli faucet - https://goerli.faucet.metisdevops.link/
 ## METADATA URL
 METADATA_URL = "ipfs://bafybeieq7ah4ygw7dfkodzeuvwppml3n3d3l57llhq3xax6wxp2wu4uwym/"
 GATEWAY_URI ="https://nftstorage.link/ipfs/bafybeieq7ah4ygw7dfkodzeuvwppml3n3d3l57llhq3xax6wxp2wu4uwym/"
+
+## Iniciar servicios del nodo:
+sudo systemctl start ceramic-one.service
+
+sudo systemctl start ceramic-node.service
+
+## Detener servicios del nodo:
+sudo systemctl stop ceramic-one.service
+
+sudo systemctl stop ceramic-node.service
+
+## Check Status de servicios:
+sudo systemctl status ceramic-one.service
+
+sudo systemctl status ceramic-node.service

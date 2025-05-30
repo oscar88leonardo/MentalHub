@@ -9,9 +9,7 @@ import {
 } from "reactstrap";
 import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
-import { AppContext } from "../../context/AppContext";
-
-import { createThirdwebClient } from "thirdweb";
+//import { AppContext } from "../../context/AppContext";
 import { ConnectButton } from "thirdweb/react";
 
 import {
@@ -25,11 +23,11 @@ import { useActiveWallet } from "thirdweb/react";
 
 const menu = () => {
   // get global data from Appcontext
-  const context = useContext(AppContext);
-  if (context === null) {
-    throw new Error("useContext must be used within a provider");
-  }
-  const { isConComposeDB, logout } = context;
+  //const context = useContext(AppContext);
+  //if (context === null) {
+  //  throw new Error("useContext must be used within a provider");
+  //}
+  //const { isConComposeDB, logout } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
@@ -38,7 +36,7 @@ const menu = () => {
   /*const clientThridweb = createThirdwebClient({
     clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
   });*/
-  
+  /*
   type LoginPayload = {
   address: string;
   chain_id?: string;
@@ -51,7 +49,7 @@ const menu = () => {
   statement: string;
   uri?: string;
   version: string;
-};
+};*/
 
   const walletsThirdweb = [
     inAppWallet({
@@ -77,7 +75,7 @@ const menu = () => {
 
   useEffect(() => {
     renderButton();
-  }, [isConComposeDB]);
+  }, []);
 
 
   // revisar rutas en app router
