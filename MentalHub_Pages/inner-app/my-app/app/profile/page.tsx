@@ -217,12 +217,11 @@ const contract =   getContract({
           for (const TkId of ArrTokenIds) {
             try {
                       
-            const urlGateway = readContract({
+          readContract({
             contract: contract,
             method: "function gatewayURI(uint256 tokenId) view returns (string)",
             params: [TkId],
-          });
-
+          }).then((urlGateway) => {
             // call the contract method gatewayURI 
             /*const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
               contract,
@@ -238,10 +237,11 @@ const contract =   getContract({
                   console.log(validNFTs);
                   //const jsonContent = JSON.parse(todo);
                   //NFTItemsInfo.push(todo);
-                  setNFTItemsInfo(validNFTs);
+                  setNFTItemsInfo(prevNFTs => [...prevNFTs, validNFTs]);
                 })
                 .catch(err => console.error(err));
             }
+          });
             //const urlGateway = await nftContract.gatewayURI(TkId);
           } catch (err) {
             console.error(err);
@@ -253,6 +253,8 @@ const contract =   getContract({
   }, [ArrTokenIds]);
   
   useEffect(() => {
+    console.log("NFTItemsInfo:");
+    console.log(NFTItemsInfo);
     NFTItemsInfo.forEach(itemNFT => {
       console.log(itemNFT.name);
       const row = document.getElementById('NFTList');
