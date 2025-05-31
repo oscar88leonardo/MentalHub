@@ -56,7 +56,7 @@ const contract =   getContract({
       try {
         if (account && isConComposeDB) {
           await getInnerProfile();
-          await getNFTsOwner ();
+          //await getNFTsOwner ();
         }
       } catch (error) {
         console.error("Error initializing profile:", error);
@@ -96,13 +96,21 @@ const contract =   getContract({
     );
   }    */
 
-    let NFTItemsInfo: any[] = [];
+    //let NFTItemsInfo: any[] = [];
+    const [NFTItemsInfo, setNFTItemsInfo] = useState<any[]>([]);
 
-    const getNFTsOwner = async () => {      
+    // call the contract method walletofOwner 
+    const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
+      contract,
+      method: "walletOfOwner",
+      params: [account?.address || ""],
+    });
+
+    /*const getNFTsOwner = async () => {      
         // We need a Signer here since this is a 'write' transaction.
         //const signer = await getProviderOrSigner(true);
-        /*const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-        const signer = await provider0.getSigner();*/
+        //const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
+        //const signer = await provider0.getSigner();
         // Create a new instance of the Contract with a Signer, which allows
         // update methods
         if(account != null) {
@@ -111,19 +119,6 @@ const contract =   getContract({
           //const ethersSigner = signer as unknown as JsonRpcSigner;
 
           //const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, ethersSigner);
-          
-
-
-          // Get the address asynchronously
-          const address = account?.address || "";
-          
-          // call the contract method walletofOwner 
-          const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
-            contract,
-            method: "walletOfOwner",
-            params: [address],
-          });
-
           useEffect(() => {
             if (ArrTokenIds !== undefined) {
               console.log("isArrTokenIds:");
@@ -133,12 +128,12 @@ const contract =   getContract({
                   console.log(ArrTokenIds.length); 
                   for (const TkId of ArrTokenIds) {
                     try {
-                    /*const response = await fetch(
-                      'http://localhost:3000/api/'+ TkId.toNumber()
-                    );
-                    const todo = await response.json(); 
-                    console.log(todo);
-                    const jsonContent = JSON.parse(todo);*/
+                    // const response = await fetch(
+                    //   'http://localhost:3000/api/'+ TkId.toNumber()
+                    // );
+                    // const todo = await response.json(); 
+                    // console.log(todo);
+                    // const jsonContent = JSON.parse(todo);
                   
                    // call the contract method gatewayURI 
                     const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
@@ -210,8 +205,83 @@ const contract =   getContract({
           }    
       }
       
-    };
+    };*/
+  useEffect(() => {
+    if (ArrTokenIds !== undefined) {
+      console.log("isArrTokenIds:");
+      console.log(isCheckingArrTokenIds);
+
+        if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
+          console.log(ArrTokenIds.length); 
+          for (const TkId of ArrTokenIds) {
+            try {
+                      
+            // call the contract method gatewayURI 
+            const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
+              contract,
+              method: "gatewayURI",
+              params: [TkId],
+            });
+            
+            useEffect(() => {
+              console.log("urlGateway:", urlGateway);
+              if (typeof urlGateway === "string" && urlGateway) {
+                fetch(urlGateway)
+                  .then(response => response.json())
+                  .then(validNFTs => {
+                    console.log(validNFTs);
+                    //const jsonContent = JSON.parse(todo);
+                    //NFTItemsInfo.push(todo);
+                    setNFTItemsInfo(validNFTs);
+                  })
+                  .catch(err => console.error(err));
+              }
+            }, [urlGateway]);
+            //const urlGateway = await nftContract.gatewayURI(TkId);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }
+    }
+
+  }, [ArrTokenIds]);
   
+  useEffect(() => {
+    NFTItemsInfo.forEach(itemNFT => {
+      console.log(itemNFT.name);
+      const row = document.getElementById('NFTList');
+      const col = document.createElement('div');
+      const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
+        <Card className="card-shadow" key={index}>              
+          <div className='player-wrapper'>
+            <video controls
+                src="`+itemNFT.pathImage+`"
+                width='300'
+                height='300'
+                >
+            </video>
+          </div>
+          <CardBody>
+            <h5 className="font-medium m-b-0">
+              `+itemNFT.name+`
+            </h5>
+            <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
+          </CardBody>
+        </Card>
+      </Col>`;
+      col.innerHTML = str;
+      const element =  document.getElementById(itemNFT.name);
+      console.log(element);
+      if (!element)
+      {
+        if (row != null){
+          row.appendChild(col);
+        }
+      }
+    });
+  }, [NFTItemsInfo]);
+
     /*
     const renderNFTItems = (NFTitem: { pathImage: string | undefined; name: string | null | undefined; contSessions: number | bigint | null | undefined; }, index: number | null | undefined) => {  
       console.log(NFTitem);
