@@ -219,7 +219,7 @@ const contract =   getContract({
                       
             const urlGateway = readContract({
             contract: contract,
-            method: "function gatewayURI(tokenId) view returns (string)",
+            method: "function gatewayURI(uint256 tokenId) view returns (string)",
             params: [TkId],
           });
 
