@@ -14,6 +14,7 @@ import SchedTherapist from "@/innerComp/SchedTherapist";
 // thirdweb imports
 import { 
   getContract, 
+  readContract,
   prepareContractCall, 
   toWei,
   resolveMethod,
@@ -216,27 +217,31 @@ const contract =   getContract({
           for (const TkId of ArrTokenIds) {
             try {
                       
+            const urlGateway = readContract({
+            contract: contract,
+            method: "function gatewayURI(tokenId) view returns (string)",
+            params: [TkId],
+          });
+
             // call the contract method gatewayURI 
-            const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
+            /*const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
               contract,
               method: "gatewayURI",
               params: [TkId],
-            });
+            });*/
             
-            useEffect(() => {
-              console.log("urlGateway:", urlGateway);
-              if (typeof urlGateway === "string" && urlGateway) {
-                fetch(urlGateway)
-                  .then(response => response.json())
-                  .then(validNFTs => {
-                    console.log(validNFTs);
-                    //const jsonContent = JSON.parse(todo);
-                    //NFTItemsInfo.push(todo);
-                    setNFTItemsInfo(validNFTs);
-                  })
-                  .catch(err => console.error(err));
-              }
-            }, [urlGateway]);
+            console.log("urlGateway:", urlGateway);
+            if (typeof urlGateway === "string" && urlGateway) {
+              fetch(urlGateway)
+                .then(response => response.json())
+                .then(validNFTs => {
+                  console.log(validNFTs);
+                  //const jsonContent = JSON.parse(todo);
+                  //NFTItemsInfo.push(todo);
+                  setNFTItemsInfo(validNFTs);
+                })
+                .catch(err => console.error(err));
+            }
             //const urlGateway = await nftContract.gatewayURI(TkId);
           } catch (err) {
             console.error(err);
