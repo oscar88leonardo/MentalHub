@@ -188,7 +188,10 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
     /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
     window.open(origin + "/meet/" + roomId, "_blank");*/
-    router.push(`/meet/${roomId}/0`);
+   //router.push(`/meet/${roomId}/0`);
+   console.log("OPENING ROOM" )
+    //router.push(`/meet/${roomId}/0`);
+    window.open(`https://innerverse.huddle01.app/room/${roomId}`, "_blank", 'noopener,noreferrer');
   };
 
   return (

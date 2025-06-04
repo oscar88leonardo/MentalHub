@@ -16,7 +16,8 @@ import {
 import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
-import { createRoom } from '../app/meet/components/createRoom';
+//import { createRoom } from '../app/meet/components/createRoom';
+import { createRoom } from '../app/meet/components/createRoomV2';
 
 // Component interface and type definitions
 interface AddTherapistRoomProps {

@@ -41,3 +41,7 @@ sudo systemctl stop ceramic-node.service
 sudo systemctl status ceramic-one.service
 
 sudo systemctl status ceramic-node.service
+
+## shutdown
+
+sudo shutdown -h now
