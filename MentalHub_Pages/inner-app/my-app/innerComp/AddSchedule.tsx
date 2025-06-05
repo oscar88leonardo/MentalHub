@@ -17,8 +17,9 @@ import { uploadImage, uploadFile } from '@self.id/image-utils';*/
 import { AppContext } from "../context/AppContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useRouter } from 'next/navigation';
+//import { useRouter } from 'next/navigation';
 import { StreamID } from '@ceramicnetwork/streamid';
+import { openMeet } from './myMeet';
 
 /// Component interface and type definitions
 //
@@ -90,7 +91,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   } 
   const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
 
-  const router = useRouter();
+  //const router = useRouter();
 
   useEffect(() => {
     if(props.therapistInfo) { 
@@ -184,15 +185,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
     }
   },[props.show]);
 
-  const openMeet = (roomId: string) => {
-    /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
-    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
-    window.open(origin + "/meet/" + roomId, "_blank");*/
-   //router.push(`/meet/${roomId}/0`);
-   console.log("OPENING ROOM" )
-    //router.push(`/meet/${roomId}/0`);
-    window.open(`https://innerverse.huddle01.app/room/${roomId}`, "_blank", 'noopener,noreferrer');
-  };
+  
 
   return (
     <div>

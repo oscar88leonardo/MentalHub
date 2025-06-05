@@ -16,6 +16,7 @@ import { AppContext } from "../context/AppContext";
 import { CLIENT_PUBLIC_FILES_PATH } from 'next/dist/shared/lib/constants';
 import AddTherapistRoom from '../innerComp/AddTherapistRoom';
 import { useRouter } from 'next/navigation';
+import { openMeet } from './myMeet';
  
 const TherapistRooms=()=> {
   const [modalisOpen, setIsOpen] = useState(false);
@@ -73,15 +74,6 @@ const TherapistRooms=()=> {
     setModalAddRoomIsOpen(true)
   };
 
-  const openMeet = (roomId:string) => {
-    /*const hostname = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '';
-    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
-    window.open(origin + "/meet/" + roomId, "_blank");*/
-    //router.push(`/meet/${roomId}/1`);
-    console.log("OPENING ROOM" )
-    //router.push(`/meet/${roomId}/0`);
-    window.open(`https://innerverse.huddle01.app/room/${roomId}`, "_blank", 'noopener,noreferrer');
-  };
 
   const renderHuddsTable = () => {
     if(innerProfile.hudds != undefined){
