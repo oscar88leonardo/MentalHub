@@ -22,12 +22,14 @@ import {
 import { useActiveWallet, useReadContract } from "thirdweb/react";
 import {client as clientThridweb} from "../../innerComp/client";
 import { myChain } from "../../innerComp/myChain";
+import { set } from "react-datepicker/dist/date_utils";
 
 
 export default function Profile() {
   const [userName, setUserName] = useState("");
   const [pfp, setPfp] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState<boolean | undefined>(undefined);
 
   // get global data from Appcontext
   const context = useContext(AppContext);
@@ -57,13 +59,11 @@ const contract =   getContract({
       try {
         if (account && isConComposeDB) {
           await getInnerProfile();
-          //await getNFTsOwner ();
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error initializing profile:", error);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
     initializeProfile();
@@ -71,12 +71,18 @@ const contract =   getContract({
 
   // Efecto para actualizar UI cuando cambia el perfil
   
-    useEffect(() => {
-      if (innerProfile) {
-        renderUserName();
-        renderUrlProfilePicture();
-      }
-      }, [innerProfile]);
+   // Separar la lógica de verificación de nuevo usuario
+  useEffect(() => {
+    // Solo actualizar isNewUser cuando no está cargando
+    if ( !loading && innerProfile !== undefined) {
+      // Si innerProfile es null, es un usuario nuevo
+      setIsNewUser(innerProfile === null);
+    }
+    if (innerProfile) {
+      renderUserName();
+      renderUrlProfilePicture();
+    }
+    },[innerProfile, loading]);
 
 
       /*
@@ -380,7 +386,8 @@ const contract =   getContract({
                       <h6 className="m-b-0 customer">{userName}</h6>
                     </div>
                     <div className="m-l-20">
-                      <FormConsultante />
+                      {/* solo mostrar FormConsultante cuando isNewUser esté definido */}                       
+                      <FormConsultante isForced={isNewUser === true} />
                       <TherapistRooms />
                       <TherapistAvalSched />
                       <Schedule />

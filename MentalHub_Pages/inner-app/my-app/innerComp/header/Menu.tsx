@@ -27,16 +27,29 @@ const menu = () => {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { logout } = context;
+  const { logout, isConComposeDB } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => setIsOpen(!isOpen);
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
+  const [showAuthWarning, setShowAuthWarning] = useState(false);
   /*const clientThridweb = createThirdwebClient({
     clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
   });*/
   
+  // función para validar autenticación
+  const handleAuthenticatedNavigation = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    if (!account || !isConComposeDB) {
+      setShowAuthWarning(true);
+      setTimeout(() => setShowAuthWarning(false), 3000);
+      return;
+    }
+    window.location.href = path;
+  };
+
+
   type LoginPayload = {
   address: string;
   chain_id?: string;
@@ -80,6 +93,19 @@ const menu = () => {
 
   // revisar rutas en app router
   const renderUrl = (AuxSection = "", AuxText = "") => {
+    // incluir validación
+    if (AuxSection === "NTFCollectSection") {
+      return (
+        <NavLink
+          href="#"
+          className="nav-link"
+          onClick={(e) => handleAuthenticatedNavigation(e, './digital-collections')}
+        >
+          {AuxText}
+        </NavLink>
+      );
+    }
+    
     //console.log(pathname);
     var vHref = './#'+AuxSection;
     if (pathname != '/') {
@@ -100,21 +126,20 @@ const menu = () => {
     }
   };
         
-    const renderButton = () => {
+  const renderButton = () => {
       //console.log("provider:");
       //console.log(provider);
-
-        if (account != null) {
-          return (
-            <NavLink
-              href="./profile"
-              className="btn btn-light font-14"
-            >
-              Profile
-            </NavLink>
-          );
-        } 
-      };
+      if (account != null) {
+        return (
+          <NavLink
+            href="./profile"
+            className="btn btn-light font-14"
+          >
+            Profile
+          </NavLink>
+        );
+      } 
+  };
   
 
   return (
@@ -139,9 +164,13 @@ const menu = () => {
                 {renderUrl("NTFCollectSection","Digital Collections")}
             </NavItem>
             <NavItem>
-                <a href="./whitelist" className="nav-link">
-                WhiteList
-                </a>
+                <NavLink
+                  href="#"
+                  className="nav-link"
+                  onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
+                >
+                  WhiteList
+                </NavLink>
             </NavItem>
             <NavItem>
                 {renderUrl("PartnersSection","Partners")}
@@ -152,7 +181,21 @@ const menu = () => {
             <NavItem>
                 {renderUrl("FAQsSection","FAQs")}
             </NavItem>
-            </Nav>  
+            </Nav> 
+              {showAuthWarning && (
+                <div className="auth-warning" style={{
+                  position: 'fixed',
+                  top: '20px',
+                  right: '20px',
+                  backgroundColor: '#ff4444',
+                  color: 'white',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  zIndex: 1000
+                  }}>
+                  Por favor, conecta tu wallet primero
+                </div>
+              )} 
             <div className="act-buttons">
             <ConnectButton
               client={clientThridweb}

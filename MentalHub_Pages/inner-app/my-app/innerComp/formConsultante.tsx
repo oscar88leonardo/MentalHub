@@ -22,7 +22,11 @@ interface IpfsResponse {
   [key: string]: any;
 } 
 
-const FormConsultante=()=> {
+interface FormConsultanteProps {
+  isForced?: boolean;
+}
+
+const FormConsultante: React.FC<FormConsultanteProps> = ({isForced})=> {
   const [modalisOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [rol, setRol] = useState("");
@@ -95,27 +99,35 @@ const FormConsultante=()=> {
     /*console.log("PFP pre update:");
     console.log(pfp);*/
     await updateRecordImageProfile(imageProfile);
-    
-    setIsOpen(false);
+     // No cerrar el modal aquí, se cerrará automáticamente cuando se actualice innerProfile
+    //setIsOpen(false);
   };
  
+  
+
+  // Modificar el handleCloseModal
+const handleCloseModal = () => {
+  if (!isForced || innerProfile !== null) {
+    setIsOpen(false);
+  }
+};
+
+
   useEffect(() => {
-    console.log("innerProfile DATA");
-    console.log(innerProfile);   
-    if (innerProfile!=undefined){
-      console.log("innerProfile defined");
-      if (innerProfile.name != undefined)
-        setName(innerProfile.name);
-      if (innerProfile.rol != undefined)
-        setRol(innerProfile.rol);
-      /*if (orbisProfile.details.profile!= undefined){
-        if (orbisProfile.details.profile!= undefined){
-          if (orbisProfile.details.profile.pfp!= undefined)
-            setPfp(orbisProfile.details.profile.pfp);  
-        }
-      }*/
-    }
-  },[innerProfile])
+    console.log("FormConsultante effect:", { isForced, innerProfile });
+  // Solo abrir el modal si:
+  // 1. Es un usuario nuevo (innerProfile === null)
+  // 2. Es forzado (isForced === true)
+  // 3. Tenemos información definitiva del perfil (innerProfile !== undefined)
+  if (innerProfile === null && isForced) {
+    setIsOpen(true);
+  } else if (innerProfile) {
+    // Si hay perfil, actualizar campos y asegurarse que el modal está cerrado
+    if (innerProfile.name) setName(innerProfile.name);
+    if (innerProfile.rol) setRol(innerProfile.rol);
+    setIsOpen(false);
+  }
+}, [innerProfile, isForced]);
 
   useEffect(() => {
     // action on update of pfp
@@ -198,7 +210,7 @@ const FormConsultante=()=> {
       
       <ReactModal 
         isOpen={modalisOpen}
-        onRequestClose={() => setIsOpen(false)}
+        onRequestClose={handleCloseModal}
         contentLabel="Edit Profile"
         style={{
         overlay: {
