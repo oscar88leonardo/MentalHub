@@ -38,9 +38,6 @@ export default function Profile() {
   }
   const { innerProfile, activeWallet,account, adminWallet, adminAccount, getInnerProfile, executeQuery, isConComposeDB } = context;
   
-// define thirdweb hook to use the active wallet and get the account
-  //const activeWallet = useActiveWallet();
-  //const account = activeWallet ? activeWallet.getAccount() : null;
 
   // incializacion del contrato
 const contract =   getContract({
@@ -85,24 +82,6 @@ const contract =   getContract({
     },[innerProfile, loading]);
 
 
-      /*
-  // Render condicional basado en el estado de carga
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <h3>Loading profile...</h3>
-      </div>
-    );
-  }
-
-  if (!account) {
-    return (
-      <div className="connect-wallet-message">
-        <h3>Please connect your wallet to view your profile</h3>
-      </div>
-    );
-  }    */
-
     //let NFTItemsInfo: any[] = [];
     const [NFTItemsInfo, setNFTItemsInfo] = useState<any[]>([]);
 
@@ -113,106 +92,7 @@ const contract =   getContract({
       params: [account?.address || ""],
     });
 
-    /*const getNFTsOwner = async () => {      
-        // We need a Signer here since this is a 'write' transaction.
-        //const signer = await getProviderOrSigner(true);
-        //const provider0 = new BrowserProvider(provider);//new providers.Web3Provider(provider);
-        //const signer = await provider0.getSigner();
-        // Create a new instance of the Contract with a Signer, which allows
-        // update methods
-        if(account != null) {
-         try { 
-          // Ensure signer is the correct type
-          //const ethersSigner = signer as unknown as JsonRpcSigner;
-
-          //const nftContract = new Contract(NFT_CONTRACT_ADDRESS, abi, ethersSigner);
-          useEffect(() => {
-            if (ArrTokenIds !== undefined) {
-              console.log("isArrTokenIds:");
-              console.log(isCheckingArrTokenIds);
-
-                if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
-                  console.log(ArrTokenIds.length); 
-                  for (const TkId of ArrTokenIds) {
-                    try {
-                    // const response = await fetch(
-                    //   'http://localhost:3000/api/'+ TkId.toNumber()
-                    // );
-                    // const todo = await response.json(); 
-                    // console.log(todo);
-                    // const jsonContent = JSON.parse(todo);
-                  
-                   // call the contract method gatewayURI 
-                    const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
-                      contract,
-                      method: "gatewayURI",
-                      params: [TkId],
-                    });
-                    
-                    useEffect(() => {
-                      console.log("urlGateway:", urlGateway);
-                      if (typeof urlGateway === "string" && urlGateway) {
-                        fetch(urlGateway)
-                          .then(response => response.json())
-                          .then(todo => {
-                            console.log(todo);
-                            //const jsonContent = JSON.parse(todo);
-                            NFTItemsInfo.push(todo);
-                            for(const itemNFT of NFTItemsInfo) {
-                              console.log(itemNFT.name);
-                              const row = document.getElementById('NFTList');
-                              const col = document.createElement('div');
-                              const str = `<div md="4" id="`+itemNFT.name+`" style="padding:10px;">
-                                <Card className="card-shadow" key={index}>              
-                                  <div className='player-wrapper'>
-                                    <video controls
-                                        src="`+itemNFT.pathImage+`"
-                                        width='300'
-                                        height='300'
-                                        >
-                                    </video>
-                                  </div>
-                                  <CardBody>
-                                    <h5 className="font-medium m-b-0">
-                                      `+itemNFT.name+`
-                                    </h5>
-                                    <p className="m-b-0 font-14">Sessions:`+itemNFT.contSessions+`</p> 
-                                  </CardBody>
-                                </Card>
-                              </Col>`;
-                              col.innerHTML = str;
-                              const element =  document.getElementById(itemNFT.name);
-                              console.log(element);
-                              if (!element)
-                              {
-                                if (row != null){
-                                  row.appendChild(col);
-                                }
-                              }
-                            }
-                          })
-                          .catch(err => console.error(err));
-                      }
-                    }, [urlGateway]);
-                    //const urlGateway = await nftContract.gatewayURI(TkId);
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }
-              }
-            }
-
-          }, [ArrTokenIds]);
-          
-          //let ArrTokenIds = await nftContract.walletOfOwner(address); 
-         
-      
-        } catch (error) {
-          console.error("Error interacting with NFT contract:", error);
-          }    
-      }
-      
-    };*/
+   
   useEffect(() => {
     if (ArrTokenIds !== undefined) {
       console.log("isArrTokenIds:");
@@ -228,12 +108,6 @@ const contract =   getContract({
             method: "function gatewayURI(uint256 tokenId) view returns (string)",
             params: [TkId],
           }).then((urlGateway) => {
-            // call the contract method gatewayURI 
-            /*const { data: urlGateway, isLoading: isurlGateway } = useReadContract({
-              contract,
-              method: "gatewayURI",
-              params: [TkId],
-            });*/
             
             console.log("urlGateway:", urlGateway);
             if (typeof urlGateway === "string" && urlGateway) {
@@ -241,8 +115,6 @@ const contract =   getContract({
                 .then(response => response.json())
                 .then(validNFTs => {
                   console.log(validNFTs);
-                  //const jsonContent = JSON.parse(todo);
-                  //NFTItemsInfo.push(todo);
                   setNFTItemsInfo(prevNFTs => [...prevNFTs, validNFTs]);
                 })
                 .catch(err => console.error(err));
@@ -295,32 +167,7 @@ const contract =   getContract({
     });
   }, [NFTItemsInfo]);
 
-    /*
-    const renderNFTItems = (NFTitem: { pathImage: string | undefined; name: string | null | undefined; contSessions: number | bigint | null | undefined; }, index: number | null | undefined) => {  
-      console.log(NFTitem);
-      console.log(NFTItemsInfo);
-      return(   
-        <Col md="4">
-          <Card className="card-shadow" key={index}>              
-          <div className='player-wrapper'>
-            <video controls
-                src={NFTitem.pathImage}
-                width='300'
-                height='300'
-                >
-            </video>
-            </div>
-            <CardBody>
-              <h5 className="font-medium m-b-0">
-                {NFTitem.name}
-              </h5>
-              <p className="m-b-0 font-14">Sessions:{NFTitem.contSessions}</p> 
-            </CardBody>
-          </Card>
-          </Col>
-          )  
-    }  
-*/
+ 
 
   const renderUrlProfilePicture = () => {
     if(innerProfile != undefined){

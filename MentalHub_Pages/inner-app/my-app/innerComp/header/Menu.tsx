@@ -99,7 +99,7 @@ const menu = () => {
         <NavLink
           href="#"
           className="nav-link"
-          onClick={(e) => handleAuthenticatedNavigation(e, './digital-collections')}
+          onClick={(e) => handleAuthenticatedNavigation(e, './#NTFCollectSection')}
         >
           {AuxText}
         </NavLink>
