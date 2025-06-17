@@ -5,6 +5,21 @@ import { Calendar, Views, DateLocalizer } from 'react-big-calendar';
 import { AppContext } from "../context/AppContext";
 import AddSchedule from '../innerComp/AddSchedule';
 
+// Imports para interacción con smart contract
+import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
+
+import { 
+  getContract, 
+  readContract,
+  prepareContractCall, 
+  toWei,
+  resolveMethod,
+  sendTransaction } from "thirdweb";
+import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
+import { owner } from "thirdweb/extensions/common";
+import {client as clientThridweb} from "./client";
+import { myChain } from "./myChain";
+
 // Define the props for the CalendarSchedule component
 interface CalendarScheduleProps {
   therapist: string | null | undefined;
@@ -55,6 +70,13 @@ interface handleSelectSlotInterface {
   end: Date;
 }
 
+// Define the NFTSession interface
+interface NFTSession {
+  tokenId: number;
+  availableSessions: number;
+}
+
+
 export default function CalendarSchedule({ therapist, setTherapist, localizer }: CalendarScheduleProps) {
   const [myEvents, setEvents] = useState<Event[]>([]);
   const [availTEvents, setAvailTEvents] = useState<BgEvent[]>([]);
@@ -71,13 +93,73 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   const [dateFinish, setDateFinish] = useState<Date>(new Date());
   const [flagValidateDate, setFlagValidateDate] = useState(false);
 
+  // estados para validación de NFT
+  const [userNFTs, setUserNFTs] = useState<NFTSession[]>([]);
+  const [hasValidNFT, setHasValidNFT] = useState(false);
   
   // get global data from Appcontext
   const context = useContext(AppContext);
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { innerProfile, isConComposeDB, getInnerProfile, executeQuery } = context;
+  
+  const { innerProfile, activeWallet,account, adminWallet, adminAccount, getInnerProfile, executeQuery, isConComposeDB } = context;
+    
+  const contract = getContract({
+      client: clientThridweb!,
+      chain: myChain,
+      address: NFT_CONTRACT_ADDRESS,
+      // The ABI for the contract is defined here
+      abi: abi as [],
+    });
+
+  // call the contract method walletofOwner 
+  const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
+    contract,
+    method: "walletOfOwner",
+    params: [account?.address || ""],
+  });
+
+  useEffect(() => {
+      if (ArrTokenIds !== undefined) {
+        console.log("isArrTokenIds:");
+        console.log(isCheckingArrTokenIds);
+  
+          if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
+            console.log(ArrTokenIds.length); 
+            // Limpiar el array de NFTs antes de agregar nuevos
+            setUserNFTs([]);
+
+            for (const TkId of ArrTokenIds) {
+              try {
+                        
+            readContract({
+                contract: contract,
+                method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)",
+                params: [TkId],
+              }).then((availSesh) => {
+                
+                //console.log("Token ID:", TkId);
+                //console.log("Available Sessions:", availSesh);
+                // Agregar el nuevo NFT al estado
+                setUserNFTs(prevNFTs => [...prevNFTs, {
+                    tokenId: Number(TkId),
+                    availableSessions: Number(availSesh)
+                }]);           
+              });
+
+            } catch (err) {
+              console.log("error obteniendo sesiones disponibles para el token ID:", TkId);
+              console.error(err);
+            }
+          }
+        }
+      }
+  
+    }, [ArrTokenIds]);
+
+  useEffect(() => {console.log("User NFTs and Sesh", userNFTs)}, [userNFTs]);  
+
 
   useEffect(() => {
     if(therapist && therapist != "Select therapist"){
@@ -224,10 +306,17 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
 
   const handleSelectSlot = useCallback(    
     async ({ start, end}:handleSelectSlotInterface) => {
+      // verificar si hay terapeuta seleccionado
       if (!therapist || therapist === "" || therapist ===  "Select therapist") {
         alert('Please, select a therapist before schedule a date');
         return;
       }    
+      // Verificar si tiene NFTS con sesiones disponibles
+      const hasValidNFT = userNFTs.some(nft => nft.availableSessions > 0);
+      if (!hasValidNFT) {
+        alert('you do not have any valid NFT with available sessions, please get one before schedule a date');
+        return;
+      }
       setDateInit(start);
       setDateFinish(end);
       setFlagValidateDate(true);
