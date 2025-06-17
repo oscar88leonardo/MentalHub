@@ -95,7 +95,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
 
   // estados para validación de NFT
   const [userNFTs, setUserNFTs] = useState<NFTSession[]>([]);
-  const [hasValidNFT, setHasValidNFT] = useState(false);
+  //const [hasValidNFT, setHasValidNFT] = useState(false);
   
   // get global data from Appcontext
   const context = useContext(AppContext);
@@ -314,7 +314,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       // Verificar si tiene NFTS con sesiones disponibles
       const hasValidNFT = userNFTs.some(nft => nft.availableSessions > 0);
       if (!hasValidNFT) {
-        alert('you do not have any valid NFT with available sessions, please get one before schedule a date');
+        alert('you do not have any valid NFT, please get one before schedule a date');
         return;
       }
       setDateInit(start);
