@@ -176,11 +176,11 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     }
 
     // Función para agregar sesiones (solo owner del contrato)
-    function addSessions(uint256 _tokenId, uint256 _sessionsToAdd) public onlyTokenOwnerOrContract(_tokenId) {
+    /*function addSessions(uint256 _tokenId, uint256 _sessionsToAdd) public onlyTokenOwnerOrContract(_tokenId) {
         require(_exists(_tokenId), "Token ID does not exist");
         tokenIdToSessions[_tokenId] += _sessionsToAdd;
         //emit SessionsUpdated(_tokenId, tokenIdToSessions[_tokenId]);
-    }
+    }*/
 
     /**
      * @dev mint allows a user to mint 1 NFT per transaction after the presale has ended.

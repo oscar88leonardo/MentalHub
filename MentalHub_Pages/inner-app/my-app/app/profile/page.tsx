@@ -36,7 +36,7 @@ export default function Profile() {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   }
-  const { innerProfile, activeWallet,account, adminWallet, adminAccount, getInnerProfile, executeQuery, isConComposeDB } = context;
+  const { innerProfile, activeWallet,account, adminWallet, adminAccount, setArrayTokenIds, getInnerProfile, executeQuery, isConComposeDB } = context;
   
 
   // incializacion del contrato
@@ -92,6 +92,13 @@ const contract =   getContract({
       params: [account?.address || ""],
     });
 
+  useEffect(() => {
+    console.log("ArrTokenIds:");
+    console.log(ArrTokenIds);
+    setArrayTokenIds(
+      ArrTokenIds ? Array.from(ArrTokenIds).map(String) : undefined
+    );
+  }, [ArrTokenIds]);
    
   useEffect(() => {
     if (ArrTokenIds !== undefined) {

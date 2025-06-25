@@ -21,6 +21,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import { StreamID } from '@ceramicnetwork/streamid';
 import { openMeet } from './myMeet';
 
+// thirdweb imports
+import { 
+  getContract, 
+  readContract,
+  prepareContractCall, 
+  toWei,
+  resolveMethod,
+  sendTransaction } from "thirdweb";
+import { useActiveWallet, useReadContract } from "thirdweb/react";
+import {client as clientThridweb} from "../innerComp/client";
+import { myChain } from "../innerComp/myChain";
+import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
+
 /// Component interface and type definitions
 //
 interface AddScheduleProps {
@@ -82,6 +95,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   const [room, setRoom] = useState("");
   const [roomId, setRoomId] = useState<string>("");
   const [roomList, setRoomList] = useState<HuddleNode[]>([]);
+  const [nft, setNft] = useState("");
   const [therapistName, setTherapistName] = useState("");
 
   // get global data from Appcontext
@@ -89,8 +103,17 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   } 
-  const { innerProfile,isConComposeDB, getInnerProfile, executeQuery } = context;
+  const { innerProfile,isConComposeDB,activeWallet,account, arrTokenIds, getInnerProfile, executeQuery } = context;
 
+  // incializacion del contrato
+  const contract =   getContract({
+        client: clientThridweb!,
+        chain: myChain,
+        address: NFT_CONTRACT_ADDRESS,
+        // The ABI for the contract is defined here
+        abi: abi as [],
+      });
+    
   //const router = useRouter();
 
   useEffect(() => {
@@ -167,9 +190,48 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
       console.log("strMutation:");
       console.log(strMutation)
       if(strMutation){
-        await executeQuery(strMutation);
-        await getInnerProfile();
-        console.log("Profile update: ", innerProfile);
+        try {
+              
+          console.log("decrementSession");
+      
+          console.log("contract decrementSession:");
+          console.log(contract);
+          
+          const tx = prepareContractCall({
+            contract,
+            // We get auto-completion for all the available functions on the contract ABI
+            method: resolveMethod("decrementSessions"),
+            // including full type-safety for the params
+            params: [nft? BigInt(nft) : null],
+            // solo enviar valor si no es sponsoreado
+            value: toWei("0"),
+          });
+    
+          if (activeWallet) {
+            //let tx = null;
+            console.log(activeWallet);
+            console.log(account);
+            
+            const { transactionHash } = await sendTransaction({
+              account: account!,
+              transaction: tx,
+            });
+            console.log("transactionHash decrementSession:");
+            console.log(transactionHash);
+    
+            //window.alert("You scheduled a session!");
+            await executeQuery(strMutation);
+            await getInnerProfile();
+            console.log("Profile update: ", innerProfile);
+          } else {
+            console.log("No hay una billetera activa.");
+          }
+    
+          
+        } catch (err) {
+          console.error(err);
+          window.alert(err);
+        }
       }    
       props.close();
     } else {alert("Please select a therapist room!")}  
@@ -238,6 +300,23 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                   <option>Select therapist room</option>
                   { roomList ? roomList.map((item) =>(
                       <option key={item.node.id} value={item.node.id}>{item.node.name}</option>
+                  ))
+                  : ""
+                }
+                </Input>
+                <Label for="NFTSelect">
+                  NFT 
+                </Label>
+                <Input
+                  id="NFTSelect"
+                  name="NFTSelect"
+                  type="select"
+                  onChange={(e) => setNft(e.target.value)}
+                  value={nft}
+                >
+                  <option>Select NFT</option>
+                  { arrTokenIds ? arrTokenIds.map((item) =>(
+                      <option key={item} value={item}>{item}</option>
                   ))
                   : ""
                 }

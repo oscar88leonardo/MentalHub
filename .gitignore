@@ -6,3 +6,4 @@ MentalHub_Pages/inner-app/compose_deploy/admin_seed.txt
 MentalHub_Pages/inner-app/compose_deploy/admin_seedBk.txt
 MentalHub_Pages/inner-app/compose_deploy/admin_seedBk1.txt
 .gitignore
+.vscode/
