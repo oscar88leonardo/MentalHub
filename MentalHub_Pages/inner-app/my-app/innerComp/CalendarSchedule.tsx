@@ -123,7 +123,6 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
           if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
             console.log(ArrTokenIds.length); 
             // Limpiar el array de NFTs antes de agregar nuevos
-            setUserNFTs([]);
 
             updateUserNFTs();
         }
@@ -133,6 +132,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
 
   const updateUserNFTs = async () => {
     if (ArrTokenIds !== undefined) {
+      setUserNFTs([]);
       for (const TkIdRaw of ArrTokenIds) {
         const TkId: bigint = BigInt(TkIdRaw as string | number | bigint | boolean);
           try {
