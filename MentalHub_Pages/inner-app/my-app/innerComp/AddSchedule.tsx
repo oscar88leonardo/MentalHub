@@ -167,7 +167,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
         strMutation = `
         mutation {
           updateSchedule(
-            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: "${nft}"}}
+            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
           ) {
             document {
               id
@@ -179,7 +179,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
         strMutation = `
           mutation {
             createSchedule(
-              input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: "${nft}"}}
+              input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
             ) {
               document {
                 id
