@@ -249,7 +249,7 @@ const contract =   getContract({
         <Container>
         <Row className="justify-content-left">
             <Col md="7" className="text-left">
-              <h2 className="title">My NTFs</h2>
+              <h2 className="title">My NFTs</h2>
             </Col>
         </Row>
         <Row id="NFTList" className="m-t-40 justify-content-center">

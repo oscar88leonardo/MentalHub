@@ -451,6 +451,8 @@ const logout = async () => {
                           }
                           state
                           id
+                          NFTContract
+                          TokenId
                         }
                       }
                     }
@@ -482,6 +484,8 @@ const logout = async () => {
                     profileId
                     state
                     id
+                    NFTContract
+                    TokenId
                   }
                 }
               }

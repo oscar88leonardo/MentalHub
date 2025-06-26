@@ -19,7 +19,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from 'next/navigation';
 import { StreamID } from '@ceramicnetwork/streamid';
-import { openMeet } from './myMeet';
+import { validateOpenMeet } from './validOpenRoom';
 
 /// Component interface and type definitions
 //
@@ -226,7 +226,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                 <Button
                   className="btn btn-light m-t-20 btn-arrow"
                   
-                  onClick={() => openMeet(roomId)}
+                  onClick={() => validateOpenMeet(roomId,dateInit,dateFinish)}
                 >
                   <span>
                     Open Room

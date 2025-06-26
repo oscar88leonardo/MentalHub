@@ -19,7 +19,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import { useRouter } from 'next/navigation';
 import { StreamID } from '@ceramicnetwork/streamid';
-import { openMeet } from './myMeet';
+import { validateOpenMeet } from './validOpenRoom';
 
 // thirdweb imports
 import { 
@@ -47,6 +47,7 @@ interface AddScheduleProps {
   dateInit: Date;
   dateFinish: Date;
   therapistInfo: any;
+  TokenID: string;
 }
 
 ///interface for roomList
@@ -166,7 +167,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
         strMutation = `
         mutation {
           updateSchedule(
-            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}"}}
+            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenId: "${nft}"}}
           ) {
             document {
               id
@@ -178,7 +179,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
         strMutation = `
           mutation {
             createSchedule(
-              input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}"}}
+              input: {content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenId: "${nft}"}}
             ) {
               document {
                 id
@@ -244,6 +245,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
       setState(props.state);
       setRoom(props.huddId);
       setRoomId(props.roomId);
+      setNft(props.TokenID);
     }
   },[props.show]);
 
@@ -393,7 +395,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"
-                    onClick={() => openMeet(roomId)}
+                    onClick={() => validateOpenMeet(roomId,dateInit,dateFinish)}
                   >
                     <span>
                       Open Room

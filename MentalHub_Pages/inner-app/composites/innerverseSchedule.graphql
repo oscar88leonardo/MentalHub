@@ -19,6 +19,8 @@ type Schedule
     profile: InnerverProfile! @relationDocument(property: "profileId")
     huddId: StreamID! @documentReference(model: "Huddle01")
     hudd: Huddle01! @relationDocument(property: "huddId")
+    NFTContract: String! @string(maxLength: 50)
+    TokenID: Int!
 }
 
 

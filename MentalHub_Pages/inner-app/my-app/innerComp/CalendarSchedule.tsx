@@ -83,6 +83,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   const [modalAddScheduleID, setModalAddScheduleID] = useState("");
   const [modalAddScheduleDateInit, setModalAddScheduleDateInit] = useState(new Date());
   const [modalAddScheduleDateFinish, setModalAddScheduleDateFinish] = useState(new Date());
+  const [modalAddScheduleTokenID, setModalAddScheduleTokenID] = useState("");
   const [dateInit, setDateInit] = useState<Date>(new Date());
   const [dateFinish, setDateFinish] = useState<Date>(new Date());
   const [flagValidateDate, setFlagValidateDate] = useState(false);
@@ -327,10 +328,10 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
           setTherapist(event.profileId);
           setTimeout(() => {
             // Código a ejecutar cuando el modal se abre
-            openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId);
+            openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId,event.TokenId);
           }, 0);
         } else {
-          openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId);
+          openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId, event.TokenId);
         }
       }
     },  
@@ -387,9 +388,10 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     setModalAddScheduleDateInit(dateInit);
     setModalAddScheduleDateFinish(dateFinish);
     setModalAddScheduleisOpen(true);
+    setModalAddScheduleTokenID(""); // Reset the token ID when creating a new schedule
   };
 
-  const openModalAddScheduleEdit = (state:string,id:string,dateInit:Date,dateFinish:Date,huddId:string,roomId:string) => {
+  const openModalAddScheduleEdit = (state:string,id:string,dateInit:Date,dateFinish:Date,huddId:string,roomId:string,tokenId:string) => {
     setModalAddScheduleisEdit(true);
     setModalAddScheduleState(state);
     setModalAddScheduleHuddId(huddId);
@@ -398,6 +400,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     setModalAddScheduleDateInit(dateInit);
     setModalAddScheduleDateFinish(dateFinish);
     setModalAddScheduleisOpen(true);
+    setModalAddScheduleTokenID(tokenId); // Set the token ID when editing a schedule
   };
 
   useEffect(() => {
@@ -408,6 +411,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       setModalAddScheduleState("");
       setModalAddScheduleHuddId("");
       setModalAddScheduleisEdit(false);
+      setModalAddScheduleTokenID("");
     } else {
       console.log("openModalAddScheduleCreate therapist:");
       console.log(therapist);
@@ -422,7 +426,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   
   return (
     <Fragment>
-      <AddSchedule show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} therapistInfo={therapistInfo}/>
+      <AddSchedule show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} TokenID={modalAddScheduleTokenID} therapistInfo={therapistInfo}/>
       {!therapist && (
         <div className="alert alert-info m-b-20">
           Please, select a therapist to check his/her availability.
