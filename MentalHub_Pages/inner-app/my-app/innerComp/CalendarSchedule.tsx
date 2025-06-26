@@ -113,6 +113,8 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     params: [account?.address || ""],
   });
 
+
+
   useEffect(() => {
       if (ArrTokenIds !== undefined) {
         console.log("isArrTokenIds:");
@@ -123,9 +125,18 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
             // Limpiar el array de NFTs antes de agregar nuevos
             setUserNFTs([]);
 
-            for (const TkId of ArrTokenIds) {
-              try {
-                        
+            updateUserNFTs();
+        }
+      }
+  
+    }, [ArrTokenIds]);
+
+  const updateUserNFTs = async () => {
+    if (ArrTokenIds !== undefined) {
+      for (const TkIdRaw of ArrTokenIds) {
+        const TkId: bigint = BigInt(TkIdRaw as string | number | bigint | boolean);
+          try {
+                    
             readContract({
                 contract: contract,
                 method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)",
@@ -141,15 +152,13 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                 }]);           
               });
 
-            } catch (err) {
-              console.log("error obteniendo sesiones disponibles para el token ID:", TkId);
-              console.error(err);
-            }
-          }
+        } catch (err) {
+          console.log("error obteniendo sesiones disponibles para el token ID:", TkId);
+          console.error(err);
         }
       }
-  
-    }, [ArrTokenIds]);
+    }
+  }
 
   useEffect(() => {console.log("User NFTs and Sesh", userNFTs)}, [userNFTs]);  
 
@@ -417,6 +426,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       console.log("openModalAddScheduleCreate therapist:");
       console.log(therapist);
       if(therapist){
+        updateUserNFTs();
         setTherapist(therapist);
       } else {
         setModalAddScheduleisOpen(false);
