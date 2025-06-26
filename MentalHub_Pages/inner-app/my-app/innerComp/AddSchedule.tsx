@@ -317,11 +317,18 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                   value={nft}
                 >
                   <option>Select NFT</option>
-                  { userNFTs ? userNFTs.map((item) =>(
-                      <option key={item.tokenId} value={item.tokenId}>Id: {item.tokenId} - # sessions: {item.availableSessions}</option>
-                  ))
-                  : ""
-                }
+                  {userNFTs
+                    ? userNFTs.map((item) => (
+                        <option
+                          key={item.tokenId}
+                          value={item.tokenId}
+                          disabled={item.availableSessions === 0}
+                        >
+                          Id: {item.tokenId} - # sessions: {item.availableSessions}
+                          {item.availableSessions === 0 ? " (No disponible)" : ""}
+                        </option>
+                      ))
+                    : ""}
                 </Input>
                 <Label for="dateInit">
                     Start Date
