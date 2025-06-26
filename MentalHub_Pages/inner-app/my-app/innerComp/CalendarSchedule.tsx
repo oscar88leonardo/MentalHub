@@ -255,6 +255,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                 huddId: sched.node.huddId,
                 roomId: sched.node.hudd.roomId,
                 profileId: sched.node.hudd.profileId,
+                TokenID: sched.node.TokenID, 
               }
               events.push(obj);
             }
@@ -328,10 +329,10 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
           setTherapist(event.profileId);
           setTimeout(() => {
             // Código a ejecutar cuando el modal se abre
-            openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId,event.TokenId);
+            openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId,event.TokenID);
           }, 0);
         } else {
-          openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId, event.TokenId);
+          openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId, event.TokenID);
         }
       }
     },  
