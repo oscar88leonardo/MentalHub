@@ -54,8 +54,11 @@ interface AppContextType {
   account: Account | undefined; // Use the correct type for account
   adminWallet: Wallet<WalletId> | undefined; // Use the correct type for admin wallet
   adminAccount: Account | undefined; // Use the correct type for admin account
-  arrTokenIds: string[] | undefined; // Use the correct type for token IDs array
-  setArrayTokenIds: React.Dispatch<React.SetStateAction<string[] | undefined>>; // Add setter for token IDs array
+  //arrTokenIds: string[] | undefined; // Use the correct type for token IDs array
+  //setArrayTokenIds: React.Dispatch<React.SetStateAction<string[] | undefined>>; // Add setter for token IDs array
+  userNFTs: NFTSession[]; // Array of user NFTs
+  setUserNFTs: React.Dispatch<React.SetStateAction<NFTSession[]>>; // Add setter for user NFTs
+  //setArrayTokenIds: React.Dispatch<React.SetStateAction<NFTSession[] | undefined>>;
   //getSigner: () => Promise<void>;
   executeQuery: (query: string) => Promise<any>; // Replace 'any' with a more specific return type if possible
   getInnerProfile: () => Promise<void>;
@@ -93,6 +96,12 @@ interface ProfileQueryResult {
   } | null | undefined;
 }
 
+// Define the NFTSession interface
+interface NFTSession {
+  tokenId: number;
+  availableSessions: number;
+}
+
 export const AppContext = createContext<AppContextType | null>(null);
 //export const AppContext = createContext(null);
 
@@ -102,7 +111,9 @@ const AppProvider = ({children,}: Readonly<{children: React.ReactNode;}>) =>
   const [innerProfile, setInnerProfile] = useState<InnerverProfile | null>(null);
   const [ceramicClient, setCeramicClient]=useState<CeramicClient | null>(null);
   const [composeDBClient, setComposeDBClient] = useState<ComposeClient | null>(null);
-  const [arrayTokenIds, setArrayTokenIds] = useState<string[] | undefined>(undefined);
+  const [arrayTokenIds, setArrayTokenIds] = useState<NFTSession[] | undefined>(undefined);
+  // estados para validación de NFT
+  const [userNFTs, setUserNFTs] = useState<NFTSession[]>([]);
   // define thirdweb hook 
   //const activeWallet = useActiveWallet();
   const activeWallet = useActiveWallet();
@@ -503,8 +514,10 @@ const logout = async () => {
     account,
     adminWallet,
     adminAccount,
-    arrTokenIds: arrayTokenIds,
-    setArrayTokenIds,
+    userNFTs,
+    setUserNFTs,
+    //arrTokenIds: arrayTokenIds,
+    //setArrayTokenIds,
     executeQuery,
     getInnerProfile,
     loginComposeDB,

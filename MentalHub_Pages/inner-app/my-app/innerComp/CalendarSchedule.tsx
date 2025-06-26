@@ -70,12 +70,6 @@ interface handleSelectSlotInterface {
   end: Date;
 }
 
-// Define the NFTSession interface
-interface NFTSession {
-  tokenId: number;
-  availableSessions: number;
-}
-
 
 export default function CalendarSchedule({ therapist, setTherapist, localizer }: CalendarScheduleProps) {
   const [myEvents, setEvents] = useState<Event[]>([]);
@@ -93,8 +87,6 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   const [dateFinish, setDateFinish] = useState<Date>(new Date());
   const [flagValidateDate, setFlagValidateDate] = useState(false);
 
-  // estados para validación de NFT
-  const [userNFTs, setUserNFTs] = useState<NFTSession[]>([]);
   //const [hasValidNFT, setHasValidNFT] = useState(false);
   
   // get global data from Appcontext
@@ -103,7 +95,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
     throw new Error("useContext must be used within a provider");
   }
   
-  const { innerProfile, activeWallet,account, adminWallet, adminAccount, getInnerProfile, executeQuery, isConComposeDB } = context;
+  const { innerProfile, activeWallet,account, adminWallet, adminAccount, userNFTs, setUserNFTs, getInnerProfile, executeQuery, isConComposeDB } = context;
     
   const contract = getContract({
       client: clientThridweb!,

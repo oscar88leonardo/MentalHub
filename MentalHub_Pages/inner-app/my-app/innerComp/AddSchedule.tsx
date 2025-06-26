@@ -103,7 +103,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   } 
-  const { innerProfile,isConComposeDB,activeWallet,account, arrTokenIds, getInnerProfile, executeQuery } = context;
+  const { innerProfile,isConComposeDB,activeWallet,account, userNFTs, getInnerProfile, executeQuery } = context;
 
   // incializacion del contrato
   const contract =   getContract({
@@ -315,8 +315,8 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                   value={nft}
                 >
                   <option>Select NFT</option>
-                  { arrTokenIds ? arrTokenIds.map((item) =>(
-                      <option key={item} value={item}>{item}</option>
+                  { userNFTs ? userNFTs.map((item) =>(
+                      <option key={item.tokenId} value={item.tokenId}>Id: {item.tokenId} - # sessions: {item.availableSessions}</option>
                   ))
                   : ""
                 }
