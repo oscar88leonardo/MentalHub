@@ -92,6 +92,7 @@ interface HuddleNode {
 const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
+  const [createDate, setCreateDate] = useState(new Date());
   const [state, setState] = useState("");
   const [room, setRoom] = useState("");
   const [roomId, setRoomId] = useState<string>("");
@@ -157,17 +158,17 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
     {
       if(props.isedit ) {
           
-        let created = '';
+        //let created = '';
         for(const sched of innerProfile.schedules.edges) {
           if(sched.node.id === props.id){
-            created = sched.node.created;
+            setCreateDate(sched.node.created);
           }
         }
         
         strMutation = `
         mutation {
           updateSchedule(
-            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${created}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
+            input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${innerProfile.id}", created: "${createDate.toISOString()}", edited: "${now.toISOString()}", state: ${state}, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
           ) {
             document {
               id
@@ -402,7 +403,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"
-                    onClick={() => validateOpenMeet(roomId,dateInit,dateFinish)}
+                    onClick={() => validateOpenMeet(props.id,roomId,dateInit,dateFinish,innerProfile.id,createDate,nft,NFT_CONTRACT_ADDRESS)}
                   >
                     <span>
                       Open Room
