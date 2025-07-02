@@ -69,7 +69,7 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
                         start: init,
                         end: finish,
                         state: sched.node.state,
-                        huddId: sched.node.huddId,
+                        huddId: hudd.node.id,
                         roomId: hudd.node.roomId,
                         profileId: sched.node.profileId,
                         displayName: sched.node.profile.displayName,
