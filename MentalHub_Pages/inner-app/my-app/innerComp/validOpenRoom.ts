@@ -25,10 +25,12 @@ export const validateOpenMeet = (context: any,id: string, room:string, roomId: s
       }
       `;
     console.log("Mutation validopen: ", strMutation);
-    executeQuery(strMutation).then(getInnerProfile());
+    executeQuery(strMutation).then(()=> {
+      getInnerProfile();
+      console.log("Profile update: ", innerProfile);
+      openMeet(roomId);
+    });
     //getInnerProfile();
-    console.log("Profile update: ", innerProfile);
-    openMeet(roomId);
   } else {
     alert("The room only available on scheduled dates.");
   }

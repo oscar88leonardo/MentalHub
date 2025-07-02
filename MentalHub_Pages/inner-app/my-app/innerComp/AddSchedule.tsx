@@ -188,12 +188,6 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
             }
           }
           `;
-      }
-      console.log("strMutation:");
-      console.log(strMutation)
-      if(strMutation){
-        try {
-              
           console.log("decrementSession");
       
           console.log("contract decrementSession:");
@@ -221,15 +215,19 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
             console.log("transactionHash decrementSession:");
             console.log(transactionHash);
     
-            //window.alert("You scheduled a session!");
-            await executeQuery(strMutation);
-            await getInnerProfile();
-            console.log("Profile update: ", innerProfile);
           } else {
             console.log("No hay una billetera activa.");
           }
+      }
+      console.log("strMutation:");
+      console.log(strMutation)
+      if(strMutation){
+        try {
     
-          
+          //window.alert("You scheduled a session!");
+          await executeQuery(strMutation);
+          await getInnerProfile();
+          console.log("Profile update: ", innerProfile);
         } catch (err) {
           console.error(err);
           window.alert(err);
@@ -403,7 +401,10 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"
-                    onClick={() => validateOpenMeet(context,props.id,room,roomId,dateInit,dateFinish,innerProfile.id,createDate,nft,NFT_CONTRACT_ADDRESS)}
+                    onClick={() => {
+                      validateOpenMeet(context,props.id,room,roomId,dateInit,dateFinish,innerProfile.id,createDate,nft,NFT_CONTRACT_ADDRESS);
+                      props.close();
+                    }}
                   >
                     <span>
                       Open Room
