@@ -20,6 +20,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from 'next/navigation';
 import { StreamID } from '@ceramicnetwork/streamid';
 import { openMeet } from './myMeet';
+import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
 
 /// Component interface and type definitions
 //
@@ -102,6 +103,83 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
     }
   },[props.show]);
 
+  const updateRecordState = async () => {
+      const now = new Date();
+  
+      if(dateFinish > now) {
+        window.alert("You can not change the state of a schedule that is not finished yet.");
+        return;
+      }
+      if(state !== "Active") {
+        window.alert("You can only change the state to Active.");
+        return;
+      }
+  
+      //console.log(now.toISOString());
+      console.log("room:");
+      console.log(room);
+      let strMutation = '';
+      if (room != "")
+      {
+        if(props.isedit ) {
+            
+          let created = '';
+          let nft = 0;
+          let profileId = '';
+          if(innerProfile) { 
+            if(innerProfile.hudds != undefined){
+              if(innerProfile.hudds.edges != undefined) {
+                let events = [];
+                for(const hudd of innerProfile.hudds.edges) {
+                  if(hudd.node != undefined){
+                    if(hudd.node.schedules != undefined){
+                      if(hudd.node.schedules.edges != undefined) {
+                        for(const sched of hudd.node.schedules.edges) {
+                          if(sched.node != undefined){
+                            if(sched.node.id === props.id){
+                              created = sched.node.created;
+                              nft = sched.node.TokenID;
+                              profileId = sched.node.profileId;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          strMutation = `
+          mutation {
+            updateSchedule(
+              input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${profileId}", created: "${created}", edited: "${now.toISOString()}", state: Finished, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
+            ) {
+              document {
+                id
+              }
+            }
+          }
+          `;
+          console.log("strMutation:");
+          console.log(strMutation)
+          if(strMutation){
+            try {
+        
+              //window.alert("You scheduled a session!");
+              await executeQuery(strMutation);
+              await getInnerProfile();
+              console.log("Profile update: ", innerProfile);
+            } catch (err) {
+              console.error(err);
+              window.alert(err);
+            }
+          }    
+          props.close();
+        }
+      }  
+    };
 
   return (
     <div>
@@ -233,6 +311,21 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   </span>
                 </Button>              
               </Col>
+              { props.isedit ? 
+                <Col lg="12">
+                  <Button
+                    className="btn btn-light m-t-20 btn-arrow"
+                    onClick={() => {
+                      updateRecordState();
+                      props.close();
+                    }}
+                  >
+                    <span>
+                      Finished
+                    </span>
+                  </Button>              
+                </Col>
+              : ""}
             </Row>
           </Form>
         </div>
