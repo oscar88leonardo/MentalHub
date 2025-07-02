@@ -7,10 +7,12 @@ export const validateOpenMeet = (id: string, roomId: string, dateInit: Date, dat
 
    // get global data from Appcontext
   const context = useContext(AppContext);
+  console.log("Context: ", context);
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   } 
   const { innerProfile,getInnerProfile, executeQuery } = context;
+  console.log("Inner Profile: ", innerProfile);
   const now = new Date();
   if (now >= dateInit && now <= dateFinish) {
     let strMutation = '';
@@ -25,6 +27,7 @@ export const validateOpenMeet = (id: string, roomId: string, dateInit: Date, dat
         }
       }
       `;
+    console.log("Mutation validopen: ", strMutation);
     executeQuery(strMutation);
     getInnerProfile();
     console.log("Profile update: ", innerProfile);
