@@ -2,7 +2,7 @@
 import { openMeet } from "./myMeet";
 
 
-export const validateOpenMeet = (context: any,id: string, roomId: string, dateInit: Date, dateFinish: Date, profileId: string, createDate: Date, nft: string, NFT_CONTRACT_ADDRESS: string) => {
+export const validateOpenMeet = (context: any,id: string, room:string, roomId: string, dateInit: Date, dateFinish: Date, profileId: string, createDate: Date, nft: string, NFT_CONTRACT_ADDRESS: string) => {
 
   console.log("Context: ", context);
   if (context === null) {

@@ -403,7 +403,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"
-                    onClick={() => validateOpenMeet(context,props.id,roomId,dateInit,dateFinish,innerProfile.id,createDate,nft,NFT_CONTRACT_ADDRESS)}
+                    onClick={() => validateOpenMeet(context,props.id,room,roomId,dateInit,dateFinish,innerProfile.id,createDate,nft,NFT_CONTRACT_ADDRESS)}
                   >
                     <span>
                       Open Room
