@@ -1,12 +1,9 @@
 // method to open a meeting room in a new tab
 import { openMeet } from "./myMeet";
-import { AppContext } from "../context/AppContext";
-import { useContext } from "react";
 
-export const validateOpenMeet = (id: string, roomId: string, dateInit: Date, dateFinish: Date, profileId: string, createDate: Date, nft: string, NFT_CONTRACT_ADDRESS: string) => {
 
-   // get global data from Appcontext
-  const context = useContext(AppContext);
+export const validateOpenMeet = (context: any,id: string, roomId: string, dateInit: Date, dateFinish: Date, profileId: string, createDate: Date, nft: string, NFT_CONTRACT_ADDRESS: string) => {
+
   console.log("Context: ", context);
   if (context === null) {
     throw new Error("useContext must be used within a provider");
