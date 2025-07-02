@@ -25,8 +25,8 @@ export const validateOpenMeet = (context: any,id: string, room:string, roomId: s
       }
       `;
     console.log("Mutation validopen: ", strMutation);
-    executeQuery(strMutation);
-    getInnerProfile();
+    executeQuery(strMutation).then(getInnerProfile());
+    //getInnerProfile();
     console.log("Profile update: ", innerProfile);
     openMeet(roomId);
   } else {
