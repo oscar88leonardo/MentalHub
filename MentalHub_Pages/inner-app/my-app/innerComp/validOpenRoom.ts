@@ -16,7 +16,7 @@ export const validateOpenMeet = (context: any,id: string, room:string, roomId: s
     strMutation = `
       mutation {
         updateSchedule(
-          input: {id: "${id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${profileId}", created: "${createDate.toISOString()}", edited: "${now.toISOString()}", state: Active, huddId: "${roomId}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
+          input: {id: "${id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${profileId}", created: "${createDate.toISOString()}", edited: "${now.toISOString()}", state: Active, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
         ) {
           document {
             id
