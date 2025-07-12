@@ -418,7 +418,7 @@ useEffect(() => {
           //si el airdrop está iniciado, verificar si ha terminado
           await checkIfAirdropEnded();
         }
-    
+        await checkIfAirdropStarted();
     };
 
     checkAirdropStatus();
