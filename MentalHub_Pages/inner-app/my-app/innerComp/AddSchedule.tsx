@@ -188,6 +188,17 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
             }
           }
           `;
+      }
+      console.log("strMutation:");
+      console.log(strMutation)
+      if(strMutation){
+        try {
+    
+          //window.alert("You scheduled a session!");
+          const response = await executeQuery(strMutation);
+          console.log("Response from executeQuery:");
+          console.log(response);
+          /*
           console.log("decrementSession");
       
           console.log("contract decrementSession:");
@@ -217,15 +228,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
     
           } else {
             console.log("No hay una billetera activa.");
-          }
-      }
-      console.log("strMutation:");
-      console.log(strMutation)
-      if(strMutation){
-        try {
-    
-          //window.alert("You scheduled a session!");
-          await executeQuery(strMutation);
+          }*/
           await getInnerProfile();
           console.log("Profile update: ", innerProfile);
         } catch (err) {
