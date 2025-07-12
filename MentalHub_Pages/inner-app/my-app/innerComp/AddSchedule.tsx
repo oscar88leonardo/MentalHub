@@ -199,7 +199,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
           console.log("Response from executeQuery:");
           console.log(response);
           if(!props.isedit){
-            if(response && response.data && response.data.createSchedule && response.data.createSchedule.document) {
+            if(response && response.data && response.data.createSchedule) {
               console.log("New schedule created with ID:", response.createSchedule.document.id);
         
               console.log("contract setSession:");
