@@ -199,8 +199,8 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
           console.log("Response from executeQuery:");
           console.log(response);
           if(!props.isedit){
-            if(response && response.data && response.data.createSchedule) {
-              console.log("New schedule created with ID:", response.createSchedule.document.id);
+            if(response && response.data && response.data.createSchedule && response.data.createSchedule.document) {
+              console.log("New schedule created with ID:", response.data.createSchedule.document.id);
         
               console.log("contract setSession:");
               console.log(contract);
@@ -210,7 +210,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 // We get auto-completion for all the available functions on the contract ABI
                 method: resolveMethod("setSession"),
                 // including full type-safety for the params
-                params: [nft? BigInt(nft) : null,response.createSchedule.document.id,'Pending'],
+                params: [nft? BigInt(nft) : null,response.data.createSchedule.document.id,'Pending'],
                 // solo enviar valor si no es sponsoreado
                 value: toWei("0"),
               });
