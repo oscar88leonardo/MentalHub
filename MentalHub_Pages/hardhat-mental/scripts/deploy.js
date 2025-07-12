@@ -32,21 +32,6 @@ async function main() {
    console.log("Esperando bloques...");
    await new Promise(resolve => setTimeout(resolve, 30000));
  
-   // Verificar el contrato
-   console.log("Verificando contrato...");
-   try {
-   await hre.run("verify:verify", {
-     address: contractAddress,
-     constructorArguments: [
-       METADATA_URL,
-       GATEWAY_URI,
-       whitelistContract
-     ],
-   });
-   console.log("Contrato verificado con éxito");
-  } catch (error) {
-   console.error("Error al verificar el contrato:", error);
-  } 
   /*
   // WHITELIST DEPLOY
   //A ContractFactory in ethers.js is an abstraction used to deploy new smart contracts,

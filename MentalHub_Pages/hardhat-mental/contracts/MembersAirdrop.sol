@@ -36,8 +36,16 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     // timestamp for when presale would end
     uint256 public airdropEnded;
 
-    // Agregar después de las variables de estado existentes
-    mapping(uint256 => uint256) private tokenIdToSessions;
+    enum SessionState { Pending, Confirmed, Active, Finished }
+
+    struct Session {
+        SessionState state;
+        string scheduleId; // ID del stream de la sesión
+        // Puedes agregar más campos si lo necesitas, como fecha, terapeuta, etc.
+    }
+
+    // tokenId => sesiones
+    mapping(uint256 => Session[]) public tokenSessions;
 
 
     modifier onlyWhenNotPaused() {
@@ -137,6 +145,53 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     /**
      * @dev AirdropMint allows a user to mint one NFT per transaction during the airdrop at $0 mint cost.
      */
+
+    function initSessions(uint256 _numSessions, uint256 tokenId ) private {
+        for (uint256 i = 0; i < _numSessions; i++) {
+            tokenSessions[tokenId].push(Session(SessionState.Pending, ""));
+        }
+    }
+
+    function setSession(uint256 tokenId, string memory scheduleId, SessionState newState) public onlyOwner {
+        //require(sessionIndex < tokenSessions[tokenId].length, "Indice de sesion invalido");
+        bool sessionExists = false;
+        uint256 sessionIndex;
+        int256 availableSession=-1;
+        
+        for (sessionIndex=0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
+            if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(scheduleId))) {
+                //require(tokenSessions[tokenId][sessionIndex].state == SessionState.Pending, "Session already confirmed or active");
+                //tokenSessions[tokenId][sessionIndex].state = newState;
+                sessionExists = true;
+                break;
+            } else if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(""))){
+                availableSession = int256(sessionIndex);
+            }
+        }
+        
+        require(sessionExists || availableSession>-1, "No Session found ");
+        if (sessionExists){    
+        tokenSessions[tokenId][sessionIndex].state = newState;
+        } else {
+            // Si no existe la sesión, se crea una nueva en el índice disponible
+            tokenSessions[tokenId][uint256(availableSession)] = Session(newState, scheduleId);
+        }
+    }
+
+    function getSessionState(uint256 tokenId, string memory scheduleId) public view returns (SessionState) {
+        bool sessionExists = false;
+        uint256 sessionIndex;
+        
+        for (sessionIndex=0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
+            if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(scheduleId))) {
+                sessionExists = true;
+                break;
+            } 
+        }
+        require(sessionExists, "Session not found");
+        return tokenSessions[tokenId][sessionIndex].state;
+    }
+
     function airdropMint(uint256 _numSessions) public payable onlyWhenNotPaused {
         require(
             airdropStarted && block.timestamp < airdropEnded,
@@ -158,15 +213,26 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         // If the address being minted to is not a contract, it works the same way as _mint
         _safeMint(msg.sender, tokenIds);
         // Actualizar el mapping con el número de sesiones
-        tokenIdToSessions[tokenIds] = _numSessions;
+        //tokenIdToSessions[tokenIds] = _numSessions;
+        initSessions(_numSessions, tokenIds);
     }
 
+    
     // Función para obtener número de sesiones disponibles
-    function getAvailableSessions(uint256 _tokenId) public view returns (uint256) {
-        require(_exists(_tokenId), "Token ID does not exist");
-        return tokenIdToSessions[_tokenId];
+    function getAvailableSessions(uint256 tokenId) public view returns (uint256) {
+        uint256 sessionIndex;
+        uint256 numSession=0;
+        require(_exists(tokenId), "Token ID does not exist");
+        for (sessionIndex=0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
+             if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(""))){
+                numSession = numSession + 1;
+            }
+        }    
+        return numSession;
+        //return tokenIdToSessions[_tokenId];
     }
 
+    /*
     // Función actualizada para decrementar sesiones
     function decrementSessions(uint256 _tokenId) public onlyTokenOwnerOrContract(_tokenId) {
         require(_exists(_tokenId), "Token ID does not exist");
@@ -174,7 +240,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         tokenIdToSessions[_tokenId] -= 1;
         //emit SessionsUpdated(_tokenId, tokenIdToSessions[_tokenId]);
     }
-
+    */
     // Función para agregar sesiones (solo owner del contrato)
     /*function addSessions(uint256 _tokenId, uint256 _sessionsToAdd) public onlyTokenOwnerOrContract(_tokenId) {
         require(_exists(_tokenId), "Token ID does not exist");
@@ -204,12 +270,16 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
         tokenIds += 1;
         _safeMint(msg.sender, tokenIds);
         // Actualizar el mapping con el número de sesiones
-        tokenIdToSessions[tokenIds] = _numSessions;
+        //tokenIdToSessions[tokenIds] = _numSessions;
+        initSessions(_numSessions, tokenIds);
 
         if(isSponsoredMint) {
             emit SponsoredMint(msg.sender, tokenIds, _numSessions);
         }
     }
+
+
+
 
     /**
      * @dev _baseURI overides the Openzeppelin's ERC721 implementation which by default
