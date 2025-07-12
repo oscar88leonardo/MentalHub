@@ -105,7 +105,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   if (context === null) {
     throw new Error("useContext must be used within a provider");
   } 
-  const { innerProfile,isConComposeDB,activeWallet,account, userNFTs, getInnerProfile, executeQuery } = context;
+  const { innerProfile,isConComposeDB,activeWallet,account, adminWallet, adminAccount, userNFTs, getInnerProfile, executeQuery } = context;
 
   // incializacion del contrato
   const contract =   getContract({
@@ -198,37 +198,42 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
           const response = await executeQuery(strMutation);
           console.log("Response from executeQuery:");
           console.log(response);
-          /*
-          console.log("decrementSession");
-      
-          console.log("contract decrementSession:");
-          console.log(contract);
-          
-          const tx = prepareContractCall({
-            contract,
-            // We get auto-completion for all the available functions on the contract ABI
-            method: resolveMethod("decrementSessions"),
-            // including full type-safety for the params
-            params: [nft? BigInt(nft) : null],
-            // solo enviar valor si no es sponsoreado
-            value: toWei("0"),
-          });
-    
-          if (activeWallet) {
-            //let tx = null;
-            console.log(activeWallet);
-            console.log(account);
-            
-            const { transactionHash } = await sendTransaction({
-              account: account!,
-              transaction: tx,
-            });
-            console.log("transactionHash decrementSession:");
-            console.log(transactionHash);
-    
-          } else {
-            console.log("No hay una billetera activa.");
-          }*/
+          if(!props.isedit){
+            if(response && response.data && response.data.createSchedule && response.data.createSchedule.document) {
+              console.log("New schedule created with ID:", response.createSchedule.document.id);
+        
+              console.log("contract setSession:");
+              console.log(contract);
+              
+              const tx = prepareContractCall({
+                contract,
+                // We get auto-completion for all the available functions on the contract ABI
+                method: resolveMethod("setSession"),
+                // including full type-safety for the params
+                params: [nft? BigInt(nft) : null,response.createSchedule.document.id,'Pending'],
+                // solo enviar valor si no es sponsoreado
+                value: toWei("0"),
+              });
+        
+              if (adminWallet) {
+                //let tx = null;
+                console.log(adminWallet);
+                console.log(adminAccount);
+                
+                const { transactionHash } = await sendTransaction({
+                  account: adminAccount!,
+                  transaction: tx,
+                });
+                console.log("transactionHash setSession:");
+                console.log(transactionHash);
+        
+              } else {
+                console.log("No hay una billetera activa.");
+              }
+            } else {
+              console.error("Failed to create new schedule.");
+            }
+          }
           await getInnerProfile();
           console.log("Profile update: ", innerProfile);
         } catch (err) {
