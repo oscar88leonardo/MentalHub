@@ -210,7 +210,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 // We get auto-completion for all the available functions on the contract ABI
                 method: resolveMethod("setSession"),
                 // including full type-safety for the params
-                params: [nft? BigInt(nft) : null,response.data.createSchedule.document.id,'Pending'],
+                params: [nft? BigInt(nft) : null,response.data.createSchedule.document.id,0],
                 // solo enviar valor si no es sponsoreado
                 value: toWei("0"),
               });
