@@ -208,7 +208,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                   // "Authorization": `Bearer ${process.env.INTERNAL_API_SECRET}`,
                 },
                 body: JSON.stringify({
-                  tokenId: nft? BigInt(nft) : null,
+                  tokenId: nft,
                   scheduleId: response.data.createSchedule.document.id,
                   // agrega aquí otros parámetros que necesites
                 }),
