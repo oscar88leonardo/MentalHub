@@ -200,7 +200,22 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
           console.log(response);
           if(!props.isedit){
             if(response && response.data && response.data.createSchedule && response.data.createSchedule.document) {
-              console.log("New schedule created with ID:", response.data.createSchedule.document.id);
+              const callSetSessionRes = await fetch("/api/callsetsession", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  // Si necesitas autorización, puedes agregarla aquí
+                  // "Authorization": `Bearer ${process.env.INTERNAL_API_SECRET}`,
+                },
+                body: JSON.stringify({
+                  tokenId: nft? BigInt(nft) : null,
+                  scheduleId: response.data.createSchedule.document.id,
+                  // agrega aquí otros parámetros que necesites
+                }),
+              });
+              const callSetSessionData = await callSetSessionRes.json();
+              console.log("Respuesta de /api/callsetsession:", callSetSessionData);
+              /*console.log("New schedule created with ID:", response.data.createSchedule.document.id);
         
               console.log("contract setSession:");
               console.log(contract);
@@ -229,7 +244,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
         
               } else {
                 console.log("No hay una billetera activa.");
-              }
+              }*/
             } else {
               console.error("Failed to create new schedule.");
             }
