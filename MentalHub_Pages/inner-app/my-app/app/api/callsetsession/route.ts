@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.INTERNAL_API_SECRET}`,
       },
-      body: body,
+      body: JSON.stringify(body),
     });
     
     const data = await response.json();
