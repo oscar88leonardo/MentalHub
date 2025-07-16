@@ -213,36 +213,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
               });
               const callSetSessionData = await callSetSessionRes.json();
               console.log("Respuesta de /api/callsetsession:", callSetSessionData);
-              /*console.log("New schedule created with ID:", response.data.createSchedule.document.id);
-        
-              console.log("contract setSession:");
-              console.log(contract);
               
-              const tx = prepareContractCall({
-                contract,
-                // We get auto-completion for all the available functions on the contract ABI
-                method: resolveMethod("setSession"),
-                // including full type-safety for the params
-                params: [nft? BigInt(nft) : null,response.data.createSchedule.document.id,0],
-                // solo enviar valor si no es sponsoreado
-                value: toWei("0"),
-              });
-        
-              if (adminWallet) {
-                //let tx = null;
-                console.log(adminWallet);
-                console.log(adminAccount);
-                
-                const { transactionHash } = await sendTransaction({
-                  account: adminAccount!,
-                  transaction: tx,
-                });
-                console.log("transactionHash setSession:");
-                console.log(transactionHash);
-        
-              } else {
-                console.log("No hay una billetera activa.");
-              }*/
             } else {
               console.error("Failed to create new schedule.");
             }
