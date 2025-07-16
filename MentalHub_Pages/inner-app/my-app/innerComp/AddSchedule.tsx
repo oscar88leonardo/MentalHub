@@ -204,8 +204,6 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  // Si necesitas autorización, puedes agregarla aquí
-                  // "Authorization": `Bearer ${process.env.INTERNAL_API_SECRET}`,
                 },
                 body: JSON.stringify({
                   tokenId: nft,
