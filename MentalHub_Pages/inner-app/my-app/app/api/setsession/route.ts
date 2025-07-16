@@ -35,33 +35,31 @@ export async function POST(req: Request) {
 
   try {
 
-    const wallet = privateKeyToAccount({
+    const account = privateKeyToAccount({
       client,
       privateKey: PRIVATE_KEY,
     });
 
-    console.log("wallet:", wallet);
-    console.log("PRIVATE_KEY:", PRIVATE_KEY);
+    console.log("account:", account);
+    //console.log("PRIVATE_KEY:", PRIVATE_KEY);
     console.log("contract setSession:");
     console.log(contract);
     
-    /*const tx = prepareContractCall({
+    const tx = prepareContractCall({
       contract,
       // We get auto-completion for all the available functions on the contract ABI
       method: resolveMethod("setSession"),
       // including full type-safety for the params
-      params: [nft? BigInt(nft) : null,response.data.createSchedule.document.id,0],
+      params: [body.tokenId? BigInt(body.tokenId) : null,body.scheduleId,0],
       // solo enviar valor si no es sponsoreado
       value: toWei("0"),
     });
 
-    if (adminWallet) {
+    if (account) {
       //let tx = null;
-      console.log(adminWallet);
-      console.log(adminAccount);
       
       const { transactionHash } = await sendTransaction({
-        account: adminAccount!,
+        account: account!,
         transaction: tx,
       });
       console.log("transactionHash setSession:");
@@ -69,8 +67,8 @@ export async function POST(req: Request) {
 
     } else {
       console.log("No hay una billetera activa.");
-    }*/
-    return NextResponse.json({ status: "success", msg: "minted" });
+    }
+    return NextResponse.json({ status: "success", msg: "executed setsession" });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ status: "fail", error: e });

@@ -108,13 +108,13 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
   const { innerProfile,isConComposeDB,activeWallet,account, adminWallet, adminAccount, userNFTs, getInnerProfile, executeQuery } = context;
 
   // incializacion del contrato
-  const contract =   getContract({
+  /*const contract =   getContract({
         client: clientThridweb!,
         chain: myChain,
         address: NFT_CONTRACT_ADDRESS,
         // The ABI for the contract is defined here
         abi: abi as [],
-      });
+      });*/
     
   //const router = useRouter();
 
