@@ -5,7 +5,8 @@ export async function POST(req: Request) {
 
   try {
     console.log("Request callsetsession:", req);
-    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.BASEURL || "http://localhost:3000";
+    console.log("Base URL:", baseUrl);
     const response = await fetch(`${baseUrl}/api/setsession`, {
       method: "POST",
       headers: {
