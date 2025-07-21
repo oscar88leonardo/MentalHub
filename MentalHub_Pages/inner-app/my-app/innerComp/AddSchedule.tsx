@@ -208,6 +208,7 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                 body: JSON.stringify({
                   tokenId: nft,
                   scheduleId: response.data.createSchedule.document.id,
+                  state: 0,
                   // agrega aquí otros parámetros que necesites
                 }),
               });

@@ -168,7 +168,28 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
             try {
         
               //window.alert("You scheduled a session!");
-              await executeQuery(strMutation);
+              const response = await executeQuery(strMutation);
+              if(!props.isedit){
+                if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
+                  const callSetSessionRes = await fetch("/api/callsetsession", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      tokenId: nft,
+                      scheduleId: response.data.updateSchedule.document.id,
+                      state: 3,
+                      // agrega aquí otros parámetros que necesites
+                    }),
+                  });
+                  const callSetSessionData = await callSetSessionRes.json();
+                  console.log("Respuesta de /api/callsetsession:", callSetSessionData);
+                  
+                } else {
+                  console.error("Failed to create new schedule.");
+                }
+              }
               await getInnerProfile();
               console.log("Profile update: ", innerProfile);
             } catch (err) {
@@ -311,7 +332,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   </span>
                 </Button>              
               </Col>
-              { props.isedit ? 
+              { props.isedit && state == 'Active' ? 
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       // We get auto-completion for all the available functions on the contract ABI
       method: resolveMethod("setSession"),
       // including full type-safety for the params
-      params: [body.tokenId? BigInt(body.tokenId) : null,body.scheduleId,0],
+      params: [body.tokenId? BigInt(body.tokenId) : null,body.scheduleId,Number(body.state)],
       // solo enviar valor si no es sponsoreado
       value: toWei("0"),
     });
@@ -68,9 +68,9 @@ export async function POST(req: Request) {
     } else {
       console.log("No hay una billetera activa.");
     }
-    return NextResponse.json({ status: "success", msg: "executed setsession" });
+    return NextResponse.json({ status: "success", msg: "executed setsession" }, { status: 200 });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ status: "fail", error: e });
+    return NextResponse.json({ status: "fail", error: e }, { status: 500 });
   }
 }

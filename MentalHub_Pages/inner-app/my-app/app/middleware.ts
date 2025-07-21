@@ -4,11 +4,12 @@ import type { NextRequest } from "next/server";
 const allowedOrigin = process.env.BASEURL || "https://tudominio.com";
 
 export function middleware(request: NextRequest) {
-  const origin = request.headers.get("origin");
+  /*const origin = request.headers.get("origin");
   // Permite solo el dominio configurado
+  console.log('origin:', origin);
   if (origin && origin !== allowedOrigin) {
     return new NextResponse("CORS error: origin not allowed", { status: 403 });
-  }
+  }*/
 
   // Para preflight requests (OPTIONS)
   if (request.method === "OPTIONS") {
