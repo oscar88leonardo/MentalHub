@@ -171,7 +171,6 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
         
               //window.alert("You scheduled a session!");
               //const response = await executeQuery(strMutation);
-              if(!props.isedit){
                 //if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
                   const callSetSessionRes = await fetch("/api/callsetsession", {
                     method: "POST",
@@ -191,7 +190,6 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                 /*} else {
                   console.error("Failed to create new schedule.");
                 }*/
-              }
               await getInnerProfile();
               console.log("Profile update: ", innerProfile);
             } catch (err) {
