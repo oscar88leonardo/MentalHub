@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     console.log("Response from callsetsession:", data);
     //res.status(response.status).json(data);
 
-    return NextResponse.json({ status: "success", msg: "minted", data: data }, { status: response.status });
+    return NextResponse.json({ status: "success", data: data }, { status: response.status });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ status: "fail", error: e }, { status: 500 });

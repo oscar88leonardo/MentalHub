@@ -126,6 +126,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
           let created = '';
           let nft = 0;
           let profileId = '';
+          let id = '';
           if(innerProfile) { 
             if(innerProfile.hudds != undefined){
               if(innerProfile.hudds.edges != undefined) {
@@ -140,6 +141,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                               created = sched.node.created;
                               nft = sched.node.TokenID;
                               profileId = sched.node.profileId;
+                              id = sched.node.id;
                             }
                           }
                         }
@@ -151,7 +153,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
             }
           }
           
-          strMutation = `
+          /*strMutation = `
           mutation {
             updateSchedule(
               input: {id: "${props.id}", content: {date_init: "${dateInit.toISOString()}", date_finish: "${dateFinish.toISOString()}", profileId: "${profileId}", created: "${created}", edited: "${now.toISOString()}", state: Finished, huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${nft}}}
@@ -164,13 +166,13 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
           `;
           console.log("strMutation:");
           console.log(strMutation)
-          if(strMutation){
+          if(strMutation){*/
             try {
         
               //window.alert("You scheduled a session!");
-              const response = await executeQuery(strMutation);
+              //const response = await executeQuery(strMutation);
               if(!props.isedit){
-                if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
+                //if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
                   const callSetSessionRes = await fetch("/api/callsetsession", {
                     method: "POST",
                     headers: {
@@ -178,7 +180,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                     },
                     body: JSON.stringify({
                       tokenId: nft,
-                      scheduleId: response.data.updateSchedule.document.id,
+                      scheduleId: id,
                       state: 3,
                       // agrega aquí otros parámetros que necesites
                     }),
@@ -186,9 +188,9 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   const callSetSessionData = await callSetSessionRes.json();
                   console.log("Respuesta de /api/callsetsession:", callSetSessionData);
                   
-                } else {
+                /*} else {
                   console.error("Failed to create new schedule.");
-                }
+                }*/
               }
               await getInnerProfile();
               console.log("Profile update: ", innerProfile);
@@ -196,7 +198,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
               console.error(err);
               window.alert(err);
             }
-          }    
+          //}    
           props.close();
         }
       }  
