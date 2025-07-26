@@ -21,6 +21,11 @@ import { useRouter } from 'next/navigation';
 import { StreamID } from '@ceramicnetwork/streamid';
 import { openMeet } from './myMeet';
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants/MembersAirdrop";
+import { 
+  getContract, 
+  readContract } from "thirdweb";
+import {client as clientThridweb} from "../innerComp/client";
+import { myChain } from "../innerComp/myChain";
 
 /// Component interface and type definitions
 //
@@ -30,7 +35,6 @@ interface AddScheduleProps {
   isedit: boolean;
   huddId: string;
   roomId: string;
-  state: string;
   id: string;
   dateInit: Date;
   dateFinish: Date;
@@ -41,8 +45,10 @@ interface AddScheduleProps {
 ///interface for roomList
 // enum for room state
 enum State {
-  Archived = 'Archived',
-  Active = 'Active'
+  Pending = 0, 
+  Confirmed = 1, 
+  Active = 2, 
+  Finished = 3
 }
 
 // Enum for Rol
@@ -80,9 +86,11 @@ interface HuddleNode {
 const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
-  const [state, setState] = useState("");
+  const [state, setState] = useState(null);
   const [room, setRoom] = useState("");
   const [roomId, setRoomId] = useState<string>("");
+  const [nft, setNft] = useState(0);
+  const [idSchedule, setIdSchedule] = useState("");
 
   // get global data from Appcontext
   const context = useContext(AppContext);
@@ -97,11 +105,62 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
     if(props.show) { 
       setDateInit(props.dateInit);
       setDateFinish(props.dateFinish);
-      setState(props.state);
+      //setState(props.state);
       setRoom(props.huddId);
       setRoomId(props.roomId);
     }
   },[props.show]);
+
+  useEffect(() => {
+    if(innerProfile) { 
+      if(innerProfile.hudds != undefined){
+        if(innerProfile.hudds.edges != undefined) {
+          for(const hudd of innerProfile.hudds.edges) {
+            if(hudd.node != undefined){
+              if(hudd.node.schedules != undefined){
+                if(hudd.node.schedules.edges != undefined) {
+                  for(const sched of hudd.node.schedules.edges) {
+                    if(sched.node != undefined){
+                      if(sched.node.id === props.id){
+                        setNft(sched.node.TokenID);
+                        setIdSchedule(sched.node.id);
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },[innerProfile]);
+
+  // incializacion del contrato
+  const contract =   getContract({
+    client: clientThridweb!,
+    chain: myChain,
+    address: NFT_CONTRACT_ADDRESS,
+    // The ABI for the contract is defined here
+    abi: abi as [],
+  });
+
+  useEffect(() => {
+    if(nft) { 
+      readContract({
+        contract: contract,
+        method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint256)",
+        params: [nft ? BigInt(nft) : BigInt(0), idSchedule],
+      }).then((returnState) => {
+        
+        console.log("returnState:", returnState);
+        /*if (typeof returnState === "string" && returnState) {
+          
+        }*/
+      });
+    }
+  },[nft]);
 
   const updateRecordState = async () => {
       const now = new Date();
@@ -118,40 +177,10 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
       //console.log(now.toISOString());
       console.log("room:");
       console.log(room);
-      let strMutation = '';
+      //let strMutation = '';
       if (room != "")
       {
         if(props.isedit ) {
-            
-          let created = '';
-          let nft = 0;
-          let profileId = '';
-          let id = '';
-          if(innerProfile) { 
-            if(innerProfile.hudds != undefined){
-              if(innerProfile.hudds.edges != undefined) {
-                let events = [];
-                for(const hudd of innerProfile.hudds.edges) {
-                  if(hudd.node != undefined){
-                    if(hudd.node.schedules != undefined){
-                      if(hudd.node.schedules.edges != undefined) {
-                        for(const sched of hudd.node.schedules.edges) {
-                          if(sched.node != undefined){
-                            if(sched.node.id === props.id){
-                              created = sched.node.created;
-                              nft = sched.node.TokenID;
-                              profileId = sched.node.profileId;
-                              id = sched.node.id;
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
           
           /*strMutation = `
           mutation {
@@ -172,7 +201,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
               //window.alert("You scheduled a session!");
               //const response = await executeQuery(strMutation);
                 //if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
-                  const callSetSessionRes = await fetch("/api/callsetsession", {
+                  /*const callSetSessionRes = await fetch("/api/callsetsession", {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
@@ -185,7 +214,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                     }),
                   });
                   const callSetSessionData = await callSetSessionRes.json();
-                  console.log("Respuesta de /api/callsetsession:", callSetSessionData);
+                  console.log("Respuesta de /api/callsetsession:", callSetSessionData);*/
                   
                 /*} else {
                   console.error("Failed to create new schedule.");
@@ -295,32 +324,6 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                     showTimeInput />
                 </FormGroup>
               </Col>
-              { props.isedit ? 
-                <Col lg="6">
-                <FormGroup className="m-t-15">
-                  <Label for="stateSelect">
-                    State
-                  </Label>
-                  <Input
-                    id="stateSelect"
-                    name="stateSelect"
-                    type="select"
-                    onChange={(e) => setState(e.target.value)}
-                    value={state}
-                  >
-                    <option>
-                      Active
-                    </option>
-                    <option>
-                      Archived
-                    </option>
-                    <option>
-                      Pending
-                    </option>
-                  </Input>
-                </FormGroup>
-              </Col>
-              : ""}
               <Col lg="12">
                 <Button
                   className="btn btn-light m-t-20 btn-arrow"

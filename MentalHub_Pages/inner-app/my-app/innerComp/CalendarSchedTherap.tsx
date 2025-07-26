@@ -29,7 +29,6 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
   const [myEvents, setEvents] = useState<Event[]>([]);
   const [modalAddScheduleisOpen, setModalAddScheduleisOpen] = useState(false);
   const [modalAddScheduleisEdit, setModalAddScheduleisEdit] = useState(false);
-  const [modalAddScheduleState, setModalAddScheduleState] = useState("");
   const [modalAddScheduleHuddId, setModalAddScheduleHuddId] = useState("");
   const [modalAddScheduleRoomId, setModalAddScheduleRoomId] = useState("");
   const [modalAddScheduleID, setModalAddScheduleID] = useState("");
@@ -103,7 +102,7 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
       console.log("event:");
       console.log(event);
       if(!event.isBackgroundEvent){
-        openModalAddScheduleEdit(event.state,event.id,event.start,event.end,event.huddId,event.roomId,event.displayName,event.roomName);
+        openModalAddScheduleEdit(event.id,event.start,event.end,event.huddId,event.roomId,event.displayName,event.roomName);
       }
     },  
     []
@@ -130,16 +129,14 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
   const openModalAddScheduleCreate = (dateInit:Date,dateFinish:Date) => {
     
     setModalAddScheduleisEdit(false);
-    setModalAddScheduleState("");
     setModalAddScheduleID("");
     setModalAddScheduleDateInit(dateInit);
     setModalAddScheduleDateFinish(dateFinish);
     setModalAddScheduleisOpen(true);
   };
 
-  const openModalAddScheduleEdit = (state:string,id:string,dateInit:Date,dateFinish:Date,huddId:string,roomId:string,displayName:string,roomName:string) => {
+  const openModalAddScheduleEdit = (id:string,dateInit:Date,dateFinish:Date,huddId:string,roomId:string,displayName:string,roomName:string) => {
     setModalAddScheduleisEdit(true);
-    setModalAddScheduleState(state);
     setModalAddScheduleHuddId(huddId);
     setModalAddScheduleRoomId(roomId);
     setModalAddScheduleID(id);
@@ -155,7 +152,6 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
       setModalAddScheduleID("");
       setModalAddScheduleDateInit(new Date());
       setModalAddScheduleDateFinish(new Date());
-      setModalAddScheduleState("");
       setModalAddScheduleHuddId("");
       setModalAddScheduleisEdit(false);
     } else {
@@ -165,7 +161,7 @@ export default function CalendarSchedule({ localizer }: CalendarScheduleProps) {
   
   return (
     <Fragment>
-      <AddSchedTherapist show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} state={modalAddScheduleState} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} displayName={modalAddScheduleDisplayName} roomName={modalAddScheduleRoomName} />
+      <AddSchedTherapist show={modalAddScheduleisOpen} close={() => setModalAddScheduleisOpen(false)} isedit={modalAddScheduleisEdit} huddId={modalAddScheduleHuddId} roomId={modalAddScheduleRoomId} id={modalAddScheduleID} dateInit={modalAddScheduleDateInit} dateFinish={modalAddScheduleDateFinish} displayName={modalAddScheduleDisplayName} roomName={modalAddScheduleRoomName} />
       <div style={{height:600}}>
         <Calendar
           defaultDate={defaultDate}
