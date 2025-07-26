@@ -228,6 +228,32 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
       }  
     };
 
+  useEffect(() => {
+    renderButtonFinished();
+  },[state]);
+
+    const renderButtonFinished = () => {
+      if(props.isedit && state == BigInt(1)) {
+        return  
+            <Col lg="12">
+              <Button
+                className="btn btn-light m-t-20 btn-arrow"
+                onClick={() => {
+                  updateRecordState();
+                  props.close();
+                }}
+              >
+                <span>
+                  Finished
+                </span>
+              </Button>              
+            </Col>
+        ;
+      } else {
+        return null;
+      }
+    };
+
   return (
     <div>
       
@@ -332,21 +358,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   </span>
                 </Button>              
               </Col>
-              { props.isedit && state == BigInt(1) ? 
-                <Col lg="12">
-                  <Button
-                    className="btn btn-light m-t-20 btn-arrow"
-                    onClick={() => {
-                      updateRecordState();
-                      props.close();
-                    }}
-                  >
-                    <span>
-                      Finished
-                    </span>
-                  </Button>              
-                </Col>
-              : ""}
+              {renderButtonFinished()}
             </Row>
           </Form>
         </div>
