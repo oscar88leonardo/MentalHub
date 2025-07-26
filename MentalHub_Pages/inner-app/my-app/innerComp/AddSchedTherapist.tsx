@@ -86,7 +86,7 @@ interface HuddleNode {
 const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
   const [dateInit, setDateInit] = useState(new Date());
   const [dateFinish, setDateFinish] = useState(new Date());
-  const [state, setState] = useState(null);
+  const [state, setState] = useState<bigint>(BigInt(-1));
   const [room, setRoom] = useState("");
   const [roomId, setRoomId] = useState<string>("");
   const [nft, setNft] = useState(0);
@@ -152,9 +152,9 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
       }).then((returnState) => {
         
         console.log("returnState:", returnState);
-        /*if (typeof returnState === "string" && returnState) {
-          
-        }*/
+        if (returnState) {
+          setState(returnState as bigint);
+        }
       });
     }
   },[nft]);
@@ -166,7 +166,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
         window.alert("You can not change the state of a schedule that is not finished yet.");
         return;
       }
-      if(state !== "Active") {
+      if(state !== BigInt(1)) {
         window.alert("You can only change the state to Active.");
         return;
       }
@@ -198,20 +198,20 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
               //window.alert("You scheduled a session!");
               //const response = await executeQuery(strMutation);
                 //if(response && response.data && response.data.updateSchedule && response.data.updateSchedule.document) {
-                  /*const callSetSessionRes = await fetch("/api/callsetsession", {
+                  const callSetSessionRes = await fetch("/api/callsetsession", {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
                       tokenId: nft,
-                      scheduleId: id,
+                      scheduleId: idSchedule,
                       state: 3,
                       // agrega aquí otros parámetros que necesites
                     }),
                   });
                   const callSetSessionData = await callSetSessionRes.json();
-                  console.log("Respuesta de /api/callsetsession:", callSetSessionData);*/
+                  console.log("Respuesta de /api/callsetsession:", callSetSessionData);
                   
                 /*} else {
                   console.error("Failed to create new schedule.");
@@ -332,7 +332,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   </span>
                 </Button>              
               </Col>
-              { props.isedit && state == 'Active' ? 
+              { props.isedit && state == BigInt(1) ? 
                 <Col lg="12">
                   <Button
                     className="btn btn-light m-t-20 btn-arrow"
