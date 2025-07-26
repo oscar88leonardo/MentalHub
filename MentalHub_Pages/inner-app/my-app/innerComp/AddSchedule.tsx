@@ -351,32 +351,6 @@ const AddSchedule: React.FC<AddScheduleProps> =(props)=> {
                     showTimeInput />
                 </FormGroup>
               </Col>
-              { props.isedit ? 
-                <Col lg="6">
-                <FormGroup className="m-t-15">
-                  <Label for="stateSelect">
-                    State
-                  </Label>
-                  <Input
-                    id="stateSelect"
-                    name="stateSelect"
-                    type="select"
-                    onChange={(e) => setState(e.target.value)}
-                    value={state}
-                  >
-                    <option>
-                      Active
-                    </option>
-                    <option>
-                      Archived
-                    </option>
-                    <option>
-                      Pending
-                    </option>
-                  </Input>
-                </FormGroup>
-              </Col>
-              : ""}
               <Col lg="12">
                 <Button
                   className="btn btn-light m-t-20 btn-arrow"
