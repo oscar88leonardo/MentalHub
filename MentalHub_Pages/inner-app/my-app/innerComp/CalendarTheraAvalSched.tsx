@@ -131,19 +131,19 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
     []
   );
 
-  const { defaultDate, scrollToTime, minTime, maxTime } = useMemo(
+  const { defaultDate, scrollToTime/*, minTime, maxTime*/ } = useMemo(
     () => {
-      const min = new Date();
+      /*const min = new Date();
       min.setHours(6, 0, 0, 0);
       
       const max = new Date();
-      max.setHours(20, 0, 0, 0);
+      max.setHours(20, 0, 0, 0);*/
       
       return {
         defaultDate: new Date(),
         scrollToTime: new Date(1970, 1, 1, 6),
-        minTime: min,
-        maxTime: max
+        /*minTime: min,
+        maxTime: max*/
       }
     },
     []
@@ -181,8 +181,8 @@ export default function CalendarTheraAvalSched({ localizer }:CalendarTheraAvalSc
           onSelectSlot={handleSelectSlot}
           selectable
           scrollToTime={scrollToTime}
-          min={minTime}
-          max={maxTime}
+          /*min={minTime}
+          max={maxTime}*/
         />
       </div>
     </Fragment>
