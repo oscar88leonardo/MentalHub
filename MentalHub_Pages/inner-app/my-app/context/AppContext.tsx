@@ -185,7 +185,7 @@ useEffect(() => {
 
       const sessionStr = sessionStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
       let session;
-      console.log("LoginComposeDB sessionStr:", sessionStr);
+      
       if (sessionStr) {
         session = await DIDSession.fromSession(sessionStr);
         console.log("Getting session:", session);

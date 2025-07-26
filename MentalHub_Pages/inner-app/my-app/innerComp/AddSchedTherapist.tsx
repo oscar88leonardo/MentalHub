@@ -108,23 +108,20 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
       //setState(props.state);
       setRoom(props.huddId);
       setRoomId(props.roomId);
-    }
-  },[props.show]);
-
-  useEffect(() => {
-    if(innerProfile) { 
-      if(innerProfile.hudds != undefined){
-        if(innerProfile.hudds.edges != undefined) {
-          for(const hudd of innerProfile.hudds.edges) {
-            if(hudd.node != undefined){
-              if(hudd.node.schedules != undefined){
-                if(hudd.node.schedules.edges != undefined) {
-                  for(const sched of hudd.node.schedules.edges) {
-                    if(sched.node != undefined){
-                      if(sched.node.id === props.id){
-                        setNft(sched.node.TokenID);
-                        setIdSchedule(sched.node.id);
-                        break;
+      if(innerProfile) { 
+        if(innerProfile.hudds != undefined){
+          if(innerProfile.hudds.edges != undefined) {
+            for(const hudd of innerProfile.hudds.edges) {
+              if(hudd.node != undefined){
+                if(hudd.node.schedules != undefined){
+                  if(hudd.node.schedules.edges != undefined) {
+                    for(const sched of hudd.node.schedules.edges) {
+                      if(sched.node != undefined){
+                        if(sched.node.id === props.id){
+                          setNft(sched.node.TokenID);
+                          setIdSchedule(sched.node.id);
+                          break;
+                        }
                       }
                     }
                   }
@@ -135,7 +132,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
         }
       }
     }
-  },[innerProfile]);
+  },[props.show]);
 
   // incializacion del contrato
   const contract =   getContract({
