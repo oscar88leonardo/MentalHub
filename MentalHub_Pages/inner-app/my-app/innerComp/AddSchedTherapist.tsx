@@ -212,7 +212,8 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                   });
                   const callSetSessionData = await callSetSessionRes.json();
                   console.log("Respuesta de /api/callsetsession:", callSetSessionData);
-                  
+                  setState(BigInt(3));
+                  window.alert("You changed the state of the schedule to Finished!");
                 /*} else {
                   console.error("Failed to create new schedule.");
                 }*/
