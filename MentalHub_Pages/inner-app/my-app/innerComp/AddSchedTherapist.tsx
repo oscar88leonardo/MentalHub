@@ -166,7 +166,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
         window.alert("You can not change the state of a schedule that is not finished yet.");
         return;
       }
-      if(state !== BigInt(1)) {
+      if(state !== BigInt(2)) {
         window.alert("You can only change the state to Active.");
         return;
       }
@@ -233,7 +233,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
   },[state]);
 
     const renderButtonFinished = () => {
-      if(props.isedit && state == BigInt(1)) {
+      if(props.isedit && state == BigInt(2)) {
         return  
             <Col lg="12">
               <Button
