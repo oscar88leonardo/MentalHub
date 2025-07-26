@@ -234,7 +234,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
 
     const renderButtonFinished = () => {
       if(props.isedit && state == BigInt(2)) {
-        return  
+        return(
             <Col lg="12">
               <Button
                 className="btn btn-light m-t-20 btn-arrow"
@@ -248,7 +248,7 @@ const AddSchedTherapist: React.FC<AddScheduleProps> =(props)=> {
                 </span>
               </Button>              
             </Col>
-        ;
+        );
       } else {
         return null;
       }
