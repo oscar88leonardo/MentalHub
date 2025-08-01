@@ -36,9 +36,19 @@ interface SchedTherap {
   }
 }
 
+interface Schedules {
+  node: {
+    date_init: string;
+    date_finish: string;
+  }
+}
+
 interface TherapistNode {
   sched_therap?: {
     edges?: SchedTherap[]
+  }
+  schedules?: {
+    edges?: Schedules[]
   }
 }
 
@@ -171,34 +181,69 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
   },[therapist]);
 
   useEffect(() => {
-    if(therapistInfo){
-      if(therapistInfo.data){
-        if(therapistInfo.data.nodes){
-          let Bgevents = [];
-          console.log('therapistInfo.data.nodes:');
-          console.log(therapistInfo.data.nodes);
-          for(const node of therapistInfo.data.nodes) {
-            if(node.sched_therap){
-              if(node.sched_therap.edges){
-                for(const sched of node.sched_therap.edges) {
-                  const init = new Date(sched.node.date_init);
-                  const finish = new Date(sched.node.date_finish);
-                  const obj = { 
-                    id: sched.node.id,
-                    start: init,
-                    end: finish,
-                    state: sched.node.state,
-                  }
-                  Bgevents.push(obj);
+    if(therapistInfo && therapistInfo.data && therapistInfo.data.nodes){
+      let finalAvailableSlots = [];
+      console.log('therapistInfo.data.nodes:', therapistInfo.data.nodes);
+
+      for(const node of therapistInfo.data.nodes) {
+        if(node.sched_therap && node.sched_therap.edges){
+          let availableSlots = node.sched_therap.edges.map(edge => ({
+            id: edge.node.id,
+            start: new Date(edge.node.date_init),
+            end: new Date(edge.node.date_finish),
+            state: edge.node.state,
+          }));
+
+          const bookedSchedules = (node.schedules && node.schedules.edges) 
+            ? node.schedules.edges.map(edge => ({
+                start: new Date(edge.node.date_init),
+                end: new Date(edge.node.date_finish),
+              }))
+            : [];
+
+          if (bookedSchedules.length > 0) {
+            let slotsToProcess = availableSlots;
+            for (const booked of bookedSchedules) {
+              let nextSlotsToProcess = [];
+              for (const slot of slotsToProcess) {
+                // No overlap: booked ends before or at the same time slot starts, or booked starts after or at the same time slot ends.
+                if (booked.end <= slot.start || booked.start >= slot.end) {
+                  nextSlotsToProcess.push(slot);
+                  continue;
+                }
+                // Slot is completely within booked
+                if (booked.start <= slot.start && booked.end >= slot.end) {
+                  // discard slot
+                  continue;
+                }
+                // Booked is completely within slot, creates a split
+                if (booked.start > slot.start && booked.end < slot.end) {
+                  nextSlotsToProcess.push({ ...slot, end: booked.start });
+                  nextSlotsToProcess.push({ ...slot, start: booked.end });
+                  continue;
+                }
+                // Booked overlaps the beginning of the slot
+                if (booked.start <= slot.start && booked.end < slot.end) {
+                  nextSlotsToProcess.push({ ...slot, start: booked.end });
+                  continue;
+                }
+                // Booked overlaps the end of the slot
+                if (booked.start > slot.start && booked.end >= slot.end) {
+                  nextSlotsToProcess.push({ ...slot, end: booked.start });
+                  continue;
                 }
               }
+              slotsToProcess = nextSlotsToProcess;
             }
+            finalAvailableSlots.push(...slotsToProcess);
+          } else {
+            finalAvailableSlots.push(...availableSlots);
           }
-          console.log('Bgevents:');
-          console.log(Bgevents);
-          setAvailTEvents(Bgevents);
         }
       }
+      
+      console.log('Bgevents:', finalAvailableSlots);
+      setAvailTEvents(finalAvailableSlots);
     }
   },[therapistInfo]);
 
@@ -226,6 +271,14 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                     roomId
                     profile {
                       name
+                    }
+                    schedules(last: 100, filters: {where: {state: {in: Active}}}) {
+                      edges {
+                        node {
+                          date_init
+                          date_finish
+                        }
+                      }
                     }
                   }
                 }
