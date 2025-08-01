@@ -200,7 +200,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                 end: new Date(edge.node.date_finish),
               }))
             : [];
-
+          console.log('Booked schedules:', bookedSchedules);
           if (bookedSchedules.length > 0) {
             let slotsToProcess = availableSlots;
             for (const booked of bookedSchedules) {
