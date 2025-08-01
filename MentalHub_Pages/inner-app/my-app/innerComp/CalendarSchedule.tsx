@@ -260,7 +260,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       console.log('Bgevents:', finalAvailableSlots);
       setAvailTEvents(finalAvailableSlots);
     }
-  },[therapistInfo, innerProfile]);
+  },[therapistInfo]);
 
   const getTherapistInfo = async () => {
     const strQuery = `
@@ -287,7 +287,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                     profile {
                       name
                     }
-                    schedules(last: 100, filters: {where: {state: {in: ["Pending","Confirmed","Active"]}}}) {
+                    schedules(last: 100, filters: {where: {state: {in: [Pending,Active]}}}) {
                       edges {
                         node {
                           profileId
