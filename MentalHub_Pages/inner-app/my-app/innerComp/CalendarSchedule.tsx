@@ -38,6 +38,7 @@ interface SchedTherap {
 
 interface Schedules {
   node: {
+    profileId: string;
     date_init: string;
     date_finish: string;
   }
@@ -202,10 +203,12 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
             state: edge.node.state,
           }));
           let bookedSchedules: { start: Date; end: Date; }[] = [];
-          if(node.hudds && node.hudds.edges){
+          if(innerProfile && node.hudds && node.hudds.edges){
             bookedSchedules = node.hudds.edges.flatMap(huddEdge =>
               (huddEdge.node.schedules && huddEdge.node.schedules.edges)
-                ? huddEdge.node.schedules.edges.map(edge => ({
+                ? huddEdge.node.schedules.edges
+                  .filter(edge => edge.node.profileId !== innerProfile.id) // Excluir el profileId del innerProfile
+                  .map(edge => ({
                     start: new Date(edge.node.date_init),
                     end: new Date(edge.node.date_finish),
                   }))
@@ -257,7 +260,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
       console.log('Bgevents:', finalAvailableSlots);
       setAvailTEvents(finalAvailableSlots);
     }
-  },[therapistInfo]);
+  },[therapistInfo, innerProfile]);
 
   const getTherapistInfo = async () => {
     const strQuery = `
@@ -284,9 +287,10 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                     profile {
                       name
                     }
-                    schedules(last: 100, filters: {where: {state: {in: [Pending,Active] }}}) {
+                    schedules(last: 100, filters: {where: {state: {in: ["Pending","Confirmed","Active"]}}}) {
                       edges {
                         node {
+                          profileId
                           date_init
                           date_finish
                         }
