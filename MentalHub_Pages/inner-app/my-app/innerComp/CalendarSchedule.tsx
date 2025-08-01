@@ -272,7 +272,7 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
                     profile {
                       name
                     }
-                    schedules(last: 100, filters: {where: {state: {in: Active}}}) {
+                    schedules(last: 100, filters: {where: {state: {in: [Pending,Active] }}}) {
                       edges {
                         node {
                           date_init
