@@ -43,12 +43,20 @@ interface Schedules {
   }
 }
 
+interface Hudds {
+  node: {
+    schedules?: {
+      edges?: Schedules[]
+    }
+  }
+}
+
 interface TherapistNode {
   sched_therap?: {
     edges?: SchedTherap[]
   }
-  schedules?: {
-    edges?: Schedules[]
+  hudds?: {
+    edges?: Hudds[]
   }
 }
 
@@ -193,15 +201,18 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
             end: new Date(edge.node.date_finish),
             state: edge.node.state,
           }));
-
-          const bookedSchedules = (node.schedules && node.schedules.edges) 
-            ? node.schedules.edges.map(edge => ({
-                start: new Date(edge.node.date_init),
-                end: new Date(edge.node.date_finish),
-              }))
-            : [];
+          let bookedSchedules: { start: Date; end: Date; }[] = [];
+          if(node.hudds && node.hudds.edges){
+            bookedSchedules = node.hudds.edges.flatMap(huddEdge =>
+              (huddEdge.node.schedules && huddEdge.node.schedules.edges)
+                ? huddEdge.node.schedules.edges.map(edge => ({
+                    start: new Date(edge.node.date_init),
+                    end: new Date(edge.node.date_finish),
+                  }))
+                : []
+            );
+          }
           console.log('Booked schedules:', bookedSchedules);
-          (node.schedules && node.schedules.edges)?console.log('node.schedules.edges:', node.schedules.edges):[];
           if (bookedSchedules.length > 0) {
             let slotsToProcess = availableSlots;
             for (const booked of bookedSchedules) {
