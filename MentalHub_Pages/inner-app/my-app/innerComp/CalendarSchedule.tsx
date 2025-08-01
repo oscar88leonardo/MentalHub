@@ -193,51 +193,52 @@ export default function CalendarSchedule({ therapist, setTherapist, localizer }:
             end: new Date(edge.node.date_finish),
             state: edge.node.state,
           }));
-
-          const bookedSchedules = (node.schedules && node.schedules.edges) 
-            ? node.schedules.edges.map(edge => ({
+          
+          if(node.schedules && node.schedules.edges) {
+            const bookedSchedules = node.schedules.edges.map(edge => ({
                 start: new Date(edge.node.date_init),
                 end: new Date(edge.node.date_finish),
-              }))
-            : [];
-          console.log('Booked schedules:', bookedSchedules);
-          if (bookedSchedules.length > 0) {
-            let slotsToProcess = availableSlots;
-            for (const booked of bookedSchedules) {
-              let nextSlotsToProcess = [];
-              for (const slot of slotsToProcess) {
-                // No overlap: booked ends before or at the same time slot starts, or booked starts after or at the same time slot ends.
-                if (booked.end <= slot.start || booked.start >= slot.end) {
-                  nextSlotsToProcess.push(slot);
-                  continue;
+              }));
+            console.log('Booked schedules:', bookedSchedules);
+            console.log('node.schedules.edges:', node.schedules.edges);
+            if (bookedSchedules.length > 0) {
+              let slotsToProcess = availableSlots;
+              for (const booked of bookedSchedules) {
+                let nextSlotsToProcess = [];
+                for (const slot of slotsToProcess) {
+                  // No overlap: booked ends before or at the same time slot starts, or booked starts after or at the same time slot ends.
+                  if (booked.end <= slot.start || booked.start >= slot.end) {
+                    nextSlotsToProcess.push(slot);
+                    continue;
+                  }
+                  // Slot is completely within booked
+                  if (booked.start <= slot.start && booked.end >= slot.end) {
+                    // discard slot
+                    continue;
+                  }
+                  // Booked is completely within slot, creates a split
+                  if (booked.start > slot.start && booked.end < slot.end) {
+                    nextSlotsToProcess.push({ ...slot, end: booked.start });
+                    nextSlotsToProcess.push({ ...slot, start: booked.end });
+                    continue;
+                  }
+                  // Booked overlaps the beginning of the slot
+                  if (booked.start <= slot.start && booked.end < slot.end) {
+                    nextSlotsToProcess.push({ ...slot, start: booked.end });
+                    continue;
+                  }
+                  // Booked overlaps the end of the slot
+                  if (booked.start > slot.start && booked.end >= slot.end) {
+                    nextSlotsToProcess.push({ ...slot, end: booked.start });
+                    continue;
+                  }
                 }
-                // Slot is completely within booked
-                if (booked.start <= slot.start && booked.end >= slot.end) {
-                  // discard slot
-                  continue;
-                }
-                // Booked is completely within slot, creates a split
-                if (booked.start > slot.start && booked.end < slot.end) {
-                  nextSlotsToProcess.push({ ...slot, end: booked.start });
-                  nextSlotsToProcess.push({ ...slot, start: booked.end });
-                  continue;
-                }
-                // Booked overlaps the beginning of the slot
-                if (booked.start <= slot.start && booked.end < slot.end) {
-                  nextSlotsToProcess.push({ ...slot, start: booked.end });
-                  continue;
-                }
-                // Booked overlaps the end of the slot
-                if (booked.start > slot.start && booked.end >= slot.end) {
-                  nextSlotsToProcess.push({ ...slot, end: booked.start });
-                  continue;
-                }
+                slotsToProcess = nextSlotsToProcess;
               }
-              slotsToProcess = nextSlotsToProcess;
+              finalAvailableSlots.push(...slotsToProcess);
+            } else {
+              finalAvailableSlots.push(...availableSlots);
             }
-            finalAvailableSlots.push(...slotsToProcess);
-          } else {
-            finalAvailableSlots.push(...availableSlots);
           }
         }
       }
