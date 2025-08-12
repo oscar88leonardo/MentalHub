@@ -6,11 +6,8 @@ import { useActiveWallet } from "thirdweb/react";
 import React from 'react';
 import { Row, Col, Container } from 'reactstrap';
 import Link from 'next/link';
-//import NFTCarrousel from "../MentalComponents/NFTCarrousel";
 
 const NFTcoList = () => {
-
-
     const [showAuthWarning, setShowAuthWarning] = useState(false);
 
     // Obtener contexto y wallet
@@ -22,10 +19,7 @@ const NFTcoList = () => {
     const activeWallet = useActiveWallet();
     const account = activeWallet ? activeWallet.getAccount () : null;
 
-  
-
-    const  NFTColInfo = [
-
+    const NFTColInfo = [
         {animation:"/NFT_CollPreview/MembersPreview.mp4", title:"MentalHub Member", 
         Author_url:'"https://www.instagram.com/pila_mental_/"', Author_id:"@m3ntal_hub",
         Link:"/NFTCol0"},
@@ -34,133 +28,106 @@ const NFTcoList = () => {
          Author_url:"https://www.instagram.com/pila_mental_/", Author_id:"@pila_mental_",
          Link:"/NFTCol1"}
     ]
-
     
     const handleLinkClick = (e, path) => {
-            if (!account || !isConComposeDB) {
-                e.preventDefault();
-                setShowAuthWarning(true);
-                setTimeout(() => setShowAuthWarning(false), 3000);
-                return;
-            } 
+        if (!account || !isConComposeDB) {
+            e.preventDefault();
+            setShowAuthWarning(true);
+            setTimeout(() => setShowAuthWarning(false), 3000);
+            return;
+        } 
         // si está autenticado, realizar la navegacion programaticamente 
         window.location.href = path;  
     }; 
     
     useEffect( () => {
         console.log("Estado showAuthWarning:", showAuthWarning);
-    }, [showAuthWarning])
-    ;
+    }, [showAuthWarning]);
 
     const renderNFTgals = (NFTcol, index) => {
          return(
-            <div className="col-lg-6" key={index}>
-                <div className='player-wrapper'>
-                    <div 
-                    onClick={(e) => handleLinkClick(e, NFTcol.Link)}
-                    style={{ cursor: 'pointer' }}
-                    >
+            <div className="col-lg-6 mb-8" key={index}>
+                <div className="modern-card overflow-hidden group cursor-pointer" 
+                     onClick={(e) => handleLinkClick(e, NFTcol.Link)}>
+                    <div className="relative">
                         <video 
                             autoPlay 
                             muted 
                             loop 
                             src={NFTcol.animation}
-                            width='100%'
-                            height='100%'
-                            style={{ cursor: 'pointer' }}
+                            className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                    </div>
-                </div>
-                <Col md="12">
-                        <div className="p-t-10">
-                            <h5 className="title font-medium">
-                                <div 
-                                onClick={(e) => handleLinkClick(e, NFTcol.Link)}
-                                style={{ cursor: 'pointer', position: 'relative' }}
-                                >
-                                {NFTcol.title}
-                                {!account && (
-                                    <span style={{
-                                        position: 'absolute',
-                                        top: '-8px',
-                                        right: '-8px',
-                                        fontSize: '18px',
-                                        color: '#ff4444'
-                                    }}>
-                                        🔒
-                                    </span>
-                                )}
+                        {!account && (
+                            <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                🔒 Locked
                             </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    
+                    <div className="p-6">
+                        <h5 className="text-xl font-semibold text-text mb-3 group-hover:text-primary transition-colors">
+                            {NFTcol.title}
                         </h5>
-                        <h6 className="subtitle">
-                            By <a href={NFTcol.Author_url} target="_blank" rel="noopener noreferrer">
+                        <h6 className="text-muted">
+                            By <a href={NFTcol.Author_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-teal hover:text-cyan transition-colors">
                                 {NFTcol.Author_id}
                             </a>
                         </h6>
                     </div>
-                </Col>                    
+                </div>
             </div>
         );
-        
     };
-
-       
-    
 
     return (
         <>    
             {showAuthWarning && (
-                        <div 
-                            className="auth-warning" 
-                            style={{
-                                position: 'fixed',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                backgroundColor: 'rgba(255, 68, 68, 0.95)',
-                                color: 'white',
-                                padding: '20px 30px',
-                                borderRadius: '8px',
-                                zIndex: 99999,
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                fontSize: '18px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                minWidth: '300px',
-                                animation: 'fadeIn 0.3s ease-in'
-                            }}
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="modern-card p-8 max-w-md mx-4 text-center">
+                        <div className="text-red-400 text-4xl mb-4">🔒</div>
+                        <h3 className="text-xl font-semibold text-text mb-2">Authentication Required</h3>
+                        <p className="text-muted mb-4">
+                            Por favor, conecta tu wallet primero para acceder a las colecciones digitales.
+                        </p>
+                        <button 
+                            onClick={() => setShowAuthWarning(false)}
+                            className="btn-primary-gradient w-full"
                         >
-                            Por favor, conecta tu wallet primero
-                        </div>     
-                        
+                            Entendido
+                        </button>
+                    </div>
+                </div>     
             )}
 
-            <div id="NTFCollectSection" className="grid">
-                <div className="spacer bg-light">
-                    <Container>
-                        <Row className="justify-content-center">
-                            <Col md="7" className="text-center">
-                                <h1 className="title font-bold">Digital Collections</h1>
-                                <h6 className="subtitle font-18 font-bold" >
-                                    By purchasing a piece from one of our digital collections (NFTs), you <br/> 
-                                    contribute to
-                                    the visibility of psychological care, you can also access 'psycho-tools',
-                                    consultations and other benefits that MentalHub professionals 
-                                    are constantly building for you. <br/><br/>  
-                                    </h6>
-                            </Col>
-                        </Row>
-                    </Container>
-                </div>
-                <div>
-                    <Container>
-                    <div  className="row">
-                    {NFTColInfo.map(renderNFTgals)}
+            <div id="NTFCollectSection" className="section-py">
+                <Container>
+                    <Row className="justify-content-center mb-16">
+                        <Col md="8" className="text-center">
+                            <div className="eyebrow-pill mb-6">
+                                Digital Collections
+                            </div>
+                            <h2 className="text-h2 font-bold text-text mb-6">
+                                Digital Collections
+                            </h2>
+                            <p className="text-lead text-muted max-w-2xl mx-auto">
+                                By purchasing a piece from one of our digital collections (NFTs), you 
+                                contribute to the visibility of psychological care, you can also access 'psycho-tools',
+                                consultations and other benefits that MentalHub professionals 
+                                are constantly building for you.
+                            </p>
+                        </Col>
+                    </Row>
+                    
+                    <div className="row">
+                        {NFTColInfo.map(renderNFTgals)}
                     </div>
-                    </Container>
-                </div> 
+                </Container>
             </div>
-    </>    
+        </>    
     );
 }
 

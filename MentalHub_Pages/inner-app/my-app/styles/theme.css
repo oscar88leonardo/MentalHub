@@ -1,0 +1,178 @@
+/* MentalHub - Theme System */
+:root {
+  --bg: #0B1220;
+  --bg-2: #0E1528;
+  --surface: #121A2B;
+  --text: #E6F0FF;
+  --muted: #9FB2C8;
+  --primary: #7C5CFC;
+  --cyan: #3ADAD9;
+  --teal: #23D3B1;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(124,92,252,0.22);
+}
+
+/* Base theme application */
+html, body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Hover verde animado navbar */
+.nav-underline {
+  background-image: linear-gradient(var(--teal), var(--teal));
+  background-size: 0% 2px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 0.25s ease;
+}
+
+.nav-underline:hover {
+  background-size: 100% 2px;
+}
+
+/* Hard reset de legacy que rompe el dark */
+[class*="progress"], .progress, .loading-bar {
+  background: none !important;
+}
+
+.section-title-bar, .title-line, .rounded-gradient-bar {
+  display: none !important;
+}
+
+body.light, .light-theme {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Hero background */
+.hero-bg {
+  background:
+    radial-gradient(600px 400px at 85% 30%, rgba(58,218,217,0.10), transparent 60%),
+    linear-gradient(135deg, rgba(124,92,252,0.18), rgba(58,218,217,0.10));
+}
+
+/* Eyebrow pill */
+.eyebrow-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(124, 92, 252, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Modern cards */
+.modern-card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Progress mini decorativo */
+.progress-mini {
+  height: 6px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+  border-radius: 3px;
+}
+
+/* Typography scale */
+.text-h1 {
+  font-size: clamp(40px, 6vw, 66px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.5%;
+}
+
+.text-h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.text-lead {
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+/* Gradient text utilities */
+.gradient-text-teal {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-cyan {
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button styles */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-modern {
+  background: transparent;
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* Team monogram */
+.team-monogram {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(124, 92, 252, 0.12);
+  border: 1px solid rgba(124, 92, 252, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--primary);
+}
+
+/* Section spacing */
+.section-py {
+  padding: 6rem 0;
+}
+
+@media (max-width: 768px) {
+  .section-py {
+    padding: 3.5rem 0;
+  }
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

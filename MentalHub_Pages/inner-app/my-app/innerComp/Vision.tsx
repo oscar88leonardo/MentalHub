@@ -6,35 +6,65 @@ import banner from "../public/MainBanner.jpg";
 
 const FeatureComponent = () => {
   return (
-    <div id="VisionSection">
-      <div >
-        <Container className="feature30">
-          <Row>
-            <Col lg="10" className="spacer" >
+    <div id="VisionSection" className="relative overflow-hidden hero-bg">
+      <Container className="relative z-10 py-24">
+        <Row className="items-center min-h-[80vh]">
+          <Col lg="6" md="6" className="order-2 order-lg-1">
+            <div className="space-y-8">
+              {/* Eyebrow pill */}
+              <div className="eyebrow-pill">
+                Mental Health Care
+              </div>
+              
+              {/* Main heading with gradient emphasis */}
+              <h1 className="text-h1 font-bold leading-tight">
+                MentalHub
+                <br />
+                <span className="gradient-text-teal">hope</span> for better
+                <br />
+                <span className="gradient-text-cyan">outcomes</span>
+              </h1>
+              
+              {/* Lead text */}
+              <p className="text-lead text-muted max-w-lg">
+                A digital community, aimed at mental health care through
+                psychological consultation for anxiety, depression, breakups and grief.
+              </p>
+              
+              {/* CTA buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="btn-primary-gradient">
+                  Get Started
+                </button>
+                <button className="btn-outline-modern">
+                  Learn More
+                </button>
+              </div>
+              
+              {/* Stats tile */}
+              <div className="modern-card p-6 max-w-xs">
+                <div className="text-3xl font-bold text-text mb-2">92%</div>
+                <div className="text-sm text-muted">Success rate in mental health improvement</div>
+                <div className="progress-mini mt-3 w-3/4"></div>
+              </div>
+            </div>
+          </Col>
+          
+          <Col lg="6" md="6" className="order-1 order-lg-2">
+            <div className="relative">
               <Image 
                 src={banner}
-                className="img-responsive"
-                alt="wrappixel"
-                />  
-            </Col>
-            <Col lg="6" md="6" className="text-center wrap-feature30-box">
-              <Card className="card-shadow">
-                <CardBody>
-                  <div className="p-05">
-                    <h1 className="title font-bold">
-                      MentalHub
-                    </h1>
-                    <p className="font-bold">
-                    A digital community, aimed at mental health care through
-                    psychological consultation for anxiety, depression, breakups and grief.
-                    </p>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+                className="img-responsive rounded-2xl shadow-2xl"
+                alt="Mental Health Care Banner"
+                priority
+              />
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-primary rounded-full opacity-80"></div>
+              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-gradient-teal rounded-full opacity-80"></div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };

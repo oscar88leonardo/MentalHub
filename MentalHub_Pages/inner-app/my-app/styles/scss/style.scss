@@ -18,6 +18,7 @@ File: scss
  *	8. Custom Templates
  */
 
+// @import "../globals.css"; // Removido para evitar conflictos con Tailwind
 @import "variable";
 @import "~/node_modules/bootstrap/scss/bootstrap";
 @import "../scss/icons/font-awesome/css/font-awesome.min.css";

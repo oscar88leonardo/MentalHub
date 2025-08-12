@@ -4,39 +4,37 @@ import { Row, Col, Container } from "reactstrap";
 import Image from "next/image";
 import roadMap from "../public/MentalHubRoadmap.svg";
 
-
 const RoadMapComponent = () => {
   return (
-    <div id="RoadMapSection">
-      <div className="spacer bg-light">
-        <Container>
-          <Row className="justify-content-center">
-            <Col lg="10" md="11" sm="12" className="text-center">
-              <h1 className="title font-bold">RoadMap</h1>
-              <h3 className="subtitle font-bold">              
-              We are building the 
-              protocol that will empower the community and decentralize the access of 
-              mental health services, take a look at our next steps.                                          
-              </h3>
-            </Col>
-          </Row>
-        </Container>
-      </div>
-      <div>
-        <Container className="feature30">
-          <Row className="justify-content-md-center row">
-            <Col lg="10">
+    <div id="RoadMapSection" className="section-py">
+      <Container>
+        <Row className="justify-content-center mb-16">
+          <Col lg="10" md="11" sm="12" className="text-center">
+            <div className="eyebrow-pill mb-6">
+              Our Journey
+            </div>
+            <h2 className="text-h2 font-bold text-text mb-6">RoadMap</h2>
+            <p className="text-lead text-muted max-w-3xl mx-auto">
+              We are building the protocol that will empower the community and decentralize the access of 
+              mental health services, take a look at our next steps.
+            </p>
+          </Col>
+        </Row>
+        
+        <Row className="justify-content-center">
+          <Col lg="10">
+            <div className="modern-card p-8">
               <Image
                 src={roadMap}
-                className="rounded img-responsive"
-                alt="wrappixel"
+                className="w-full h-auto rounded-2xl"
+                alt="MentalHub Roadmap"
+                priority
               />
-            </Col>
-          </Row>
-        </Container>
-      </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
-  
   );
 };
 

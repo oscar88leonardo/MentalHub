@@ -1,12 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState, useContext } from "react";
-import {
-  Collapse,
-  NavbarToggler,
-  Nav,
-  NavItem,
-  NavLink,
-} from "reactstrap";
+import React, { useEffect, useState, useContext } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
 import { AppContext } from "../../context/AppContext";
@@ -21,7 +14,7 @@ import {client as clientThridweb} from "../client";
 import { myChain } from "../myChain";
 import { useActiveWallet } from "thirdweb/react";
 
-const menu = () => {
+const Menu = () => {
   // get global data from Appcontext
   const context = useContext(AppContext);
   if (context === null) {
@@ -34,9 +27,6 @@ const menu = () => {
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
   const [showAuthWarning, setShowAuthWarning] = useState(false);
-  /*const clientThridweb = createThirdwebClient({
-    clientId: "e7b10fdbf32bdb18fe8d3545bac07a5d",
-  });*/
   
   // función para validar autenticación
   const handleAuthenticatedNavigation = (e: React.MouseEvent, path: string) => {
@@ -48,21 +38,6 @@ const menu = () => {
     }
     window.location.href = path;
   };
-
-
-  type LoginPayload = {
-  address: string;
-  chain_id?: string;
-  domain: string;
-  expiration_time: string;
-  invalid_before: string;
-  issued_at: string;
-  nonce: string;
-  resources?: Array<string>;
-  statement: string;
-  uri?: string;
-  version: string;
-};
 
   const walletsThirdweb = [
     inAppWallet({
@@ -90,36 +65,68 @@ const menu = () => {
     renderButton();
   }, []);
 
-
   // revisar rutas en app router
   const renderUrl = (AuxSection = "", AuxText = "") => {
     // incluir validación
     if (AuxSection === "NTFCollectSection") {
       return (
-        <NavLink
+        <a
           href="#"
-          className="nav-link"
+          style={{
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            padding: '0.5rem 1rem',
+            fontWeight: '500',
+            transition: 'color 0.2s ease',
+            textDecoration: 'none'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
           onClick={(e) => handleAuthenticatedNavigation(e, './#NTFCollectSection')}
         >
           {AuxText}
-        </NavLink>
+        </a>
       );
     }
     
-    //console.log(pathname);
-    var vHref = './#'+AuxSection;
+    const vHref = './#'+AuxSection;
     if (pathname != '/') {
       return (
-        <NavLink
+        <a
           href={vHref}
-          className="nav-link"
+          style={{
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            padding: '0.5rem 1rem',
+            fontWeight: '500',
+            transition: 'color 0.2s ease',
+            textDecoration: 'none'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
         >
           {AuxText}
-        </NavLink>
+        </a>
       );
     } else {
       return (
-        <Link to={AuxSection} spy={true} smooth={true} offset={10} duration={500} className="nav-link">
+        <Link 
+          to={AuxSection} 
+          spy={true} 
+          smooth={true} 
+          offset={10} 
+          duration={500} 
+          style={{
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            padding: '0.5rem 1rem',
+            fontWeight: '500',
+            transition: 'color 0.2s ease',
+            textDecoration: 'none'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+        >
           {AuxText}
         </Link>
       );
@@ -127,76 +134,120 @@ const menu = () => {
   };
         
   const renderButton = () => {
-      //console.log("provider:");
-      //console.log(provider);
       if (account != null) {
         return (
-          <NavLink
+          <a
             href="./profile"
-            className="btn btn-light font-14"
+            style={{
+              backgroundColor: 'var(--primary)',
+              color: 'white',
+              padding: '0.5rem 1.5rem',
+              borderRadius: '0.75rem',
+              fontWeight: '600',
+              textDecoration: 'none',
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
             Profile
-          </NavLink>
+          </a>
         );
       } 
   };
   
 
   return (
-    <div>
-        <NavbarToggler onClick={toggle}>
-            <span className="ti-menu"></span>
-        </NavbarToggler>
-        <Collapse
-            isOpen={isOpen}
-            navbar
-            className="hover-dropdown ml-auto"
-            id="h6-info"
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
+        {/* Desktop Menu - Siempre visible */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem' }}>
+            {renderUrl("VisionSection","Vision")}
+            {renderUrl("DescriptionSection","Description")}
+            {renderUrl("NTFCollectSection","Digital Collections")}
+            <a
+              href="#"
+              style={{
+                color: 'var(--muted)',
+                cursor: 'pointer',
+                padding: '0.5rem 1rem',
+                fontWeight: '500',
+                transition: 'color 0.2s ease',
+                textDecoration: 'none'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+              onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
+            >
+              WhiteList
+            </a>
+            {renderUrl("PartnersSection","Partners")}
+            {renderUrl("RoadMapSection","RoadMap")}
+            {renderUrl("FAQsSection","FAQs")}
+        </div>
+
+        {/* Mobile Menu Button - Solo visible en móvil */}
+        <button
+          onClick={toggle}
+          style={{
+            display: 'none',
+            border: 'none',
+            color: 'var(--text)',
+            background: 'none',
+            cursor: 'pointer',
+            padding: '0.5rem'
+          }}
+          className="mobile-menu-btn"
         >
-            <Nav navbar className="ml-auto" >
-            <NavItem>
+            <span className="ti-menu" style={{ fontSize: '1.25rem' }}></span>
+        </button>
+
+        {/* Mobile Menu - Drawer style */}
+        {isOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'var(--surface)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1rem',
+            zIndex: 1000
+          }} className="mobile-menu">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {renderUrl("VisionSection","Vision")}
-            </NavItem>
-            <NavItem>
                 {renderUrl("DescriptionSection","Description")}
-            </NavItem>
-            <NavItem>
                 {renderUrl("NTFCollectSection","Digital Collections")}
-            </NavItem>
-            <NavItem>
-                <NavLink
+                <a
                   href="#"
-                  className="nav-link"
+                  style={{
+                    color: 'var(--muted)',
+                    cursor: 'pointer',
+                    padding: '0.5rem 1rem',
+                    fontWeight: '500',
+                    transition: 'color 0.2s ease',
+                    textDecoration: 'none'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                   onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
                 >
                   WhiteList
-                </NavLink>
-            </NavItem>
-            <NavItem>
+                </a>
                 {renderUrl("PartnersSection","Partners")}
-            </NavItem>
-            <NavItem>
                 {renderUrl("RoadMapSection","RoadMap")}
-            </NavItem>
-            <NavItem>
                 {renderUrl("FAQsSection","FAQs")}
-            </NavItem>
-            </Nav> 
-              {showAuthWarning && (
-                <div className="auth-warning" style={{
-                  position: 'fixed',
-                  top: '20px',
-                  right: '20px',
-                  backgroundColor: '#ff4444',
-                  color: 'white',
-                  padding: '10px',
-                  borderRadius: '5px',
-                  zIndex: 1000
-                  }}>
-                  Por favor, conecta tu wallet primero
-                </div>
-              )} 
-            <div className="act-buttons">
+            </div>
+          </div>
+        )}
+
+        {showAuthWarning && (
+          <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', zIndex: 50 }}>
+            Por favor, conecta tu wallet primero
+          </div>
+        )} 
+
+        {/* Wallet Connection */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <ConnectButton
               client={clientThridweb}
               wallets={walletsThirdweb}
@@ -207,23 +258,20 @@ const menu = () => {
               }}
               auth={{
                 isLoggedIn: async (address: string) => {
-                  // Implement your logic to check if the user is logged in
-                  // For now, return false or true as needed
                   return !!account;
                 },
                 doLogin: async (params) => {
                   console.log("logging in!");
-                  //await login(params);
                 },
                 getLoginPayload: async () => ({
-                  address: "0x0000000000000000000000000000000000000000",  // Dirección vacía
-                  chain_id: "0x1",  // Ethereum Mainnet (pero no se usará)
+                  address: "0x0000000000000000000000000000000000000000",
+                  chain_id: "0x1",
                   domain: "dummy",
                   uri: "https://dummy.com",
                   version: "1",
                   nonce: "0",
                   issued_at: new Date().toISOString(),
-                  expiration_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+                  expiration_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
                   invalid_before: new Date().toISOString(),
                   statement: "Sign in to Innerverse",
                   resources: [],
@@ -234,19 +282,14 @@ const menu = () => {
                 },
               }}
             />
-            </div>
-            <div className="act-buttons">
-                {renderButton()}
-              </div>       
-        </Collapse>
+        </div>
+
+        {/* Profile Button */}
+        <div style={{ marginLeft: '1rem' }}>
+            {renderButton()}
+        </div>
     </div>
   )
 }
 
-export default menu
-
-/*
-
-
-
-*/
+export default Menu;

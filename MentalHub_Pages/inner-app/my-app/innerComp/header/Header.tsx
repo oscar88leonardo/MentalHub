@@ -1,42 +1,39 @@
+import React from "react";
 import Image from "next/image";
-import { Link } from "react-scroll";
-//import { useRouter } from "next/navigation"; cambia con respecto a next/router
-import {
-  Collapse,
-  Navbar,
-  NavbarToggler,
-  NavbarBrand,
-  Nav,
-  NavItem,
-  Container,
-  NavLink,
-} from "reactstrap";
-
 import Menu from "./Menu";
 import logo from "../../public/LogoMentalHub.png";
 
 const Header = () => {
-
     return (
-        <div className="fixed-top" style={{
-            backgroundColor: '#0faba5'
-          }} id="top">
-          <div className="header6">
-            <Container className="po-relative">
-              <Navbar className="navbar-expand-sm h6-nav-bar">
-                <NavbarBrand href="/">
-                  <Image
-                  width={98}
-                  height={81}
-                  src={logo} alt="wrapkit" />
-                </NavbarBrand>  
-                <Menu/>
-              </Navbar>
-            </Container>
-          </div>
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            backgroundColor: 'var(--surface)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1rem 0',
+            color: 'white'
+        }} id="top">
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Image
+                            width={98}
+                            height={81}
+                            src={logo} 
+                            alt="MentalHub Logo"
+                        />
+                        <span style={{ marginLeft: '1rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                            MENTALHUB
+                        </span>
+                    </div>  
+                    <Menu/>
+                </div>
+            </div>
         </div>
-      );
-
+    );
 }
 
 export default Header;
