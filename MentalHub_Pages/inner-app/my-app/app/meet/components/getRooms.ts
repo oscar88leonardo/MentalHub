@@ -8,9 +8,13 @@ export const getRooms = async () => {
     apiKey: process.env.API_KEY!,
   });
  
-  const rooms = await api.getRooms();
- 
-  console.log(rooms?.data);
- 
-  return rooms?.data;
+const rooms = await api.getRooms();
+
+if (rooms && !rooms.error && rooms.data) {
+  console.log(rooms.data.rooms);
+  return rooms.data.rooms;
+} else {
+  console.log('Error fetching rooms:', rooms?.error);
+  return [];
+}
 };
