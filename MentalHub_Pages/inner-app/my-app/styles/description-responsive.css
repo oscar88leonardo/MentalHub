@@ -1,0 +1,119 @@
+/* Description Component Responsive Styles - Solo Tamaños y Posiciones */
+
+/* Estilos base para todos los dispositivos */
+.description-row {
+  margin: 0;
+  padding: 0;
+}
+
+.description-col {
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+/* Layout vertical en móviles */
+@media (max-width: 767px) {
+  .description-row {
+    display: block !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .description-col {
+    flex: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-bottom: 2rem !important;
+    display: block !important;
+  }
+  
+  .description-col .modern-card {
+    margin-bottom: 1rem !important;
+  }
+}
+
+/* Layout horizontal en pantallas medianas y grandes */
+@media (min-width: 768px) {
+  .description-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    margin-left: -15px !important;
+    margin-right: -15px !important;
+  }
+  
+  .description-col {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    width: 50% !important;
+    margin-bottom: 0 !important;
+    display: block !important;
+  }
+  
+  /* Espacio entre las cajas */
+  .description-col:first-child {
+    padding-right: 7.5px !important;
+  }
+  
+  .description-col:last-child {
+    padding-left: 7.5px !important;
+  }
+}
+
+/* Ajustes de altura para mantener consistencia */
+@media (min-width: 768px) {
+  .description-col .modern-card {
+    min-height: 400px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .description-col .modern-card p {
+    flex-grow: 1 !important;
+  }
+}
+
+/* Optimización para pantallas muy grandes */
+@media (min-width: 1200px) {
+  #DescriptionSection .container {
+    max-width: 1140px !important;
+  }
+}
+
+/* Transiciones suaves para cambios de layout */
+.description-col,
+.description-col .modern-card {
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Override completo de Reactstrap para pantallas medianas y grandes */
+@media (min-width: 768px) {
+  .description-row > * {
+    float: none !important;
+  }
+  
+  .description-col {
+    float: none !important;
+  }
+  
+  /* Asegurar que las cajas tengan el mismo ancho */
+  .description-col:nth-child(1) {
+    width: 50% !important;
+    max-width: 50% !important;
+  }
+  
+  .description-col:nth-child(2) {
+    width: 50% !important;
+    max-width: 50% !important;
+  }
+}
+
+/* Forzar estilos en pantallas pequeñas */
+@media (max-width: 767px) {
+  .description-col {
+    float: none !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

@@ -9,10 +9,10 @@ const Partners = () => {
                 <Row className="justify-content-center mb-16">
                     <Col md="10" className="text-center">
                         <div className="eyebrow-pill mb-6">
-                            Our Partners
+                            Our Team
                         </div>
                         <h2 className="text-h2 font-bold text-text mb-8">
-                            MentalHub Partners
+                            Innerverse Partners
                         </h2>
                         <p className="text-lead text-muted max-w-4xl mx-auto leading-relaxed">
                             Mental care requires commitment from professionals in constant training and updating 

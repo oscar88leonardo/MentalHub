@@ -60,7 +60,7 @@ const FAQsComponent = (props) => {
           </Col>
         </Row>
         
-        <Row className="gap-6">
+        <Row>
           <Col md="4" className="mb-6">
             <div className="modern-card p-6 h-full">
               <Button

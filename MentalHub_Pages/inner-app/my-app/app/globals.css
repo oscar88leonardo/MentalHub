@@ -117,3 +117,51 @@ a {
 	font-size: 16px;
 	font-family: monospace;
 }
+
+/* Hero Banner Responsive Styles - Solo posicionamiento */
+/* Responsive adjustments for hero section */
+@media (max-width: 640px) {
+  /* Ensure brain animation is visible on mobile */
+  .hero-visual-container {
+    transform: scale(0.8);
+    margin-top: -2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Center the visual elements on tablets */
+  .hero-visual-container {
+    transform: scale(0.9);
+    margin-top: -1rem;
+  }
+}
+
+/* Ensure the brain animation stays visible */
+@media (max-width: 480px) {
+  .hero-visual-container {
+    transform: scale(0.7);
+    margin-top: -3rem;
+  }
+}
+
+/* Smooth transitions for responsive changes */
+.hero-visual-container {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Asegurar espacio desde el header fijo */
+#VisionSection {
+  padding-top: 2rem; /* Espacio adicional desde el header */
+}
+
+@media (max-width: 768px) {
+  #VisionSection {
+    padding-top: 3rem; /* Más espacio en móviles */
+  }
+}
+
+@media (max-width: 480px) {
+  #VisionSection {
+    padding-top: 4rem; /* Máximo espacio en móviles pequeños */
+  }
+}

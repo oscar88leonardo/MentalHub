@@ -18,9 +18,20 @@ const FeatureComponent = () => {
           </Col>
         </Row>
         
-        <Row className="gap-8">
-          <Col md="6" className="mb-8">
-            <div className="modern-card p-8 h-full">
+        {/* Layout responsive usando Row y Col de Reactstrap */}
+        <Row className="description-row" style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'stretch'
+        }}>
+          {/* Primera caja - Purpose */}
+          <Col xs="12" md="6" className="description-col" style={{
+            flex: '0 0 50%',
+            maxWidth: '50%',
+            width: '50%',
+            marginBottom: 0
+          }}>
+            <div className="modern-card p-8 h-100">
               <div className="flex items-center mb-6">
                 <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mr-4">
                   <i className="fa fa-star text-white text-xl"></i>
@@ -40,13 +51,19 @@ const FeatureComponent = () => {
             </div>
           </Col>
           
-          <Col md="6" className="mb-8">
-            <div className="modern-card p-8 h-full">
+          {/* Segunda caja - Why MentalHub */}
+          <Col xs="12" md="6" className="description-col" style={{
+            flex: '0 0 50%',
+            maxWidth: '50%',
+            width: '50%',
+            marginBottom: 0
+          }}>
+            <div className="modern-card p-8 h-100">
               <div className="flex items-center mb-6">
                 <div className="w-16 h-16 bg-gradient-teal rounded-2xl flex items-center justify-center mr-4">
                   <i className="fa fa-heart text-white text-xl"></i>
                 </div>
-                <h5 className="text-xl font-semibold text-text">Why MentalHub?</h5>
+                <h5 className="text-xl font-semibold text-text">Why Innerverse?</h5>
               </div>
               <p className="text-muted leading-relaxed">
                 Did you know that according to the World Health Organization (WHO) more than 300 million people 

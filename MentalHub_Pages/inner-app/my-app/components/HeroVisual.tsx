@@ -7,7 +7,7 @@ const MotionImg = dynamic(() => import("./MotionImg"), { ssr: false });
 export default function HeroVisual() {
   return (
     <div
-      className="relative w-full max-w-[920px] h-[560px] md:h-[620px] lg:h-[680px] overflow-visible -mt-6 md:-mt-10"
+      className="relative w-full max-w-[920px] h-[400px] sm:h-[500px] md:h-[620px] lg:h-[680px] overflow-visible -mt-6 md:-mt-10 hero-visual-container"
       aria-label="Illustration: hand holding a floating brain"
     >
       {/* Se elimina el rectángulo de fondo para dejar solo la ilustración */}
@@ -23,8 +23,11 @@ export default function HeroVisual() {
 
 		{/* Cerebro + glow wrapper para alineación exacta */}
 		<div
-			className="absolute left-[27%] md:left-[23%] lg:left-[30%] top-[-5%] md:top-[-4%] -translate-x-1/2 pointer-events-none"
-			style={{ width: 'clamp(220px, 30.8vw, 396px)' }}
+			className="absolute 
+        left-[20%] sm:left-[22%] md:left-[23%] lg:left-[30%] 
+        top-[-2%] sm:top-[-3%] md:top-[-4%] lg:top-[-5%] 
+        -translate-x-1/2 pointer-events-none
+        w-[180px] sm:w-[200px] md:w-[250px] lg:w-[396px]"
 		>
 			{/* Glow sutil centrado detrás del cerebro */}
 			<div

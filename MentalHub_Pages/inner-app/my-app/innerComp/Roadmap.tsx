@@ -15,7 +15,7 @@ const RoadMapComponent = () => {
             </div>
             <h2 className="text-h2 font-bold text-text mb-6">RoadMap</h2>
             <p className="text-lead text-muted max-w-3xl mx-auto">
-              We are building the protocol that will empower the community and decentralize the access of 
+              We are building Innerverse, the platform that will empower the community and decentralize the access of 
               mental health services, take a look at our next steps.
             </p>
           </Col>

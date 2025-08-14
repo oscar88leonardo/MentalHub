@@ -1,0 +1,69 @@
+/* Hero Banner Responsive Styles - Solo Posicionamiento */
+
+/* Responsive breakpoints para posicionamiento del hero */
+@media (max-width: 480px) {
+  /* Extra small devices (phones) */
+  .hero-visual-container {
+    transform: scale(0.65);
+    margin-top: 2rem; /* Cambiado de -4rem a 2rem para evitar superposición con header */
+    margin-bottom: -2rem;
+    z-index: 1; /* Asegurar que esté por debajo del header */
+  }
+}
+
+@media (max-width: 640px) {
+  /* Small devices (large phones) */
+  .hero-visual-container {
+    transform: scale(0.75);
+    margin-top: 1rem; /* Cambiado de -3rem a 1rem */
+    margin-bottom: -1rem;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Medium devices (tablets) */
+  .hero-visual-container {
+    transform: scale(0.85);
+    margin-top: 0.5rem; /* Cambiado de -2rem a 0.5rem */
+    z-index: 1;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Large devices (laptops) */
+  .hero-visual-container {
+    transform: scale(0.9);
+    margin-top: 0; /* Cambiado de -1rem a 0 */
+    z-index: 1;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Extra large devices (desktops) */
+  .hero-visual-container {
+    transform: scale(1);
+    margin-top: 0;
+    z-index: 1;
+  }
+}
+
+/* Smooth transitions para cambios responsive */
+.hero-visual-container {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure brain animation is always visible and below header */
+.hero-visual-container {
+  position: relative;
+  z-index: 1; /* Siempre por debajo del header (z-index: 9999) */
+}
+
+/* Optimize for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .hero-visual-container {
+    transform: scale(0.8);
+    margin-top: 1rem; /* Ajustado para evitar superposición */
+    z-index: 1;
+  }
+}

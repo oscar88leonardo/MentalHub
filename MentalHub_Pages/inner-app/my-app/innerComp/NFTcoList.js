@@ -111,13 +111,12 @@ const NFTcoList = () => {
                                 Digital Collections
                             </div>
                             <h2 className="text-h2 font-bold text-text mb-6">
-                                Digital Collections
+                                    Explore Innerverse 
                             </h2>
                             <p className="text-lead text-muted max-w-2xl mx-auto">
-                                By purchasing a piece from one of our digital collections (NFTs), you 
-                                contribute to the visibility of psychological care, you can also access 'psycho-tools',
-                                consultations and other benefits that MentalHub professionals 
-                                are constantly building for you.
+                                By purchasing a piece from one of our digital collections,  you unlock access to Inerverse servicves, 
+                                enable 'psycho-tools', consultations and other benefits that Innerverse professionals 
+                                are constantly building for you. 
                             </p>
                         </Col>
                     </Row>
