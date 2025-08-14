@@ -199,19 +199,7 @@ const Menu = () => {
             </svg>
         </button>
         
-        {/* Debug info */}
-        <div style={{ 
-          position: 'fixed', 
-          top: '100px', 
-          right: '10px', 
-          background: 'red', 
-          color: 'white', 
-          padding: '5px', 
-          fontSize: '12px',
-          zIndex: 9999
-        }}>
-          isOpen: {isOpen ? 'true' : 'false'}
-        </div>
+
 
         {/* Mobile Menu - Drawer style */}
         {isOpen && (

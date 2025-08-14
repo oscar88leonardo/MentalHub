@@ -104,15 +104,17 @@
 .mobile-menu {
     position: fixed !important;
     top: 80px !important;
-    left: 0 !important;
-    right: 0 !important;
+    right: 0 !important; /* Se despliega desde la derecha */
+    width: 280px !important; /* Ancho fijo del drawer */
     background-color: #6666ff !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     padding: 1rem !important;
     z-index: 1000 !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    animation: slideDown 0.2s ease-out !important;
+    box-shadow: -4px 4px 6px rgba(0, 0, 0, 0.1) !important; /* Sombra hacia la izquierda */
+    animation: slideInRight 0.3s ease-out !important;
     display: none; /* Por defecto oculto */
+    border-radius: 0 0 0 12px !important; /* Bordes redondeados en la esquina izquierda */
 }
 
 /* Cuando el menú móvil está abierto */
@@ -121,14 +123,14 @@
     display: block !important;
 }
 
-@keyframes slideDown {
+@keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateX(100%);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
     }
 }
 
@@ -228,5 +230,6 @@
     .mobile-menu {
         padding: 0.75rem;
         top: 70px;
+        width: 260px !important; /* Menú más estrecho en móviles pequeños */
     }
 }
