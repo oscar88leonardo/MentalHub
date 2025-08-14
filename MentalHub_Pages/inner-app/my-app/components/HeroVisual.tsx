@@ -24,10 +24,10 @@ export default function HeroVisual() {
 		{/* Cerebro + glow wrapper para alineación exacta */}
 		<div
 			className="absolute 
-        left-[20%] sm:left-[22%] md:left-[23%] lg:left-[30%] 
-        top-[-2%] sm:top-[-3%] md:top-[-4%] lg:top-[-5%] 
+        left-[30%] sm:left-[30%] md:left-[23%] lg:left-[30%] 
+        top-[-5%] sm:top-[-5%] md:top-[-4%] lg:top-[-5%] 
         -translate-x-1/2 pointer-events-none
-        w-[180px] sm:w-[200px] md:w-[250px] lg:w-[396px]"
+        w-[238px] sm:w-[265px] md:w-[250px] lg:w-[396px]"
 		>
 			{/* Glow sutil centrado detrás del cerebro */}
 			<div

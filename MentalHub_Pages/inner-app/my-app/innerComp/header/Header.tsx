@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Menu from "./Menu";
 import logo from "../../public/innerverse-logo.png";
 import "./Header.css";
@@ -21,15 +22,17 @@ const Header = () => {
             <div className="header-content">
                 <div className="header-flex">
                     <div className="logo-container">
-                        <Image
-                            width={0}
-                            height={0}
-                            sizes="100vw"
-                            src={logo} 
-                            alt="Innerverse Logo"
-                            className="header-logo"
-                            style={{ objectFit: 'contain' }}
-                        />
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center' }}>
+                            <Image
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                src={logo} 
+                                alt="Innerverse Logo"
+                                className="header-logo"
+                                style={{ objectFit: 'contain' }}
+                            />
+                        </Link>
                     </div>  
                     <Menu/>
                 </div>

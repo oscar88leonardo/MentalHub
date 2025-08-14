@@ -5,7 +5,7 @@
   /* Extra small devices (phones) */
   .hero-visual-container {
     transform: scale(0.65);
-    margin-top: 2rem; /* Cambiado de -4rem a 2rem para evitar superposición con header */
+    margin-top: 5rem; /* Aumentado para dar espacio al cerebro centrado sobre la mano */
     margin-bottom: -2rem;
     z-index: 1; /* Asegurar que esté por debajo del header */
   }
@@ -15,7 +15,7 @@
   /* Small devices (large phones) */
   .hero-visual-container {
     transform: scale(0.75);
-    margin-top: 1rem; /* Cambiado de -3rem a 1rem */
+    margin-top: 4rem; /* Aumentado para dar espacio al cerebro centrado sobre la mano */
     margin-bottom: -1rem;
     z-index: 1;
   }
@@ -25,7 +25,7 @@
   /* Medium devices (tablets) */
   .hero-visual-container {
     transform: scale(0.85);
-    margin-top: 0.5rem; /* Cambiado de -2rem a 0.5rem */
+    margin-top: 3rem; /* Aumentado para dar espacio al cerebro centrado sobre la mano */
     z-index: 1;
   }
 }
@@ -34,7 +34,7 @@
   /* Large devices (laptops) */
   .hero-visual-container {
     transform: scale(0.9);
-    margin-top: 0; /* Cambiado de -1rem a 0 */
+    margin-top: 1.5rem; /* Ajustado para dar espacio al cerebro */
     z-index: 1;
   }
 }
@@ -63,7 +63,7 @@
 @media (hover: none) and (pointer: coarse) {
   .hero-visual-container {
     transform: scale(0.8);
-    margin-top: 1rem; /* Ajustado para evitar superposición */
+    margin-top: 4rem; /* Ajustado para evitar superposición y dar espacio al cerebro centrado */
     z-index: 1;
   }
 }
