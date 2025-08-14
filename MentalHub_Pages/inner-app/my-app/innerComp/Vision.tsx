@@ -3,6 +3,7 @@ import React from "react";
 import { Row, Col, Container, Card, CardBody } from "reactstrap";
 import Image from "next/image";
 import banner from "../public/MainBanner.jpg";
+import HeroVisual from "../components/HeroVisual";
 
 const FeatureComponent = () => {
   return (
@@ -18,7 +19,7 @@ const FeatureComponent = () => {
               
               {/* Main heading with gradient emphasis */}
               <h1 className="text-h1 font-bold leading-tight">
-                MentalHub
+                Innerverse
                 <br />
                 <span className="gradient-text-teal">hope</span> for better
                 <br />
@@ -52,15 +53,7 @@ const FeatureComponent = () => {
           
           <Col lg="6" md="6" className="order-1 order-lg-2">
             <div className="relative">
-              <Image 
-                src={banner}
-                className="img-responsive rounded-2xl shadow-2xl"
-                alt="Mental Health Care Banner"
-                priority
-              />
-              {/* Decorative elements */}
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-primary rounded-full opacity-80"></div>
-              <div className="absolute -bottom-4 -left-4 w-6 h-6 bg-gradient-teal rounded-full opacity-80"></div>
+              <HeroVisual />
             </div>
           </Col>
         </Row>
