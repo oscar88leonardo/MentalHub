@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
 import { AppContext } from "../../context/AppContext";
 import { ConnectButton } from "thirdweb/react";
+import "./Header.css";
 
 import {
   inAppWallet,
@@ -23,7 +24,9 @@ const Menu = () => {
   const { logout, isConComposeDB } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const toggle = () => setIsOpen(!isOpen);
+  const toggle = () => {
+    setIsOpen(!isOpen);
+  };
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
   const [showAuthWarning, setShowAuthWarning] = useState(false);
@@ -31,12 +34,18 @@ const Menu = () => {
   // función para validar autenticación
   const handleAuthenticatedNavigation = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
+    setIsOpen(false); // Cerrar menú móvil al navegar
     if (!account || !isConComposeDB) {
       setShowAuthWarning(true);
       setTimeout(() => setShowAuthWarning(false), 3000);
       return;
     }
     window.location.href = path;
+  };
+
+  // Cerrar menú cuando se hace click en un link
+  const handleLinkClick = () => {
+    setIsOpen(false);
   };
 
   const walletsThirdweb = [
@@ -63,6 +72,16 @@ const Menu = () => {
 
   useEffect(() => {
     renderButton();
+    
+    // Cerrar menú móvil cuando cambie el tamaño de ventana
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // revisar rutas en app router
@@ -72,17 +91,11 @@ const Menu = () => {
       return (
         <a
           href="#"
-          style={{
-            color: 'var(--muted)',
-            cursor: 'pointer',
-            padding: '0.5rem 1rem',
-            fontWeight: '500',
-            transition: 'color 0.2s ease',
-            textDecoration: 'none'
+          className="menu-link"
+          onClick={(e) => {
+            handleLinkClick();
+            handleAuthenticatedNavigation(e, './#NTFCollectSection');
           }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-          onClick={(e) => handleAuthenticatedNavigation(e, './#NTFCollectSection')}
         >
           {AuxText}
         </a>
@@ -94,16 +107,8 @@ const Menu = () => {
       return (
         <a
           href={vHref}
-          style={{
-            color: 'var(--muted)',
-            cursor: 'pointer',
-            padding: '0.5rem 1rem',
-            fontWeight: '500',
-            transition: 'color 0.2s ease',
-            textDecoration: 'none'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+          className="menu-link"
+          onClick={handleLinkClick}
         >
           {AuxText}
         </a>
@@ -116,16 +121,8 @@ const Menu = () => {
           smooth={true} 
           offset={10} 
           duration={500} 
-          style={{
-            color: 'var(--muted)',
-            cursor: 'pointer',
-            padding: '0.5rem 1rem',
-            fontWeight: '500',
-            transition: 'color 0.2s ease',
-            textDecoration: 'none'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+          className="menu-link"
+          onClick={handleLinkClick}
         >
           {AuxText}
         </Link>
@@ -139,8 +136,8 @@ const Menu = () => {
           <a
             href="./profile"
             style={{
-              backgroundColor: 'var(--primary)',
-              color: 'white',
+              backgroundColor: 'white',
+              color: '#6666ff',
               padding: '0.5rem 1.5rem',
               borderRadius: '0.75rem',
               fontWeight: '600',
@@ -159,23 +156,14 @@ const Menu = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}>
-        {/* Desktop Menu - Siempre visible */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem' }}>
+        {/* Desktop Menu - Visible en desktop */}
+        <div className="desktop-menu">
             {renderUrl("VisionSection","Vision")}
             {renderUrl("DescriptionSection","Description")}
             {renderUrl("NTFCollectSection","Digital Collections")}
             <a
               href="#"
-              style={{
-                color: 'var(--muted)',
-                cursor: 'pointer',
-                padding: '0.5rem 1rem',
-                fontWeight: '500',
-                transition: 'color 0.2s ease',
-                textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+              className="menu-link"
               onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
             >
               WhiteList
@@ -188,47 +176,54 @@ const Menu = () => {
         {/* Mobile Menu Button - Solo visible en móvil */}
         <button
           onClick={toggle}
-          style={{
-            display: 'none',
-            border: 'none',
-            color: 'var(--text)',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '0.5rem'
-          }}
           className="mobile-menu-btn"
+          aria-label="Toggle menu"
+          style={{
+            display: 'block',
+            border: 'none',
+            color: 'white',
+            background: isOpen ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            borderRadius: '0.25rem',
+            transition: 'background-color 0.2s ease',
+            zIndex: 1001
+          }}
         >
-            <span className="ti-menu" style={{ fontSize: '1.25rem' }}></span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
         </button>
 
         {/* Mobile Menu - Drawer style */}
         {isOpen && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            backgroundColor: 'var(--surface)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '1rem',
-            zIndex: 1000
-          }} className="mobile-menu">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div 
+            className="mobile-menu"
+            style={{
+              position: 'fixed',
+              top: '80px',
+              left: '0',
+              right: '0',
+              backgroundColor: '#6666ff',
+              padding: '1rem',
+              zIndex: 1000,
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '0.5rem'
+            }}>
                 {renderUrl("VisionSection","Vision")}
                 {renderUrl("DescriptionSection","Description")}
                 {renderUrl("NTFCollectSection","Digital Collections")}
                 <a
                   href="#"
-                  style={{
-                    color: 'var(--muted)',
-                    cursor: 'pointer',
-                    padding: '0.5rem 1rem',
-                    fontWeight: '500',
-                    transition: 'color 0.2s ease',
-                    textDecoration: 'none'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                  className="menu-link"
                   onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
                 >
                   WhiteList
