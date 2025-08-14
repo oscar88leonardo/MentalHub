@@ -79,7 +79,7 @@
 
 /* Mobile menu button */
 .mobile-menu-btn {
-    display: none;
+    display: none !important; /* Forzamos que esté oculto por defecto */
     border: none;
     color: white;
     background: none;
@@ -102,16 +102,23 @@
 
 /* Mobile menu dropdown */
 .mobile-menu {
-    position: fixed;
-    top: 80px;
-    left: 0;
-    right: 0;
-    background-color: #6666ff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1rem;
-    z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: slideDown 0.2s ease-out;
+    position: fixed !important;
+    top: 80px !important;
+    left: 0 !important;
+    right: 0 !important;
+    background-color: #6666ff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 1rem !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    animation: slideDown 0.2s ease-out !important;
+    display: none; /* Por defecto oculto */
+}
+
+/* Cuando el menú móvil está abierto */
+.mobile-menu[style*="display: block"],
+.mobile-menu[style*="display: block !important"] {
+    display: block !important;
 }
 
 @keyframes slideDown {
@@ -186,6 +193,10 @@
     
     .mobile-menu-btn {
         display: block !important;
+    }
+    
+    .mobile-menu {
+        display: block !important; /* Forzamos que el menú móvil sea visible cuando isOpen es true */
     }
     
     .header-content {

@@ -32,8 +32,6 @@ export const metadata: Metadata = {
     ]
   },
   manifest: '/site.webmanifest',
-  themeColor: '#6666ff',
-  viewport: 'width=device-width, initial-scale=1',
   openGraph: {
     title: 'Innerverse - Mental Health Care',
     description: 'A digital community, aimed at mental health care through psychological consultation for anxiety, depression, breakups and grief.',
@@ -45,6 +43,12 @@ export const metadata: Metadata = {
     title: 'Innerverse - Mental Health Care',
     description: 'A digital community, aimed at mental health care through psychological consultation for anxiety, depression, breakups and grief.',
   }
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#6666ff',
 };
 
 export default function RootLayout({

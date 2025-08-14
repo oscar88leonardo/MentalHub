@@ -25,7 +25,9 @@ const Menu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => {
+    console.log('Toggle clicked! Current isOpen:', isOpen);
     setIsOpen(!isOpen);
+    console.log('New isOpen will be:', !isOpen);
   };
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
@@ -196,21 +198,27 @@ const Menu = () => {
                 <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
         </button>
+        
+        {/* Debug info */}
+        <div style={{ 
+          position: 'fixed', 
+          top: '100px', 
+          right: '10px', 
+          background: 'red', 
+          color: 'white', 
+          padding: '5px', 
+          fontSize: '12px',
+          zIndex: 9999
+        }}>
+          isOpen: {isOpen ? 'true' : 'false'}
+        </div>
 
         {/* Mobile Menu - Drawer style */}
         {isOpen && (
           <div 
             className="mobile-menu"
             style={{
-              position: 'fixed',
-              top: '80px',
-              left: '0',
-              right: '0',
-              backgroundColor: '#6666ff',
-              padding: '1rem',
-              zIndex: 1000,
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              display: 'block' // Solo controlamos display, el resto lo maneja CSS
             }}
           >
             <div style={{ 
@@ -252,10 +260,10 @@ const Menu = () => {
                 sponsorGas: true, 
               }}
               auth={{
-                isLoggedIn: async (address: string) => {
+                isLoggedIn: async () => {
                   return !!account;
                 },
-                doLogin: async (params) => {
+                doLogin: async () => {
                   console.log("logging in!");
                 },
                 getLoginPayload: async () => ({
