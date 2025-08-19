@@ -10,6 +10,16 @@
   --teal: #23D3B1;
   --radius: 18px;
   --shadow: 0 10px 30px rgba(124,92,252,0.22);
+  
+  /* Nueva paleta Innerverse - variables CSS globales */
+  --color-primary: #66cccc;
+  --color-primary-dark: #339999;
+  --color-primary-light: #99e6e6;
+  --color-secondary: #666699;
+  --color-secondary-dark: #4d4d73;
+  --color-secondary-light: #9999b3;
+  --color-base-dark: #000033;
+  --color-base-light: #ffffff;
 }
 
 /* Base theme application */

@@ -13,6 +13,7 @@ const config: Config = {
         'inter': ['Inter', 'sans-serif'],
       },
       colors: {
+        // Variables CSS existentes (mantener compatibilidad)
         'bg': 'var(--bg)',
         'bg-2': 'var(--bg-2)',
         'surface': 'var(--surface)',
@@ -21,6 +22,22 @@ const config: Config = {
         'primary': 'var(--primary)',
         'cyan': 'var(--cyan)',
         'teal': 'var(--teal)',
+        
+        // Nueva paleta Innerverse
+        primary: {
+          DEFAULT: '#66cccc', // aqua - CTA, acentos, botones primarios
+          dark: '#339999',
+          light: '#99e6e6',
+        },
+        secondary: {
+          DEFAULT: '#666699', // violeta grisáceo - fondos suaves, tarjetas
+          dark: '#4d4d73',
+          light: '#9999b3',
+        },
+        base: {
+          dark: '#000033', // navy - headings, navbar, footer
+          light: '#ffffff', // blanco - fondos, texto sobre dark
+        },
       },
       borderRadius: {
         'xl': 'var(--radius)',
