@@ -19,7 +19,6 @@ const config: Config = {
         'surface': 'var(--surface)',
         'text': 'var(--text)',
         'muted': 'var(--muted)',
-        'primary': 'var(--primary)',
         'cyan': 'var(--cyan)',
         'teal': 'var(--teal)',
         
