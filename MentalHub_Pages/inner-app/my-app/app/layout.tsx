@@ -11,6 +11,7 @@ import  Footer from "../innerComp/Footer";
 import  Header from "../innerComp/header/Header";
 import AppProvider from "../context/AppContext";  
 import { ThirdwebProvider } from "thirdweb/react";
+import { client } from "../innerComp/client";
 
 const inter = Inter({
   weight: ['400', '500', '600', '700', '800'],

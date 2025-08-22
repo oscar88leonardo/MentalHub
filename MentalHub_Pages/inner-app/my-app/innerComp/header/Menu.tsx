@@ -170,6 +170,13 @@ const Menu = () => {
             >
               WhiteList
             </a>
+            <a
+              href="/dao"
+              className="menu-link"
+              onClick={handleLinkClick}
+            >
+              DAO
+            </a>
             {renderUrl("PartnersSection","Partners")}
             {renderUrl("RoadMapSection","RoadMap")}
             {renderUrl("FAQsSection","FAQs")}
@@ -224,6 +231,13 @@ const Menu = () => {
                 >
                   WhiteList
                 </a>
+                <a
+                  href="/dao"
+                  className="menu-link"
+                  onClick={handleLinkClick}
+                >
+                  DAO
+                </a>
                 {renderUrl("PartnersSection","Partners")}
                 {renderUrl("RoadMapSection","RoadMap")}
                 {renderUrl("FAQsSection","FAQs")}
@@ -243,10 +257,10 @@ const Menu = () => {
               client={clientThridweb}
               wallets={walletsThirdweb}
               connectModal={{ size: "compact" }}
-              accountAbstraction= {{
+              /*accountAbstraction= {{
                 chain: myChain,
                 sponsorGas: true, 
-              }}
+              }}*/
               auth={{
                 isLoggedIn: async () => {
                   return !!account;

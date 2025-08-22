@@ -3,7 +3,7 @@
   --bg: #0B1220;
   --bg-2: #0E1528;
   --surface: #121A2B;
-  --text: #E6F0FF;
+  --text: #000000;
   --muted: #9FB2C8;
   --primary: #7C5CFC;
   --cyan: #3ADAD9;
@@ -53,6 +53,130 @@ html, body {
 body.light, .light-theme {
   background: var(--bg) !important;
   color: var(--text) !important;
+}
+
+/* Forms – mejorar legibilidad en tema oscuro */
+input,
+select,
+textarea,
+.form-control {
+  background-color: #ffffff !important;
+  color: #0B1220 !important; /* texto oscuro sobre fondo claro */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* gris medio, alta legibilidad */
+  opacity: 1 !important;
+}
+
+label,
+.form-label {
+  color: var(--text) !important; /* mantener contraste alto para labels */
+}
+
+select option { color: #0B1220; }
+
+/* Estados disabled/read-only con mejor contraste */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #eef2f7 !important;
+  color: #4b5563 !important;
+}
+
+/* Enfoque accesible en campos de formulario */
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(35, 211, 177, 0.65) !important; /* --teal */
+}
+
+/* Overrides de tipografía en superficies claras (cards/modals) */
+.card,
+.modal-content,
+.dropdown-menu {
+  background-color: #ffffff; /* asegurar fondo claro */
+  color: #0B1220 !important; /* texto oscuro */
+}
+
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6,
+.modal-content h1, .modal-content h2, .modal-content h3, .modal-content h4, .modal-content h5, .modal-content h6,
+.card label, .modal-content label,
+.card p, .modal-content p,
+.card span, .modal-content span {
+  color: #0B1220 !important;
+  opacity: 1 !important;
+}
+
+.card .text-muted,
+.modal-content .text-muted,
+.card .form-text,
+.modal-content .form-text {
+  color: #4b5563 !important; /* gris medio visible */
+  opacity: 1 !important;
+}
+
+/* ============== React Big Calendar (legibilidad) ============== */
+.rbc-calendar,
+.rbc-calendar * {
+  color: #0B1220 !important;
+}
+
+.rbc-toolbar button {
+  color: #0B1220 !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important; /* gris claro */
+}
+.rbc-toolbar button:hover {
+  background: #f3f4f6 !important; /* gris muy claro */
+}
+
+.rbc-time-view,
+.rbc-time-content,
+.rbc-time-header,
+.rbc-time-gutter,
+.rbc-header,
+.rbc-label {
+  color: #0B1220 !important;
+}
+
+.rbc-event, .rbc-day-slot .rbc-event, .rbc-background-event {
+  color: #0B1220 !important;
+}
+
+/* Eventos (reservas) visibles y limpios */
+.rbc-event, .rbc-day-slot .rbc-event {
+  background: #607df9 !important;
+  border: 1px solid #9ab6ff !important; /* azul suave */
+}
+
+/* Disponibilidad (background events) muy suave para no fatigar */
+.rbc-background-event {
+  background: rgba(124, 91, 255, 0.151) !important; /* violeta muy tenue */
+  border: 1px dashed rgba(124, 92, 252, 0.30) !important;
+}
+
+/* Forzar textos en cualquier contenedor blanco común */
+.bg-white, .white, .surface-white {
+  color: #0B1220 !important;
+}
+
+/* Tipografía global de ayuda y muted */
+.text-muted, .form-text, small {
+  color: #475569 !important; /* slate-600 */
+  opacity: 1 !important;
+}
+
+/* Forzar contraste alto en modales y formularios */
+.modal-header, .modal-body, .modal-footer {
+  color: #0B1220 !important;
+}
+.modal-body h1, .modal-body h2, .modal-body h3, .modal-body h4, .modal-body h5, .modal-body h6,
+.modal-body label, .modal-body span, .modal-body p {
+  color: #0B1220 !important;
 }
 
 /* Hero background */

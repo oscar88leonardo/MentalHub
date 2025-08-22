@@ -4,7 +4,10 @@
  // METIS  SEPOLIA TESTNET
  //export const NFT_CONTRACT_ADDRESS = "0x217d9EdC4e5701aB92a95d742Bd6597BeF531f38"; 
  //export const NFT_CONTRACT_ADDRESS = "0xcAf1501488f3F985d1bA6420a48661A881f01061";
- export const NFT_CONTRACT_ADDRESS = "0xcc1515239C446f6f1a3D49fEb8953f68c4F84cDA";                                        
+ //export const NFT_CONTRACT_ADDRESS = "0xcc1515239C446f6f1a3D49fEb8953f68c4F84cDA";                                        
+
+//NFT Address in Shibuya
+ export const NFT_CONTRACT_ADDRESS = "0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5";                                        
 
 // POLYGON MUMBAI TESTNET
 // export const NFT_CONTRACT_ADDRESS ="0xd97533D7a552e2c793cdC477C0DcA64e76c76E3b"  //MUMBAI TESTNET address IPFS

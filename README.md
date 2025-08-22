@@ -2,6 +2,39 @@
  
 Demo web App: https://mental-hub-my-app-p3qk.vercel.app/
 
+## DAO MVP (Astar Shibuya)
+
+- Cómo correr
+  - cp MentalHub_Pages/hardhat-mental/.env.example MentalHub_Pages/hardhat-mental/.env
+  - Editar .env y setear PRIVATE_KEY, OPTIONAL: GOVERNOR_ADDRESS, PROPOSAL_ID
+  - cd MentalHub_Pages/hardhat-mental && npm i
+  - npx hardhat compile
+  - npx hardhat run scripts/deploy.ts --network shibuya
+  - (anotar direcciones del log)
+  - export GOVERNOR_ADDRESS=0x...; npx hardhat run scripts/propose.ts --network shibuya
+  - cd ../inner-app/my-app && npm i && echo "NEXT_PUBLIC_THIRDWEB_CLIENTID=..." > .env.local
+  - echo "NEXT_PUBLIC_GOV_ADDRESS=0x..." >> .env.local
+  - npm run dev
+
+- Direcciones de testnet (pegar luego del deploy)
+  - Members=0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
+  - Governor=0x80702B337f333825f1A776945F48F87905378e9B
+
+- Faucet SBY
+  - Astar Portal / Triangle
+
+- Explorer
+  - Blockscout Shibuya
+
+- Verificación rápida post-deploy
+  - npx hardhat compile
+  - npx hardhat run scripts/deploy.ts --network shibuya
+  - cd ../inner-app/my-app && npm run dev
+  - export GOVERNOR_ADDRESS=0x...; cd ../../hardhat-mental && npx hardhat run scripts/propose.ts --network shibuya
+  - Refrescar UI, votar "For"
+  - Verificar proposal/tx en Blockscout
+  - Enviar SBY al address del Governor y comprobar saldo en el widget
+
 Whitelist Contract Address [ETH Goerli Testnet]: 0xd9BFb19Be9e3568b766D4987A546a835E2589E48
 NFT Col Members Contract Address [ETH Goerli Testnet]: 0x3AFc87192488Ee62e9F4583D8448948669320193
 

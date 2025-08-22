@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import { ERC721Votes } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Votes.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import "./IWhitelist.sol";
 
-contract MembersAirdrop is ERC721Enumerable, Ownable {
+contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownable {
     using Strings for uint256;    
     /**
      * @dev _baseTokenURI for computing {tokenURI}. If set, the resulting URI for each
@@ -79,11 +82,21 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
      */
     constructor(string memory baseURI, string memory gateURI, address whitelistContract)
         ERC721("Mental Hub Members", "MHM")
+        EIP712("Mental Hub Members", "1")
+        Ownable(msg.sender)
     {
         _baseTokenURI = baseURI;
         _gatewayTokenURI = gateURI;
         whitelist = IWhitelist(whitelistContract);
         isSponsoredMint = true; // Por defecto, el mint es sponsoreado
+    }
+
+    // Mint administrativo para demo/operaciones (no afecta nombres públicos existentes)
+    function ownerMint(address to, uint256 _numSessions) public onlyOwner {
+        require(tokenIds < maxTokenIds, "Exceed maximum MentalHub Members supply");
+        tokenIds += 1;
+        _safeMint(to, tokenIds);
+        initSessions(_numSessions, tokenIds);
     }
 
     function toggleSponsoredMint() public onlyOwner {
@@ -222,7 +235,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     function getAvailableSessions(uint256 tokenId) public view returns (uint256) {
         uint256 sessionIndex;
         uint256 numSession=0;
-        require(_exists(tokenId), "Token ID does not exist");
+        require(_ownerOf(tokenId) != address(0), "Token ID does not exist");
         for (sessionIndex=0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
              if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(""))){
                 numSession = numSession + 1;
@@ -298,7 +311,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     * This function returns the URI from where we can extract the metadata for a given tokenId
     */
      function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        require(_ownerOf(tokenId) != address(0), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _baseURI();
         // Here it checks if the length of the baseURI is greater than 0, if it is return the baseURI and attach
@@ -309,7 +322,7 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
     }
 
     function gatewayURI(uint256 tokenId) public view virtual returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        require(_ownerOf(tokenId) != address(0), "ERC721Metadata: URI query for nonexistent token");
 
         string memory gateURI = _gatewayURI();
         // Here it checks if the length of the baseURI is greater than 0, if it is return the baseURI and attach
@@ -342,4 +355,29 @@ contract MembersAirdrop is ERC721Enumerable, Ownable {
 
     // Fallback function is called when msg.data is not empty
     fallback() external payable {}
+    
+    // Overrides requeridos por herencia múltiple (ERC721, ERC721Enumerable, ERC721Votes)
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override(ERC721, ERC721Enumerable, ERC721Votes)
+        returns (address)
+    {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(address account, uint128 value)
+        internal
+        override(ERC721, ERC721Enumerable, ERC721Votes)
+    {
+        super._increaseBalance(account, value);
+    }
 }
