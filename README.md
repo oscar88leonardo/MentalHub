@@ -1,6 +1,6 @@
 ﻿# MentalHub
  
-Demo web App: https://mental-hub-my-app-p3qk.vercel.app/
+Demo web App: https://mental-hub-my-app-p3qk-git-frontendv0-leos-projects-1ca3b281.vercel.app/dao
 
 ## DAO MVP (Astar Shibuya)
 
@@ -16,9 +16,12 @@ Demo web App: https://mental-hub-my-app-p3qk.vercel.app/
   - echo "NEXT_PUBLIC_GOV_ADDRESS=0x..." >> .env.local
   - npm run dev
 
-- Direcciones de testnet (pegar luego del deploy)
-  - Members=0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
-  - Governor=0x80702B337f333825f1A776945F48F87905378e9B
+
+Deploy en Shibuya:
+Whitelist (Shibuya) ya desplegada: 0x7452e1D4353Cb41DDbb4De4F84F0D129247d98d9
+Deploy en Shibuya:
+Members=0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
+Governor=0x80702B337f333825f1A776945F48F87905378e9B
 
 - Faucet SBY
   - Astar Portal / Triangle
