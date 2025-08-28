@@ -257,10 +257,10 @@ const Menu = () => {
               client={clientThridweb}
               wallets={walletsThirdweb}
               connectModal={{ size: "compact" }}
-              /*accountAbstraction= {{
+              accountAbstraction= {{
                 chain: myChain,
                 sponsorGas: true, 
-              }}*/
+              }}
               auth={{
                 isLoggedIn: async () => {
                   return !!account;
