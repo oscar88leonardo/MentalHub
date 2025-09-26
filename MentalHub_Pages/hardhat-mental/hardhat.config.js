@@ -5,6 +5,11 @@ require("dotenv").config({ path: ".env" });
 const METISNODE_HTTP_URL = process.env.METISNODE_HTTP_URL;
 const QUICKNODE_HTTP_URL = process.env.QUICKNODE_HTTP_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const sanitizePk = (k) => {
+  if (!k) return k;
+  const trimmed = k.trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+  return trimmed.startsWith("0x") ? trimmed : ("0x" + trimmed);
+};
 
 module.exports = {
   solidity: {
@@ -32,6 +37,11 @@ module.exports = {
       url: "https://evm.shibuya.astar.network",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
       chainId: 81
+    },
+    lisk_sepolia: {
+      url: process.env.LISK_SEPOLIA_RPC || "https://4202.rpc.thirdweb.com",
+      accounts: PRIVATE_KEY ? [sanitizePk(PRIVATE_KEY)] : [],
+      chainId: 4202
     }
   },
   etherscan: {

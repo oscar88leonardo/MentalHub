@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { TransactionButton } from "thirdweb/react";
-import { getContract, prepareContractCall, getContractEvents, prepareEvent, readContract } from "thirdweb";
+import { getContract, prepareContractCall, getContractEvents, prepareEvent, readContract, defineChain } from "thirdweb";
 import { client } from "../client";
-import { myChain } from "../myChain";
 import { ethers, formatEther, parseEther, isAddress, id } from "ethers";
 
 const governorAddress = process.env.NEXT_PUBLIC_GOV_ADDRESS as string;
@@ -14,7 +13,8 @@ const proposalCreated = prepareEvent({
 });
 
 export default function DaoWidget() {
-  const governor = useMemo(() => getContract({ client, chain: myChain, address: governorAddress }), []);
+  const shibuyaChain = defineChain({ id: 81, rpc: "https://evm.shibuya.astar.network" });
+  const governor = useMemo(() => getContract({ client, chain: shibuyaChain, address: governorAddress }), []);
   const [proposals, setProposals] = useState<Array<{
     id: string;
     description: string;

@@ -9,9 +9,16 @@ async function main() {
   // Preparar overrides EIP-1559 para evitar mempool "already known" y reemplazos
   const fee = await ethers.provider.getFeeData();
   const bump = ethers.utils.parseUnits('10', 'gwei');
-  const maxPriorityFeePerGas = fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas.add(bump) : bump;
-  const maxFeePerGas = fee.maxFeePerGas ? fee.maxFeePerGas.add(bump.mul(2)) : bump.mul(2);
-  const overrides = { maxPriorityFeePerGas, maxFeePerGas } as const;
+  const gasLimit = ethers.BigNumber.from(8000000);
+  let overrides: any = { gasLimit };
+  if (fee.maxFeePerGas && fee.maxPriorityFeePerGas) {
+    const maxPriorityFeePerGas = fee.maxPriorityFeePerGas.add(bump);
+    const maxFeePerGas = fee.maxFeePerGas.add(bump.mul(2));
+    overrides = { ...overrides, maxPriorityFeePerGas, maxFeePerGas };
+  } else {
+    const gasPrice = (await ethers.provider.getGasPrice()).add(bump);
+    overrides = { ...overrides, gasPrice };
+  }
 
   // Desplegar MembersAirdrop si es necesario
   const MembersAirdrop = await ethers.getContractFactory("MembersAirdrop");

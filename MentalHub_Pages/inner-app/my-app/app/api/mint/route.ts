@@ -12,8 +12,8 @@ import { createThirdwebClient,
 export async function POST(req: Request) {
   try {
     const myChain = defineChain({
-      id: 59902,
-      rpc: "https://59902.rpc.thirdweb.com/" + process.env.THIRDWEB_CLIENTID || "",
+      id: 4202,
+      rpc: "https://4202.rpc.thirdweb.com/" + (process.env.THIRDWEB_CLIENT_ID || process.env.THIRDWEB_CLIENTID || ""),
     });
     console.log("THIRDWEB_SECRET_KEY");
     console.log(process.env.THIRDWEB_SECRET_KEY);

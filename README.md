@@ -1,8 +1,22 @@
-﻿# MentalHub
+﻿# Innerverse
  
-Demo web App: https://mental-hub-my-app-p3qk-git-frontendv0-leos-projects-1ca3b281.vercel.app/dao
+## Descripción
+Innerverse es una plataforma web3 orientada al bienestar de la salud mental que combina NFTs de membresía con utilidades on-chain (sesiones, control de acceso) y gobernanza. El MVP incluye un contrato de whitelist, una colección ERC-721 con soporte de sesiones y un módulo de DAO.
 
-## DAO MVP (Astar Shibuya)
+Demo web App: 
+https://innerverse.care
+https://mental-hub-my-app-p3qk-git-frontendv0-leos-projects-1ca3b281.vercel.app/dao
+
+## Integración con Lisk (Sepolia Testnet)
+- Red: Lisk Sepolia (chainId 4202)
+- RPC: `https://4202.rpc.thirdweb.com` (ver [thirdweb Lisk Sepolia Testnet](https://thirdweb.com/lisk-sepolia-testnet))
+- Explorer: [liskscout](https://sepolia-blockscout.lisk.com)
+
+Contratos desplegados en Lisk Sepolia:
+- Whitelist: `0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88`
+- MembersAirdrop: `0xE49AcfF5b7e0C0cc8252F9420a553c61BE02eAf3`
+
+## DAO MVP (Astar Shibuya) - Crypto Latin Fest Hackathon
 
 - Cómo correr
   - cp MentalHub_Pages/hardhat-mental/.env.example MentalHub_Pages/hardhat-mental/.env

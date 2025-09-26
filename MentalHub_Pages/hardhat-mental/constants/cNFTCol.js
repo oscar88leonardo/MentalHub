@@ -1,6 +1,8 @@
-// Address of the Whitelist Contract on Astar Shibuya
-const WHITELIST_CONTRACT_ADDRESS = "0x7452e1D4353Cb41DDbb4De4F84F0D129247d98d9";
-// POLYGON MUMBAI TESTNET
+// Address of the Whitelist Contract on Lisk Sepolia
+const WHITELIST_CONTRACT_ADDRESS = "0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88";
+// Astar Shibuya (histórico)
+// const WHITELIST_CONTRACT_ADDRESS = "0x7452e1D4353Cb41DDbb4De4F84F0D129247d98d9";
+// Polygon Mumbai (histórico)
 // const WHITELIST_CONTRACT_ADDRESS = "0xB73e449442055e1310E467bb657469e402aBd904";
 
 // URL to extract Metadata  NFT on localhost

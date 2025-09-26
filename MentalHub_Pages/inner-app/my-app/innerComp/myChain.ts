@@ -6,6 +6,6 @@ import { defineChain } from "thirdweb";
   });*/
 
   export const myChain = defineChain({
-    id: 59902,
-    rpc: "https://59902.rpc.thirdweb.com/" + process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "",
+    id: 4202,
+    rpc: "https://4202.rpc.thirdweb.com/" + (process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || ""),
   });
