@@ -1,7 +1,7 @@
 ﻿# Innerverse
  
 ## Descripción
-Innerverse es una plataforma web3 orientada al bienestar de la salud mental que combina NFTs de membresía con utilidades on-chain (sesiones, control de acceso) y gobernanza. El MVP incluye un contrato de whitelist, una colección ERC-721 con soporte de sesiones y un módulo de DAO.
+Innerverse es una plataforma web3 orientada al bienestar de la salud mental que combina NFTs de membresía con utilidades on-chain (sesiones, control de acceso) y gobernanza. El MVP incluye contrato de whitelist & Members con soporte de sesiones, un módulo de DAO para desarrollo de propuestas y administración de tesoro comunitario, modulo de perfil, sistema de agendamiento y procesamiento de videoconferencias decenteralizadas.
 
 #Pitch Desk
 https://docs.google.com/presentation/d/1RpmnLQQrG51J3xjlDq5KiF6PtSZ4vzvwQtTEYcBdork/edit?slide=id.ge38dc7bb6a_0_151#slide=id.ge38dc7bb6a_0_151
@@ -12,7 +12,6 @@ https://drive.google.com/drive/folders/1ehLBarc9rHOkPQW02ssuCmk0KqXujVi0
 #Demo web App: 
 https://innerverse.care
 https://mental-hub-my-app-p3qk-git-frontendv0-leos-projects-1ca3b281.vercel.app/dao
-
 
 #########################################
 Decentralized Database -Ceramic node config@Google cloud 
