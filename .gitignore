@@ -7,3 +7,19 @@ MentalHub_Pages/inner-app/compose_deploy/admin_seedBk.txt
 MentalHub_Pages/inner-app/compose_deploy/admin_seedBk1.txt
 .gitignore
 .vscode/
+
+# my-dapp (Next.js)
+MentalHub_Pages/inner-app/my-dapp/node_modules/
+MentalHub_Pages/inner-app/my-dapp/.next/
+MentalHub_Pages/inner-app/my-dapp/out/
+MentalHub_Pages/inner-app/my-dapp/build/
+MentalHub_Pages/inner-app/my-dapp/.vercel
+MentalHub_Pages/inner-app/my-dapp/.env*.local
+MentalHub_Pages/inner-app/my-dapp/next-env.d.ts
+MentalHub_Pages/inner-app/my-dapp/.turbo
+MentalHub_Pages/inner-app/my-dapp/.swc
+MentalHub_Pages/inner-app/my-dapp/coverage
+MentalHub_Pages/inner-app/my-dapp/npm-debug.log*
+MentalHub_Pages/inner-app/my-dapp/yarn-debug.log*
+MentalHub_Pages/inner-app/my-dapp/yarn-error.log*
+MentalHub_Pages/inner-app/my-dapp/package-lock.json
