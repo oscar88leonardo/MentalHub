@@ -93,6 +93,7 @@ interface CeramicContextType {
   isConnected: boolean;
   isLoading: boolean;
   error: string | null;
+  hasPersistedSession: boolean;
   
   // Clients
   ceramic: CeramicClient | null;
@@ -170,10 +171,21 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
           walletId: activeWallet?.id,
           timestamp: Date.now()
         }));
+        setHasPersistedSession(true);
         console.log("💾 Wallet state persisted to sessionStorage");
       }
     }
   }, [activeWallet, account, adminWallet, adminAccount, isThirdwebReady]);
+
+  // Detect if we already have a persisted wallet session
+  useEffect(() => {
+    try {
+      const persisted = sessionStorage.getItem("thirdweb:account");
+      if (persisted) {
+        setHasPersistedSession(true);
+      }
+    } catch {}
+  }, []);
 
   // Create provider for Ceramic authentication (like my-app)
   const providerThirdweb = adminWallet
@@ -574,6 +586,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     isConnected,
     isLoading,
     error,
+    hasPersistedSession,
     ceramic,
     composeClient,
     profile,
