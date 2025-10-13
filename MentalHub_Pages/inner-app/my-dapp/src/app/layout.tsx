@@ -4,7 +4,6 @@ import "./globals.css";
 import "../styles/innerverse-theme.css";
 import { ThirdwebProvider } from "thirdweb/react";
 import { CeramicProvider } from "@/context/CeramicContext";
-import { client } from "@/lib/client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThirdwebProvider client={client}>
+        <ThirdwebProvider>
           <CeramicProvider>
             {children}
           </CeramicProvider>

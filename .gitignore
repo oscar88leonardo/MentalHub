@@ -1,13 +1,50 @@
-MentalHub_Pages/.vscode/settings.json
-MentalHub_Pages/inner-app/my-app/package-lock.json
-MentalHub_Pages/inner-app/my-app/node_modules/
-MentalHub_Pages/inner-app/my-app/.next/
-MentalHub_Pages/inner-app/node_modules/
+### Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+### Node / JS (monorepo)
+**/node_modules/
+**/.pnp
+**/.pnp.js
+**/.yarn/*
+**/coverage/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+### Next.js
+**/.next/
+**/out/
+
+### Build artifacts
+**/build/
+**/dist/
+
+### TypeScript
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+### Env files
+**/.env*
+MentalHub_Pages/inner-app/my-app/.env.local
+
+### Vercel
+**/.vercel
+
+### Hardhat
+**/artifacts/
+**/cache/
+**/typechain/
+**/typechain-types/
+**/coverage
+**/coverage.json
+
+### Repo-specific secrets
 MentalHub_Pages/inner-app/compose_deploy/admin_seed.txt
 MentalHub_Pages/inner-app/compose_deploy/admin_seedBk.txt
 MentalHub_Pages/inner-app/compose_deploy/admin_seedBk1.txt
-.gitignore
-.vscode/
-MentalHub_Pages/inner-app/my-app/next-env.d.ts
-MentalHub_Pages/inner-app/my-app/.env.local
-node_modules/
+
+### Legacy exceptions kept
+MentalHub_Pages/inner-app/my-app/package-lock.json
