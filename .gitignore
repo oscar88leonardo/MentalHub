@@ -10,3 +10,4 @@ MentalHub_Pages/inner-app/compose_deploy/admin_seedBk1.txt
 .vscode/
 MentalHub_Pages/inner-app/my-app/next-env.d.ts
 MentalHub_Pages/inner-app/my-app/.env.local
+node_modules/
