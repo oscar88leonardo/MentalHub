@@ -76,7 +76,7 @@ export default function CeramicDebugPage() {
         console.log("[CD] switching chain", chainHex);
         await provider.request?.({ method: "wallet_switchEthereumChain", params: [{ chainId: chainHex }] });
       } catch (e) {
-        console.warn("[CD] wallet_switchEthereumChain failed; using wallet.switchChain");
+        console.warn("[CD] wallet_switchEthereumChain failed; using wallet.switchChain",e);
         await selectedWallet?.switchChain?.(myChain);
       }
     }
