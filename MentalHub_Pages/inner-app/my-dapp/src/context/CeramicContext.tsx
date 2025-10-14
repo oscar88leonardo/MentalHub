@@ -566,12 +566,74 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       
       if (result?.data?.viewer?.innerverProfile) {
         setProfile(result.data.viewer.innerverProfile);
-        console.log("✅ Profile loaded successfully:", result.data.viewer.innerverProfile);
-      } else {
-        console.log("❌ No profile found for user");
-        console.log("Available data:", result?.data);
-        setProfile(null);
+        console.log("✅ Profile loaded successfully (viewer):", result.data.viewer.innerverProfile);
+        return;
       }
+
+      // Fallback sin firma: resolver por DID de la wallet (did:pkh)
+      const walletAddress = (adminAccount?.address || account?.address || "").toLowerCase();
+      if (!walletAddress) {
+        console.log("⚠️ No wallet address available to resolve profile by DID (keeping existing profile state)");
+        return;
+      }
+
+      const did = `did:pkh:eip155:${myChain.id}:${walletAddress}`;
+      console.log("🔎 Fallback by DID (node->CeramicAccount)", did);
+
+      // Intento A: node(id: DID) -> CeramicAccount.innerverProfile
+      const byAccountQuery = `
+        query($did: ID!) {
+          node(id: $did) {
+            ... on CeramicAccount {
+              id
+              innerverProfile {
+                id
+                name
+                displayName
+                rol
+                pfp
+              }
+            }
+          }
+        }
+      `;
+      const byAccountRes: any = await composeClient.executeQuery(byAccountQuery, { did });
+      console.log("byAccountRes:", JSON.stringify(byAccountRes, null, 2));
+      const accProfile = byAccountRes?.data?.node?.innerverProfile as InnerverProfile | undefined;
+      if (accProfile) {
+        setProfile(accProfile);
+        console.log("✅ Profile loaded successfully (by DID node)", accProfile);
+        return;
+      }
+
+      // Intento B: índice del modelo por controller
+      console.log("🔎 Fallback by model index (controller)");
+      const byIndexQuery = `
+        query($did: ID!) {
+          innerverProfileIndex(filters: { where: { controller: { equalTo: $did } } }, first: 1) {
+            edges {
+              node {
+                id
+                name
+                displayName
+                rol
+                pfp
+              }
+            }
+          }
+        }
+      `;
+      const byIndexRes: any = await composeClient.executeQuery(byIndexQuery, { did });
+      console.log("byIndexRes:", JSON.stringify(byIndexRes, null, 2));
+      const idxNode = byIndexRes?.data?.innerverProfileIndex?.edges?.[0]?.node as InnerverProfile | undefined;
+      if (idxNode) {
+        setProfile(idxNode);
+        console.log("✅ Profile loaded successfully (by index)", idxNode);
+        return;
+      }
+
+      console.log("❌ No profile found by viewer nor DID/index");
+      setProfile(null);
     } catch (err) {
       console.error("Error loading profile:", err);
       setError(err instanceof Error ? err.message : "Failed to load profile");
@@ -579,8 +641,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   };
 
   const executeQuery = async (query: string) => {
-    if (!composeClient || !isConnected) {
-      throw new Error("ComposeDB not connected");
+    if (!composeClient) {
+      throw new Error("ComposeDB not initialized");
     }
     return await composeClient.executeQuery(query);
   };

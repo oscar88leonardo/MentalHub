@@ -1,10 +1,11 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
 import Header from "./Header";
 import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
+import { resolveIpfsUrl } from "@/lib/ipfs";
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -14,16 +15,58 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const { 
     profile, 
     isConnected, 
-    isLoading, 
     error, 
     refreshProfile, 
-    connect,
     activeWallet,
     account,
     adminWallet,
     adminAccount
   } = useCeramic();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isBootLoading, setIsBootLoading] = useState(true);
+  const initialLoadDoneRef = useRef(false);
+  const lastWalletAddressRef = useRef<string | null>(null);
+
+  // Carga inicial: sólo una vez con spinner
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (initialLoadDoneRef.current) return;
+      setIsBootLoading(true);
+      try {
+        await refreshProfile();
+      } catch (e) {
+        console.warn("Auto refreshProfile failed:", e);
+      } finally {
+        if (!cancelled) {
+          initialLoadDoneRef.current = true;
+          setIsBootLoading(false);
+        }
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Relectura al cambiar wallet (sin tocar el spinner inicial)
+  useEffect(() => {
+    const currentAddr = (adminAccount?.address || account?.address || "").toLowerCase();
+    if (!currentAddr) return;
+    if (lastWalletAddressRef.current === currentAddr) return;
+    lastWalletAddressRef.current = currentAddr;
+
+    (async () => {
+      try {
+        setIsRefreshing(true);
+        await refreshProfile();
+      } catch (e) {
+        console.warn("Refresh on wallet change failed:", e);
+      } finally {
+        setIsRefreshing(false);
+      }
+    })();
+  }, [account?.address, adminAccount?.address, refreshProfile]);
 
   // NO auto-conectar - Solo mostrar información del wallet
   useEffect(() => {
@@ -48,14 +91,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     }
   };
 
-  const handleConnect = async () => {
-    try {
-      await connect();
-    } catch (error) {
-      console.error("Error connecting:", error);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -64,7 +99,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     });
   };
 
-  if (isLoading) {
+  if (isBootLoading) {
     return (
       <div 
         className="flex-1 min-h-screen flex items-center justify-center"
@@ -84,7 +119,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         >
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-lg font-medium" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-            Conectando con Ceramic...
+            Cargando perfil...
           </p>
         </div>
       </div>
@@ -190,22 +225,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         {/* Botones de acción */}
         <div className="mb-6 flex justify-between items-center">
           <div className="flex space-x-3">
-            {!isConnected && (
-              <button
-                onClick={handleConnect}
-                disabled={isLoading}
-                className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-lg"
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
-              >
-                {isLoading && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                )}
-                <span className="font-medium">{isLoading ? 'Conectando...' : 'Conectar a Ceramic'}</span>
-              </button>
-            )}
             <button
               onClick={handleRefresh}
-              disabled={isRefreshing || !isConnected}
+              disabled={isRefreshing}
               className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-lg"
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
             >
@@ -215,11 +237,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
               <span className="font-medium">{isRefreshing ? 'Actualizando...' : 'Actualizar Perfil'}</span>
             </button>
           </div>
-          
-          {/* Botón de editar perfil */}
-          {isConnected && (
-            <EditProfileButton isNewUser={!profile} />
-          )}
+
+          {/* Botón de editar perfil (autenticación solo al guardar) */}
+          <EditProfileButton isNewUser={!profile} />
         </div>
 
         {profile ? (
@@ -235,15 +255,23 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
               }}
             >
               <div className="flex items-center space-x-6">
-                <div 
-                  className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-                </div>
+                {profile.pfp ? (
+                  <img
+                    src={resolveIpfsUrl(profile.pfp)}
+                    alt={profile.name || "pfp"}
+                    className="w-24 h-24 rounded-full object-cover border border-white/40"
+                  />
+                ) : (
+                  <div 
+                    className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
                 <div className="flex-1">
                   <h2 className="text-3xl font-bold text-white mb-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                     {profile.name || 'Usuario'}
@@ -378,13 +406,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
               <p className="text-white/90 text-sm mb-6">
                 No se encontró un perfil de Innerverse asociado a tu wallet. Puedes crear uno o verificar tu conexión.
               </p>
-              <button
-                onClick={handleConnect}
-                className="px-6 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-medium shadow-lg"
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
-              >
-                Intentar Conectar
-              </button>
+              <EditProfileButton isNewUser />
             </div>
           </div>
         )}

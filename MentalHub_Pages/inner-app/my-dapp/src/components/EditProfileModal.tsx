@@ -317,15 +317,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   {/* Preview de imagen actual */}
                   {pfp && (
                     <div className="flex items-center space-x-4">
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)'
-                        }}
-                      >
-                        {pfp.startsWith('http') ? '🖼️' : name.charAt(0).toUpperCase()}
-                      </div>
+                      <img
+                        src={pfp.startsWith('http') ? pfp : `/api/ipfs/${pfp}`}
+                        alt="pfp preview"
+                        className="w-16 h-16 rounded-full object-cover border border-white/30"
+                      />
                       <div>
                         <p className="text-white/80 text-sm">Imagen actual</p>
                         {pfp.startsWith('http') && (

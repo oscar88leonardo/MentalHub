@@ -13,7 +13,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title, subtitle, onLogout }) => {
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
-  const { isConnected: isCeramicConnected, isLoading } = useCeramic();
+  const { isConnected: isCeramicConnected, isLoading, composeClient } = useCeramic();
+  const isReadOnly = !isCeramicConnected && !!composeClient; // clientes listos sin DID => modo lectura
 
   return (
     <div 
@@ -62,8 +63,13 @@ const Header: React.FC<HeaderProps> = ({ title, subtitle, onLogout }) => {
                 className="text-sm text-white font-medium"
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
               >
-                {isCeramicConnected ? 'Ceramic Conectado ✅' : 
-                 isLoading ? 'Conectando...' : 'Ceramic Desconectado ❌'}
+                {isCeramicConnected
+                  ? 'Ceramic Conectado ✅'
+                  : isLoading
+                    ? 'Conectando...'
+                    : isReadOnly
+                      ? 'Ceramic: Modo lectura (desconectado)'
+                      : 'Ceramic Desconectado ❌'}
               </span>
             </div>
             

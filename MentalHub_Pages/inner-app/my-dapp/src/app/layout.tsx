@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "../styles/innerverse-theme.css";
-import { ThirdwebProvider } from "thirdweb/react";
+import Providers from "./Providers";
 import { CeramicProvider } from "@/context/CeramicContext";
 
 const geistSans = Geist({
@@ -30,11 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThirdwebProvider>
+        <Providers>
           <CeramicProvider>
             {children}
           </CeramicProvider>
-        </ThirdwebProvider>
+        </Providers>
       </body>
     </html>
   );
