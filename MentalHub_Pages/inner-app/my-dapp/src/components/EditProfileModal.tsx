@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useCeramic } from "@/context/CeramicContext";
+import Image from "next/image";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -317,9 +318,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   {/* Preview de imagen actual */}
                   {pfp && (
                     <div className="flex items-center space-x-4">
-                      <img
+                      <Image
                         src={pfp.startsWith('http') ? pfp : `/api/ipfs/${pfp}`}
                         alt="pfp preview"
+                        width={64}
+                        height={64}
                         className="w-16 h-16 rounded-full object-cover border border-white/30"
                       />
                       <div>

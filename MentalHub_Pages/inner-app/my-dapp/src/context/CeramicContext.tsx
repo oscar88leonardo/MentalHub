@@ -288,7 +288,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
               params: [{ chainId: targetChainIdHex }],
             });
           } catch (switchErr) {
-            console.warn("wallet_switchEthereumChain failed, trying adminWallet.switchChain...");
+            console.warn("wallet_switchEthereumChain failed, trying adminWallet.switchChain...",switchErr);
             try {
               await adminWallet?.switchChain?.(myChain);
             } catch (e) {
@@ -478,7 +478,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       const simpleResult = await composeClient.executeQuery(simpleQuery);
       console.log("Simple query result:", JSON.stringify(simpleResult, null, 2));
 
-      // Si funciona, probemos con la consulta completa
+      /* Si funciona, probemos con la consulta completa
       const query = `
         query {
           viewer {
@@ -551,7 +551,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
             }
           }
         }
-      `;
+      `;*/
 
       // Usar el resultado simple primero
       const result = simpleResult as ProfileQueryResult;

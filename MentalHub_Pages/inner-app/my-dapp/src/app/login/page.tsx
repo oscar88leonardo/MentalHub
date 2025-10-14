@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ConnectEmbed, useActiveWallet } from "thirdweb/react";
 import { client } from "@/lib/client";
 import { myChain } from "@/lib/chain";
-import { useCeramic } from "@/context/CeramicContext";
 import { 
   inAppWallet,
   createWallet,

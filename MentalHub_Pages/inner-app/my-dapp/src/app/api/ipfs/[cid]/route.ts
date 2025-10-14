@@ -3,9 +3,9 @@ import { NextRequest } from 'next/server';
 // Simple proxy to serve ipfs hash via configured gateway; helps with mixed content and path handling
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { cid: string } }
+  context: any
 ) {
-  const cid = params.cid;
+  const cid = context?.params?.cid as string;
   const gateway = (process.env.NEXT_PUBLIC_IPFS_GATEWAY || 'https://ipfs.io').replace(/\/$/, '');
   const url = `${gateway}/ipfs/${cid}`;
   const res = await fetch(url);

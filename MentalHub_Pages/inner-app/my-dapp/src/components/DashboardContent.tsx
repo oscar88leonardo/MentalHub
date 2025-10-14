@@ -9,7 +9,7 @@ interface DashboardContentProps {
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ onLogout }) => {
-  const { activeWallet, account } = useCeramic();
+  const { account } = useCeramic();
 
   const stats = [
     {

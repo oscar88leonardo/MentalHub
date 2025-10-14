@@ -16,10 +16,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     profile, 
     isConnected, 
     error, 
-    refreshProfile, 
-    activeWallet,
+    refreshProfile,    
     account,
-    adminWallet,
     adminAccount
   } = useCeramic();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -256,9 +254,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             >
               <div className="flex items-center space-x-6">
                 {profile.pfp ? (
-                  <img
+                  <Image
                     src={resolveIpfsUrl(profile.pfp)}
                     alt={profile.name || "pfp"}
+                    width={96}
+                    height={96}
                     className="w-24 h-24 rounded-full object-cover border border-white/40"
                   />
                 ) : (

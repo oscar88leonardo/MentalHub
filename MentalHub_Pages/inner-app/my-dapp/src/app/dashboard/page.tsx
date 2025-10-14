@@ -8,7 +8,6 @@ import ProfilePage from "@/components/ProfilePage";
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
   const [activeItem, setActiveItem] = useState('dashboard');
   const router = useRouter();
 
