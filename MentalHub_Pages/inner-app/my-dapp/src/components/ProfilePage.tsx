@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
 import Header from "./Header";
