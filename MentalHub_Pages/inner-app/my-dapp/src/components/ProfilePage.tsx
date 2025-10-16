@@ -1,11 +1,16 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
 import Header from "./Header";
 import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
 import { resolveIpfsUrl } from "@/lib/ipfs";
+import { getContract, readContract } from "thirdweb";
+import { useReadContract } from "thirdweb/react";
+import { client } from "@/lib/client";
+import { myChain } from "@/lib/chain";
+import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -24,6 +29,60 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [isBootLoading, setIsBootLoading] = useState(true);
   const initialLoadDoneRef = useRef(false);
   const lastWalletAddressRef = useRef<string | null>(null);
+
+  // Mis Inner Keys (NFTs del usuario)
+  const [userInnerKeys, setUserInnerKeys] = useState<any[]>([]);
+  // incializacion del contrato
+  const contract =   getContract({
+    client: client!,
+    chain: myChain,
+    address: NFT_CONTRACT_ADDRESS,
+    // The ABI for the contract is defined here
+    abi: abi as [],
+  });
+  // call the contract method walletofOwner 
+  const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
+    contract,
+    method: "walletOfOwner",
+    params: [ (account?.address || "") ],
+  });
+
+  useEffect(() => {
+    if (ArrTokenIds !== undefined) {
+      console.log("isArrTokenIds:");
+      console.log(isCheckingArrTokenIds);
+
+        if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
+          console.log(ArrTokenIds.length); 
+          for (const TkId of ArrTokenIds) {
+            try {
+                      
+          readContract({
+            contract: contract,
+            method: "function gatewayURI(uint256 tokenId) view returns (string)",
+            params: [TkId],
+          }).then((urlGateway) => {
+            
+            console.log("urlGateway:", urlGateway);
+            if (typeof urlGateway === "string" && urlGateway) {
+              fetch(urlGateway)
+                .then(response => response.json())
+                .then(validNFTs => {
+                  console.log(validNFTs);
+                  setUserInnerKeys(prevNFTs => [...prevNFTs, validNFTs]);
+                })
+                .catch(err => console.error(err));
+            }
+          });
+            //const urlGateway = await nftContract.gatewayURI(TkId);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }
+    }
+
+  }, [ArrTokenIds]);  
 
   // Carga inicial: sólo una vez con spinner
   useEffect(() => {
@@ -383,6 +442,50 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                 </div>
               </div>
             )}
+
+            {/* Mis Inner Keys */}
+            <div 
+              className="rounded-2xl p-8 shadow-xl"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <h3 className="text-2xl font-bold text-white mb-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                Mis Inner Keys
+              </h3>
+              {isCheckingArrTokenIds ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              ) : userInnerKeys.length === 0 ? (
+                <p className="text-white/80">Aún no tienes Inner Keys asociadas.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userInnerKeys.map((item: any, idx: number) => (
+                    <div key={idx} className="rounded-2xl overflow-hidden bg-white/10 border border-white/20 shadow-xl">
+                      <div className="relative w-full h-0 pb-[56.25%] overflow-hidden rounded-b-none">
+                        {item?.pathImage ? (
+                          <video controls className="absolute inset-0 w-full h-full object-cover">
+                            <source src={item.pathImage} type="video/mp4" />
+                          </video>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-white/80">Sin vista previa</div>
+                        )}
+                      </div>
+                      <div className="p-5 text-white">
+                        <h4 className="text-lg font-semibold mb-1">{item?.name || 'Inner Key'}</h4>
+                        {item?.contSessions !== undefined && (
+                          <p className="text-white/80 text-sm">Sesiones: {item.contSessions}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center min-h-[30vh]">

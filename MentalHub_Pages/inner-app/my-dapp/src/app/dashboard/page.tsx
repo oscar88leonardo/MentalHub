@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
 import Sidebar from "@/components/Sidebar";
 import DashboardContent from "@/components/DashboardContent";
+import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
 
 export default function DashboardPage() {
@@ -39,6 +40,8 @@ export default function DashboardPage() {
     switch (activeItem) {
       case 'profile':
         return <ProfilePage onLogout={handleLogout} />;
+      case 'nfts':
+        return <InnerKeysCatalog onLogout={handleLogout} />;
       case 'dashboard':
       default:
         return <DashboardContent onLogout={handleLogout} />;

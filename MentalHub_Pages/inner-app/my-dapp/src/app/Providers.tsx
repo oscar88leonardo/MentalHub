@@ -18,6 +18,11 @@ const wallets = [
         "phone",
       ],
     },
+    /*// Habilitar sponsor de gas (EIP-7702) en la in-app wallet
+    executionMode: {
+      mode: "EIP7702",
+      sponsorGas: true,
+    },*/
   }),
   createWallet("io.metamask"),
   createWallet("com.coinbase.wallet"),

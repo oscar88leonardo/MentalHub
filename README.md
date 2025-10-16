@@ -31,6 +31,22 @@ sudo systemctl status ceramic-node.service
 sudo shutdown -h now
 
 #########################################
+smart contracts en  Metis, Polygon, Astar-Shibuya testnets
+
+Whitelist contract Address [Metis Sepolia Testnet]: 
+0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88
+MembersAirdrop contract Address [Metis Sepolia Testnet]: 
+0xcc1515239C446f6f1a3D49fEb8953f68c4F84cDA
+
+Whitelist contract Address [polygon mumbai Testnet]: 0xB73e449442055e1310E467bb657469e402aBd904
+MembersAirdrop contract Address [polygon mumbai Testnet]: 0x2C73F53DB83Df1f6CD928e4F69Dbf122999c268f
+
+Whitelist contract Address [Astar Shibuya Testnet]: 
+0x7452e1D4353Cb41DDbb4De4F84F0D129247d98d9
+MembersAirdrop contract Address [Astar Shibuya Testnet]:
+0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
+
+#########################################
 ## Integración con Lisk (Sepolia Testnet)
 - Red: Lisk Sepolia (chainId 4202)
 - RPC: `https://4202.rpc.thirdweb.com` (ver [thirdweb Lisk Sepolia Testnet](https://thirdweb.com/lisk-sepolia-testnet))
@@ -41,7 +57,7 @@ Contratos desplegados en Lisk Sepolia:
 - MembersAirdrop: `0xE49AcfF5b7e0C0cc8252F9420a553c61BE02eAf3`
 
 #########################################
-## DAO MVP (Astar Shibuya) - Crypto Latin Fest Hackathon
+## basic DAO  (Astar Shibuya) - Crypto Latin Fest Hackathon
 
 - Cómo correr
   - cp MentalHub_Pages/hardhat-mental/.env.example MentalHub_Pages/hardhat-mental/.env
@@ -56,11 +72,10 @@ Contratos desplegados en Lisk Sepolia:
   - npm run dev
 
 
-Deploy en Shibuya:
-Whitelist (Shibuya) ya desplegada: 0x7452e1D4353Cb41DDbb4De4F84F0D129247d98d9
-Deploy en Shibuya:
-Members=0x7BCbe9a7A35793A9031C0cAA3DfD2A46212a40c5
-Governor=0x80702B337f333825f1A776945F48F87905378e9B
+DAO Deploy en Shibuya:
+
+Governor contract Address [Astar Shibuya Testnet]
+0x80702B337f333825f1A776945F48F87905378e9B
 
 - Faucet SBY
   - Astar Portal / Triangle
@@ -76,23 +91,6 @@ Governor=0x80702B337f333825f1A776945F48F87905378e9B
   - Refrescar UI, votar "For"
   - Verificar proposal/tx en Blockscout
   - Enviar SBY al address del Governor y comprobar saldo en el widget
-
-
-#########################################
-smart contracts en ETH, Metis, Polygon testnets
-
-Whitelist Contract Address [ETH Goerli Testnet]: 0xd9BFb19Be9e3568b766D4987A546a835E2589E48
-NFT Col Members Contract Address [ETH Goerli Testnet]: 0x3AFc87192488Ee62e9F4583D8448948669320193
-
-Whitelist contract Address [Metis goerli Testnet]: 0x3F32B7e7A5B8297Ae8Ab86b1EbaC9831CE4047fD
-MembersAirdrop contract Address [Metis goerli Testnet]: 0x459B185D76b9E33c95c533B7E6ff710Df513dbEF
-MembersAirdrop IPFS contract Address [Metis goerli Testnet]:0xcAf1501488f3F985d1bA6420a48661A881f01061
-Metis Goerli faucet - https://goerli.faucet.metisdevops.link/
-
-
-Whitelist contract Address [polygon mumbai Testnet]: 0xB73e449442055e1310E467bb657469e402aBd904
-MembersAirdrop contract Address [polygon mumbai Testnet]: 0x2C73F53DB83Df1f6CD928e4F69Dbf122999c268f
-MembersAirdrop IPFS contract Address [polygon mumbai Testnet]:0xd97533D7a552e2c793cdC477C0DcA64e76c76E3b
 
 #########################################
 ## METADATA URL
