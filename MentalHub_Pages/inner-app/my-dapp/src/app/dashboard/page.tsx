@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import DashboardContent from "@/components/DashboardContent";
 import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
+import Availability from "@/components/Availability";
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
@@ -40,6 +41,8 @@ export default function DashboardPage() {
     switch (activeItem) {
       case 'profile':
         return <ProfilePage onLogout={handleLogout} />;
+      case 'availability':
+        return <Availability onLogout={handleLogout} />;
       case 'nfts':
         return <InnerKeysCatalog onLogout={handleLogout} />;
       case 'dashboard':

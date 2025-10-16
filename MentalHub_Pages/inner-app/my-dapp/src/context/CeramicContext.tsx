@@ -115,7 +115,7 @@ interface CeramicContextType {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  executeQuery: (query: string) => Promise<any>;
+  executeQuery: (query: string, variables?: Record<string, any>) => Promise<any>;
   authenticateForWrite: (streamId?: string) => Promise<boolean>; // authenticate only when needed; can include stream capability
 }
 
@@ -640,11 +640,18 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     }
   };
 
-  const executeQuery = async (query: string) => {
+  const executeQuery = async (query: string, variables?: Record<string, any>) => {
     if (!composeClient) {
       throw new Error("ComposeDB not initialized");
     }
-    return await composeClient.executeQuery(query);
+    // Pasar variables si se proporcionan
+    try {
+      // @ts-ignore - composeClient.executeQuery soporta variables opcionales
+      return await composeClient.executeQuery(query, variables);
+    } catch (e) {
+      // Fallback por seguridad sin variables
+      return await composeClient.executeQuery(query);
+    }
   };
 
   const contextValue: CeramicContextType = {
