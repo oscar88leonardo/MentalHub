@@ -7,6 +7,7 @@ import DashboardContent from "@/components/DashboardContent";
 import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
 import Availability from "@/components/Availability";
+import RoomsManager from "@/components/RoomsManager";
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
@@ -41,6 +42,8 @@ export default function DashboardPage() {
     switch (activeItem) {
       case 'profile':
         return <ProfilePage onLogout={handleLogout} />;
+      case 'rooms':
+        return <RoomsManager />;
       case 'availability':
         return <Availability onLogout={handleLogout} />;
       case 'nfts':

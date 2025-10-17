@@ -48,40 +48,51 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   });
 
   useEffect(() => {
-    if (ArrTokenIds !== undefined) {
-      console.log("isArrTokenIds:");
-      console.log(isCheckingArrTokenIds);
-
-        if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
-          console.log(ArrTokenIds.length); 
-          for (const TkId of ArrTokenIds) {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        if (!ArrTokenIds || !Array.isArray(ArrTokenIds)) {
+          setUserInnerKeys([]);
+          return;
+        }
+        const items = await Promise.all(
+          ArrTokenIds.map(async (TkId: any) => {
             try {
-                      
-          readContract({
-            contract: contract,
-            method: "function gatewayURI(uint256 tokenId) view returns (string)",
-            params: [TkId],
-          }).then((urlGateway) => {
-            
-            console.log("urlGateway:", urlGateway);
-            if (typeof urlGateway === "string" && urlGateway) {
-              fetch(urlGateway)
-                .then(response => response.json())
-                .then(validNFTs => {
-                  console.log(validNFTs);
-                  setUserInnerKeys(prevNFTs => [...prevNFTs, validNFTs]);
-                })
-                .catch(err => console.error(err));
+              const urlGateway = await readContract({
+                contract: contract,
+                method: "function gatewayURI(uint256 tokenId) view returns (string)",
+                params: [TkId],
+              });
+              if (typeof urlGateway === "string" && urlGateway) {
+                const resp = await fetch(urlGateway);
+                const meta = await resp.json();
+                const tokenIdStr = typeof TkId === "bigint" ? TkId.toString() : String(TkId);
+                return { ...meta, tokenId: tokenIdStr };
+              }
+            } catch (e) {
+              console.error(e);
             }
-          });
-            //const urlGateway = await nftContract.gatewayURI(TkId);
-          } catch (err) {
-            console.error(err);
-          }
+            return null;
+          })
+        );
+        if (cancelled) return;
+        const seen = new Set<string>();
+        const unique = (items.filter(Boolean) as any[]).filter((item: any) => {
+          const key = item.tokenId || item.pathImage || item.name;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setUserInnerKeys(unique);
+      } catch (e) {
+        if (!cancelled) {
+          console.error(e);
+          setUserInnerKeys([]);
         }
       }
-    }
-
+    };
+    load();
+    return () => { cancelled = true; };
   }, [ArrTokenIds]);  
 
   // Carga inicial: sólo una vez con spinner
@@ -486,6 +497,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                 </div>
               )}
             </div>
+
+            {/* Salas (Huddle) - movidas al menú lateral */}
           </div>
         ) : (
           <div className="flex items-center justify-center min-h-[30vh]">
