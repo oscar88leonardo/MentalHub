@@ -12,6 +12,9 @@ https://drive.google.com/drive/folders/1ehLBarc9rHOkPQW02ssuCmk0KqXujVi0
 #Demo web App: 
 https://innerverse.care
 https://mental-hub-my-app-p3qk-git-frontendv0-leos-projects-1ca3b281.vercel.app/dao
+# (On going) Rediseñp y migración de Dapp:
+https://innerverse-dapp.vercel.app/
+
 
 #########################################
 Decentralized Database -Ceramic node config@Google cloud 
