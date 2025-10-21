@@ -3,8 +3,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Header from "./Header";
 import DebugWallet from "./DebugWallet";
 import { useCeramic } from "@/context/CeramicContext";
-import Image from "next/image";
 import { resolveIpfsUrl } from "@/lib/ipfs";
+import Image from "next/image";
 // import { myChain } from "@/lib/chain";
 import { Calendar, Views, dateFnsLocalizer } from "react-big-calendar";
 import type { View, Messages } from "react-big-calendar";

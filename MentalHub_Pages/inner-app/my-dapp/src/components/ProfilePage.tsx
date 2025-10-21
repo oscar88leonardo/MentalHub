@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
 import Header from "./Header";
@@ -7,7 +7,6 @@ import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
 import { resolveIpfsUrl } from "@/lib/ipfs";
 import { getContract, readContract } from "thirdweb";
-import { useReadContract } from "thirdweb/react";
 import { client } from "@/lib/client";
 import { myChain } from "@/lib/chain";
 import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
@@ -32,31 +31,39 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   // Mis Inner Keys (NFTs del usuario)
   const [userInnerKeys, setUserInnerKeys] = useState<any[]>([]);
-  // incializacion del contrato
-  const contract =   getContract({
+  // incializacion del contrato (memoizado para evitar recreación en cada render)
+  const contract = useMemo(() => getContract({
     client: client!,
     chain: myChain,
     address: NFT_CONTRACT_ADDRESS,
     // The ABI for the contract is defined here
     abi: abi as [],
-  });
-  // call the contract method walletofOwner 
-  const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
-    contract,
-    method: "walletOfOwner",
-    params: [ (account?.address || "") ],
-  });
+  }), []);
+  // Control de carga para Inner Keys
+  const [isCheckingArrTokenIds, setIsCheckingArrTokenIds] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        if (!ArrTokenIds || !Array.isArray(ArrTokenIds)) {
+        const addr = account?.address;
+        if (!addr) {
+          setUserInnerKeys([]);
+          return;
+        }
+        setIsCheckingArrTokenIds(true);
+        setUserInnerKeys([]);
+        const tokenIds = await readContract({
+          contract,
+          method: "function walletOfOwner(address _owner) view returns (uint256[])",
+          params: [addr],
+        });
+        if (!Array.isArray(tokenIds)) {
           setUserInnerKeys([]);
           return;
         }
         const items = await Promise.all(
-          ArrTokenIds.map(async (TkId: any) => {
+          tokenIds.map(async (TkId: any) => {
             try {
               const urlGateway = await readContract({
                 contract: contract,
@@ -89,11 +96,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           console.error(e);
           setUserInnerKeys([]);
         }
+      } finally {
+        if (!cancelled) setIsCheckingArrTokenIds(false);
       }
     };
     load();
     return () => { cancelled = true; };
-  }, [ArrTokenIds]);  
+  }, [account?.address, contract]);
 
   // Carga inicial: sólo una vez con spinner
   useEffect(() => {
