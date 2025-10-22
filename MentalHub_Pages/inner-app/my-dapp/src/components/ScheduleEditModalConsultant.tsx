@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react";
 import { openMeet } from "@/lib/meet";
+import { openRoomFlowNoCheck } from "@/lib/openRoom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useCeramic } from "@/context/CeramicContext";
@@ -27,9 +28,10 @@ interface Props {
   onClose: () => void;
   schedule: ScheduleItem;
   onSaved?: () => void;
+  onUpdated?: () => void;
 }
 
-const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved }) => {
+const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
   const { profile, account, executeQuery, authenticateForWrite } = useCeramic();
   const [busy, setBusy] = useState<"none" | "open">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
@@ -173,43 +175,29 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
 
   const openRoom = async () => {
     if (!schedule) return;
-    const now = new Date();
-    if (!(now >= start && now <= end)) {
-      showToast("La sala solo está disponible en la franja horaria programada.", "error");
-      return;
-    }
-    if ((tokenId == null || tokenId === "")) {
-      showToast("No se encontró una Inner Key asociada a esta consulta.", "error");
-      return;
-    }
-
     try {
       setBusy("open");
-      try {
-        await fetch('/api/callsetsession', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tokenId: String(tokenId), scheduleId: schedule.id, state: 2 })
-        });
-      } catch (apiError) {
-        showToast('Error al activar la sesión en el contrato.', 'error');
-        setBusy('none');
-        return;
-      }
-      // Validar sala y abrir con la sala seleccionada si corresponde
-      let roomIdToOpen = schedule.roomId;
-      if (room) {
-        const selected = rooms.find(r => r.id === room);
-        if (!selected) {
-          showToast('La sala seleccionada no pertenece al terapeuta de esta consulta.', 'error');
-          setBusy('none');
-          return;
-        }
-        roomIdToOpen = selected.roomId;
-      }
-      openMeet(roomIdToOpen);
-    } catch (e) {
-      showToast('Error al abrir la sala', 'error');
+      await openRoomFlowNoCheck({
+        tokenId,
+        scheduleId: schedule.id,
+        start,
+        end,
+        defaultRoomId: schedule.roomId,
+        selectedRoomId: room || undefined,
+        rooms: rooms.map(r => ({ id: r.id, roomId: r.roomId })),
+        openMeet,
+        optimistic: true,
+      });
+      try { onUpdated && onUpdated(); } catch {}
+    } catch (e: any) {
+      const msg = e?.message === 'TIME_WINDOW'
+        ? 'La sala solo está disponible en la franja horaria programada.'
+        : e?.message === 'NO_TOKEN'
+          ? 'No se encontró una Inner Key asociada a esta consulta.'
+          : e?.message === 'INVALID_ROOM'
+            ? 'La sala seleccionada no pertenece al terapeuta de esta consulta.'
+            : 'Error al abrir la sala';
+      showToast(msg, 'error');
     } finally {
       setBusy("none");
     }

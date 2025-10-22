@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { client } from "@/lib/client";
 import { myChain } from "@/lib/chain";
 import { openMeet } from "@/lib/meet";
+import { useCeramic } from "@/context/CeramicContext";
+import { openRoomFlowNoCheck } from "@/lib/openRoom";
 import { getContract, readContract } from "thirdweb";
 import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
 
@@ -30,6 +32,9 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const [busy, setBusy] = useState<'none' | 'open' | 'finalize'>('none');
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [availableSessions, setAvailableSessions] = useState<number | null>(null);
+  const { profile, executeQuery } = useCeramic();
+  const [rooms, setRooms] = useState<Array<{ id: string; name: string; roomId: string }>>([]);
+  const [room, setRoom] = useState<string>("");
 
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
 
@@ -49,6 +54,30 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
     run();
   }, [event.tokenId, contract]);
 
+  // Cargar salas activas del terapeuta autenticado y preseleccionar la sala actual del evento
+  useEffect(() => {
+    (async () => {
+      try {
+        const q = `
+          query {
+            node(id: "${profile?.id}") {
+              ... on InnerverProfile {
+                hudds(last: 100, filters: { where: { state: { in: Active } } }) {
+                  edges { node { id name roomId } }
+                }
+              }
+            }
+          }
+        `;
+        const res: any = await executeQuery(q);
+        const edges = res?.data?.node?.hudds?.edges || [];
+        const mapped = edges.map((e: any) => ({ id: e.node.id, name: e.node.name, roomId: e.node.roomId }));
+        setRooms(mapped);
+        setRoom("");
+      } catch {}
+    })();
+  }, [profile?.id, executeQuery]);
+
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
@@ -57,28 +86,27 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const openRoom = async () => {
     try {
       setBusy('open');
-      const now = new Date();
-      // Restricción por franja horaria (igual a my-app): solo abrir dentro del rango programado
-      const nowMs = now.getTime();
-      const initMs = (event.start instanceof Date ? event.start : new Date(event.start)).getTime();
-      const endMs = (event.end instanceof Date ? event.end : new Date(event.end)).getTime();
-      if (!(nowMs >= initMs && nowMs <= endMs)) {
-        showToast('La sala solo está disponible en la franja horaria programada.', 'error');
-        setBusy('none');
-        return;
-      }
-      try {
-        await fetch('/api/callsetsession', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tokenId: String(event.tokenId ?? '0'), scheduleId: event.id, state: 2 })
-        });
-      } catch {}
-      openMeet(event.roomId);
+      await openRoomFlowNoCheck({
+        tokenId: event.tokenId,
+        scheduleId: event.id,
+        start: event.start,
+        end: event.end,
+        defaultRoomId: event.roomId,
+        selectedRoomId: room || undefined,
+        rooms: rooms.map(r => ({ id: r.id, roomId: r.roomId })),
+        openMeet,
+        optimistic: true,
+      });
       onUpdated?.();
-    } catch (e) {
-      console.error(e);
-      showToast('Error al abrir la sala', 'error');
+    } catch (e: any) {
+      const msg = e?.message === 'TIME_WINDOW'
+        ? 'La sala solo está disponible en la franja horaria programada.'
+        : e?.message === 'NO_TOKEN'
+          ? 'No se encontró una Inner Key asociada a esta consulta.'
+          : e?.message === 'INVALID_ROOM'
+            ? 'La sala seleccionada no pertenece al terapeuta.'
+            : 'Error al abrir la sala';
+      showToast(msg, 'error');
     } finally {
       setBusy('none');
     }
@@ -145,6 +173,15 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           <p><span className="font-semibold">Fin:</span> {event.end.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Estado:</span> {event.state}</p>
           <p><span className="font-semibold">Inner Key:</span> Id: {event.tokenId ?? '—'} {availableSessions != null && (<span className="text-white/80">- # sesiones: {availableSessions}</span>)}</p>
+          <div className="mt-2">
+            <p className="text-white/80 text-sm">Seleccionar sala</p>
+            <select value={room} onChange={(e) => setRoom(e.target.value)} className="w-full px-3 py-2 rounded border bg-white text-black">
+              <option value="">{event.roomName || 'Sala por defecto'}</option>
+              {rooms.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="p-4 flex justify-end gap-3">
           {event.state === 'Active' && (

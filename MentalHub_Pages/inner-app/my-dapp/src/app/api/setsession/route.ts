@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction } from "thirdweb";
+import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { privateKeyToAccount } from "thirdweb/wallets";
 import { abi, NFT_CONTRACT_ADDRESS } from "../../../constants/MembersAirdrop";
 import { client } from "@/lib/client";
@@ -39,6 +39,18 @@ export async function POST(req: Request) {
     //console.log("contract setSession:");
     //console.log(contract);
     
+    // Pre-chequeo: si ya está en el mismo estado, no ejecutar transacción
+    try {
+      const current = await readContract({
+        contract,
+        method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+        params: [BigInt(body.tokenId), body.scheduleId],
+      });
+      if (Number(current) === Number(body.state)) {
+        return NextResponse.json({ status: "success", msg: "noop (same state)" }, { status: 200 });
+      }
+    } catch {}
+
     const tx = prepareContractCall({
       contract,
       // We get auto-completion for all the available functions on the contract ABI

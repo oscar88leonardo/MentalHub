@@ -54,44 +54,45 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
 
   // Leer Inner Keys del usuario y verificar sesiones disponibles (solo cuando la wallet esté lista)
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      try {
-        const addr = account?.address;
-        if (!addr) {
-          setHasAvailableKey(false);
-          return;
-        }
-        setIsLoadingKeys(true);
-        try { onLoadingKeysChange && onLoadingKeysChange(true); } catch {}
-        const tokenIds = await readContract({
-          contract,
-          method: "function walletOfOwner(address _owner) view returns (uint256[])",
-          params: [addr],
-        });
-        let ok = false;
-        if (Array.isArray(tokenIds) && tokenIds.length > 0) {
-          for (const t of tokenIds) {
-            try {
-              const idNum = BigInt(t as any);
-              const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [idNum] });
-              const n = Number(avail as any);
-              if (n > 0) { ok = true; break; }
-            } catch {}
-          }
-        }
-        if (!cancelled) setHasAvailableKey(ok);
-      } catch {
-        if (!cancelled) setHasAvailableKey(false);
-      } finally {
-        if (!cancelled) setIsLoadingKeys(false);
-        try { onLoadingKeysChange && onLoadingKeysChange(false); } catch {}
+  const refreshKeyAvailability = useCallback(async () => {
+    try {
+      const addr = account?.address;
+      if (!addr) {
+        setHasAvailableKey(false);
+        return;
       }
-    };
-    run();
-    return () => { cancelled = true; };
-  }, [account?.address, contract]);
+      setIsLoadingKeys(true);
+      try { onLoadingKeysChange && onLoadingKeysChange(true); } catch {}
+      const tokenIds = await readContract({
+        contract,
+        method: "function walletOfOwner(address _owner) view returns (uint256[])",
+        params: [addr],
+      });
+      let ok = false;
+      if (Array.isArray(tokenIds) && tokenIds.length > 0) {
+        for (const t of tokenIds) {
+          try {
+            const idNum = BigInt(t as any);
+            const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [idNum] });
+            const n = Number(avail as any);
+            if (n > 0) { ok = true; break; }
+          } catch {}
+        }
+      }
+      setHasAvailableKey(ok);
+    } catch {
+      setHasAvailableKey(false);
+    } finally {
+      setIsLoadingKeys(false);
+      try { onLoadingKeysChange && onLoadingKeysChange(false); } catch {}
+    }
+  }, [account?.address, contract, onLoadingKeysChange]);
+
+  useEffect(() => {
+    refreshKeyAvailability();
+  }, [refreshKeyAvailability]);
+
+  
 
   // Cargar lista de terapeutas (una vez; evita re-ejecución por cambios de referencia)
   useEffect(() => {
@@ -521,6 +522,25 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                   isOpen={!!selectedSched}
                   onClose={() => setSelectedSched(null)}
                   schedule={selectedSched}
+                  onUpdated={async () => {
+                    const cur = selectedSched;
+                    if (!cur) return;
+                    // Actualización inmediata optimista a Active
+                    setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: 'Active' } : ev));
+                    // Confirmación on-chain sin recarga completa
+                    try {
+                      if (cur.tokenId != null) {
+                        const stateNum = await readContract({
+                          contract,
+                          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+                          params: [BigInt(cur.tokenId), cur.id]
+                        });
+                        const n = Number(stateNum as any);
+                        const map = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+                        setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: map(n) } : ev));
+                      }
+                    } catch {}
+                  }}
                   onSaved={async () => {
                     // Refrescar lista tras guardar
                     setMySchedLoading(true);
@@ -537,7 +557,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       <ScheduleCreateModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSaved={async () => { await loadBusySlots(); }}
+        onSaved={async () => { await loadBusySlots(); await refreshKeyAvailability(); }}
         therapistName={therapistName}
         therapistRooms={therapistRooms}
         dateInit={selStart}

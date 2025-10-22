@@ -93,7 +93,20 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       `;
       const res: any = await executeQuery(mutation);
       if (!res?.errors) {
-        // Estado por defecto es Pending: no se requiere escribir en el contrato aquí
+        // Vincular on-chain en Pending (igual a my-app): consume slot inmediatamente
+        try {
+          const schedId = res?.data?.createSchedule?.document?.id;
+          if (schedId && tokenId) {
+            await fetch('/api/callsetsession', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tokenId: String(tokenId), scheduleId: String(schedId), state: 0 })
+            });
+          }
+        } catch (e) {
+          // No bloquear el flujo si falla la llamada; se reflejará en reintentos manuales
+          console.error('callsetsession Pending error:', e);
+        }
         await refreshProfile();
         try { await onSaved?.(); } catch {}
         onClose();

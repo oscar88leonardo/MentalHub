@@ -276,70 +276,30 @@ const SessionsTherapist: React.FC = () => {
       </div>
 
       {detailOpen && selected && (
-        <ScheduleDetailsModal isOpen={detailOpen} onClose={() => setDetailOpen(false)} event={selected} onUpdated={() => {
-          setDetailOpen(false);
-          // Forzar refresco on-chain: reiniciar firma para que el efecto vuelva a leer estados
-          onChainSigRef.current = '';
-          (async () => {
-            try {
-              setIsLoading(true);
-              const q = `
-                query {
-                  node(id: "${profile?.id}") {
-                    ... on InnerverProfile {
-                      id
-                      hudds(last: 100, filters: { where: { state: { in: Active } } }) {
-                        edges {
-                          node {
-                            id
-                            name
-                            roomId
-                            schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
-                              edges {
-                                node {
-                                  id
-                                  date_init
-                                  date_finish
-                                  state
-                                  profileId
-                                  profile { displayName }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              `;
-              const res: any = await executeQuery(q);
-              const hudds = res?.data?.node?.hudds?.edges || [];
-              const mapped: EventItem[] = [];
-              for (const h of hudds) {
-                const hnode = h?.node;
-                const schedEdges = hnode?.schedules?.edges || [];
-                for (const s of schedEdges) {
-                  const sn = s?.node;
-                  if (!sn) continue;
-                  mapped.push({
-                    id: sn.id,
-                    start: new Date(sn.date_init),
-                    end: new Date(sn.date_finish),
-                    state: sn.state,
-                    huddId: hnode.id,
-                    roomId: hnode.roomId,
-                    displayName: sn.profile?.displayName || "",
-                    roomName: hnode.name,
+        <ScheduleDetailsModal
+          isOpen={detailOpen}
+          onClose={() => setDetailOpen(false)}
+          event={selected}
+          onUpdated={() => {
+            setDetailOpen(false);
+            // 1) Actualización inmediata del evento seleccionado vía on-chain (sin esperar GraphQL)
+            (async () => {
+              try {
+                if (selected?.tokenId != null) {
+                  const stateNum = await readContract({
+                    contract,
+                    method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+                    params: [BigInt(selected.tokenId), selected.id]
                   });
+                  const n = Number(stateNum as any);
+                  const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+                  const newState = mapState(n);
+                  setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState } : ev));
                 }
-              }
-              setEvents(mapped);
-            } finally {
-              setIsLoading(false);
-            }
-          })();
-        }} />
+              } catch {}
+            })();
+          }}
+        />
       )}
     </div>
   );
