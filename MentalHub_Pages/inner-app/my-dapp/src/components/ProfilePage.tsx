@@ -8,8 +8,9 @@ import EditProfileButton from "./EditProfileButton";
 import { resolveIpfsUrl } from "@/lib/ipfs";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -35,7 +36,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const contract = useMemo(() => getContract({
     client: client!,
     chain: myChain,
-    address: NFT_CONTRACT_ADDRESS,
+    address: contracts.membersAirdrop,
     // The ABI for the contract is defined here
     abi: abi as [],
   }), []);

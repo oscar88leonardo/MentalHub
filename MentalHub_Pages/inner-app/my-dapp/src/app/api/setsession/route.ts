@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { privateKeyToAccount } from "thirdweb/wallets";
-import { abi, NFT_CONTRACT_ADDRESS } from "../../../constants/MembersAirdrop";
+import { abi } from "@/abicontracts/MembersAirdrop";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
 
 const PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY as `0x${string}`;
 
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   const contract =   getContract({
         client: client!,
         chain: myChain,
-        address: NFT_CONTRACT_ADDRESS,
+        address: contracts.membersAirdrop,
         // The ABI for the contract is defined here
         abi: abi as [],
       });

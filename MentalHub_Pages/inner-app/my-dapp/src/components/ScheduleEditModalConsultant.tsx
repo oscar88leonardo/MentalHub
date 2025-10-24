@@ -7,8 +7,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useCeramic } from "@/context/CeramicContext";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 interface ScheduleItem {
   id: string;
@@ -47,7 +48,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
   const isEditable = status === 'Pending';
 
   // NFTs del usuario y sesiones disponibles
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
+  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
   const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
   const [isLoadingNFTs, setIsLoadingNFTs] = useState(false);
 
@@ -152,7 +153,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
       const mutation = `
         mutation {
           updateSchedule(
-            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", huddId: "${room}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${tokenId || 0} } }
+            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", huddId: "${room}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId || 0} } }
           ) {
             document { id }
           }

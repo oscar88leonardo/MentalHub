@@ -3,8 +3,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -29,7 +30,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
   const [start, setStart] = useState<Date>(dateInit);
   const [end, setEnd] = useState<Date>(dateFinish);
 
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
+  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
 
   useEffect(() => {
     // Cargar NFTs y sus sesiones disponibles (on-chain)
@@ -85,7 +86,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       const mutation = `
         mutation {
           createSchedule(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${roomId}", NFTContract: "${NFT_CONTRACT_ADDRESS}", TokenID: ${tokenId}}}
+            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${roomId}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
           ) {
             document { id }
           }

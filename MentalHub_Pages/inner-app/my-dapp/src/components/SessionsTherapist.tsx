@@ -7,8 +7,9 @@ import { useCeramic } from "@/context/CeramicContext";
 import ScheduleDetailsModal from "./ScheduleDetailsModal";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -123,7 +124,7 @@ const SessionsTherapist: React.FC = () => {
   }, [profile?.id, executeQuery]);
 
   // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
+  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
   useEffect(() => {
     if (!events.length) return;
     // Calcular rango visible según la vista

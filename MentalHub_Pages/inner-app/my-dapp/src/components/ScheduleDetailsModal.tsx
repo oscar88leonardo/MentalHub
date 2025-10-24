@@ -1,12 +1,13 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
+import { myChain } from "@/config/chain";
 import { openMeet } from "@/lib/meet";
 import { useCeramic } from "@/context/CeramicContext";
 import { openRoomFlowNoCheck } from "@/lib/openRoom";
 import { getContract, readContract } from "thirdweb";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 interface EventItem {
   id: string;
@@ -36,7 +37,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const [rooms, setRooms] = useState<Array<{ id: string; name: string; roomId: string }>>([]);
   const [room, setRoom] = useState<string>("");
 
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
+  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
 
   // (sin edición): no se cargan salas ni se manejan estados locales de sala/fechas
 

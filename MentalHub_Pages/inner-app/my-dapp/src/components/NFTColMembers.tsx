@@ -1,13 +1,14 @@
 "use client"
 import React, { useEffect, useRef, useState, useContext } from "react";
 import Image from "next/image";
-import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction } from "thirdweb";
+import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
 import { owner } from "thirdweb/extensions/common";
 import { client as clientThirdweb } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi as whitelistAbi, WHITELIST_CONTRACT_ADDRESS } from "@/constants/whitelist";
-import { abi as membersAbi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi as whitelistAbi } from "@/abicontracts/whitelist";
+import { abi as membersAbi } from "@/abicontracts/MembersAirdrop";
 
 interface NFTColMembersProps {
   embedded?: boolean;
@@ -29,14 +30,14 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
   const contract = getContract({
     client: clientThirdweb!,
     chain: myChain,
-    address: NFT_CONTRACT_ADDRESS,
+    address: contracts.membersAirdrop,
     abi: membersAbi as [],
   });
 
   const contractWhitelist = getContract({
     client: clientThirdweb!,
     chain: myChain,
-    address: WHITELIST_CONTRACT_ADDRESS,
+    address: contracts.whitelist!,
     abi: whitelistAbi as [],
   });
 
@@ -102,11 +103,26 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
   const publicMint = async (name: string, pathTypeContDig: string, pathContDigi: string, contSessions: number) => {
     try {
       setLoading(true);
+      let value: bigint = BigInt(0);
+      try {
+        if (!dataisSponsoredMint.data) {
+          const price = await readContract({
+            contract,
+            method: "function _price() view returns (uint256)",
+            params: [],
+          });
+          value = BigInt(price as any);
+        }
+      } catch (e) {
+        console.warn("No se pudo leer el precio on-chain, usando 0.", e);
+        value = BigInt(0);
+      }
+
       const tx = prepareContractCall({
         contract,
         method: resolveMethod("mint"),
         params: [2],
-        value: dataisSponsoredMint.data ? toWei("0") : toWei("0.01"),
+        value,
       });
       if (activeWallet && account) {
         await sendTransaction({ account, transaction: tx });

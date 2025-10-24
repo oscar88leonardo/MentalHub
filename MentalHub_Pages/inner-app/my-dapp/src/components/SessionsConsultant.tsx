@@ -9,8 +9,9 @@ import ScheduleCreateModal from "./ScheduleCreateModal";
 import ScheduleEditModalConsultant from "./ScheduleEditModalConsultant";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -53,7 +54,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   }), []);
 
   // Leer Inner Keys del usuario y verificar sesiones disponibles (solo cuando la wallet esté lista)
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: NFT_CONTRACT_ADDRESS, abi: abi as [] }), []);
+  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
   const refreshKeyAvailability = useCallback(async () => {
     try {
       const addr = account?.address;

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ConnectEmbed, useActiveWallet } from "thirdweb/react";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
+import { myChain } from "@/config/chain";
 import { 
   inAppWallet,
   createWallet,

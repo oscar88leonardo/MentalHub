@@ -8,7 +8,7 @@ import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
 import { useActiveWallet, useAdminWallet } from "thirdweb/react";
 import { EIP1193 } from "thirdweb/wallets";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
+import { myChain } from "@/config/chain";
 import { definition } from "@/__generated__/definition.js";
 
 // Types
