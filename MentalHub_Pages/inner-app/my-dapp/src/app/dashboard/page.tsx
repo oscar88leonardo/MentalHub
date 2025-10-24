@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
 import Sidebar from "@/components/Sidebar";
 import DashboardContent from "@/components/DashboardContent";
+import DaoWidget from "@/components/DaoWidget";
 import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
 import Availability from "@/components/Availability";
 import Sessions from "@/components/Sessions";
 import RoomsManager from "@/components/RoomsManager";
+import WhitelistWidget from "@/components/WhitelistWidget";
 import { useCeramic } from "@/context/CeramicContext";
 
 export default function DashboardPage() {
@@ -56,6 +58,10 @@ export default function DashboardPage() {
         return <Sessions onLogout={handleLogout} />;
       case 'nfts':
         return <InnerKeysCatalog onLogout={handleLogout} />;
+      case 'dao':
+        return <DaoWidget onLogout={handleLogout} />;
+      case 'whitelist':
+        return <WhitelistWidget onLogout={handleLogout} />;
       case 'dashboard':
       default:
         return <DashboardContent onLogout={handleLogout} />;
