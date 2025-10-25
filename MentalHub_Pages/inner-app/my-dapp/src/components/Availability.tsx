@@ -146,9 +146,9 @@ const Availability: React.FC<AvailabilityProps> = ({ onLogout }) => {
     showArchived ? events : events.filter((e) => e.state === "Active")
   ), [events, showArchived]);
 
-  const hasOverlap = (start: Date, end: Date) => {
+  const hasOverlap = useCallback((start: Date, end: Date) => {
     return events.some(({ start: s, end: e }) => (start >= s && start < e) || (end > s && end <= e) || (start <= s && end >= e));
-  };
+  }, [events]);
 
   const handleSelectSlot = useCallback(async ({ start, end }: { start: Date; end: Date }) => {
     if (!profile?.id) return;
@@ -180,7 +180,7 @@ const Availability: React.FC<AvailabilityProps> = ({ onLogout }) => {
       console.error(e);
       alert("Error al crear disponibilidad. Revisa la consola.");
     }
-  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability, events]);
+  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability, hasOverlap]);
 
   const handleSelectEvent = useCallback((evt: any) => {
     setEditData({ id: evt.id, state: evt.state, start: evt.start, end: evt.end, created: evt.created });
@@ -216,7 +216,7 @@ const Availability: React.FC<AvailabilityProps> = ({ onLogout }) => {
       console.error(e);
       alert("Error al actualizar disponibilidad");
     }
-  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability]);
+  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability, hasOverlap]);
 
   const renderWelcomeCard = () => {
     if (!account) return null;
@@ -306,7 +306,7 @@ const Availability: React.FC<AvailabilityProps> = ({ onLogout }) => {
             <DebugWallet />
             <div className="rounded-2xl p-6 text-white" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}>
               <h3 className="text-xl font-semibold mb-2">Acceso restringido</h3>
-              <p>Esta sección está disponible sólo para usuarios con rol "Terapeuta".</p>
+              <p>Esta sección está disponible sólo para usuarios con rol &quot;Terapeuta&quot;.</p>
             </div>
           </div>
         </div>

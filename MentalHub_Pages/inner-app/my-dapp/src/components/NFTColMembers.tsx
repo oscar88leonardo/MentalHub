@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
@@ -76,7 +76,7 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const airdropMint = async (name: string, pathTypeContDig: string, pathContDigi: string, contSessions: number) => {
+  const airdropMint = async (_name: string, _pathTypeContDig: string, _pathContDigi: string, _contSessions: number) => {
     try {
       setLoading(true);
     if (dataWhitelist.data) {
@@ -100,7 +100,7 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     }
   };
 
-  const publicMint = async (name: string, pathTypeContDig: string, pathContDigi: string, contSessions: number) => {
+  const publicMint = async (_name: string, _pathTypeContDig: string, _pathContDigi: string, _contSessions: number) => {
     try {
       setLoading(true);
       let value: bigint = BigInt(0);
@@ -158,7 +158,7 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     }
   };
 
-  const getOwner = async () => {
+  const getOwner = useCallback(async () => {
     try {
       const _owner = await owner({ contract });
       if (adminWallet && adminAccount) {
@@ -170,15 +170,15 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     } catch (err: any) {
       console.error(err.message);
     }
-  };
+  }, [adminWallet, adminAccount, contract]);
 
   useEffect(() => {
     if (account) {
       getOwner();
     }
-  }, [account]);
+  }, [account, getOwner]);
 
-  const getTokenIdsMinted = async () => {
+  const getTokenIdsMinted = useCallback(async () => {
     try {
       if (datatokenIds.isLoading) return;
       if (datatokenIds.data) {
@@ -188,11 +188,11 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [datatokenIds.isLoading, datatokenIds.data]);
 
   useEffect(() => {
     getTokenIdsMinted();
-  }, [datatokenIds.data]);
+  }, [getTokenIdsMinted]);
 
   useEffect(() => {
     const checkAirdropStatus = async () => {

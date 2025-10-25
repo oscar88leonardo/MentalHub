@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { TransactionButton } from "thirdweb/react";
+// import { TransactionButton } from "thirdweb/react";
 import { getContract, prepareContractCall, resolveMethod, sendTransaction } from "thirdweb";
 import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
@@ -8,11 +8,11 @@ import { contracts } from "@/config/contracts";
 import { abi } from "@/abicontracts/whitelist";
 import { useActiveWallet, useReadContract } from "thirdweb/react";
 
-interface WhitelistWidgetProps {
-  onLogout?: () => void;
-}
+// interface WhitelistWidgetProps {
+//   // onLogout?: () => void;
+// }
 
-export default function WhitelistWidget({ onLogout }: WhitelistWidgetProps) {
+export default function WhitelistWidget() {
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
   

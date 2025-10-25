@@ -1,6 +1,6 @@
 "use client"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { Calendar, Views, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -63,7 +63,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         return;
       }
       setIsLoadingKeys(true);
-      try { onLoadingKeysChange && onLoadingKeysChange(true); } catch {}
+      try { onLoadingKeysChange?.(true); } catch {}
       const tokenIds = await readContract({
         contract,
         method: "function walletOfOwner(address _owner) view returns (uint256[])",
@@ -85,7 +85,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       setHasAvailableKey(false);
     } finally {
       setIsLoadingKeys(false);
-      try { onLoadingKeysChange && onLoadingKeysChange(false); } catch {}
+      try { onLoadingKeysChange?.(false); } catch {}
     }
   }, [account?.address, contract, onLoadingKeysChange]);
 
@@ -372,7 +372,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     <div className="space-y-4">
       <div className="rounded-2xl p-4 text-white" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
         <h3 className="text-lg font-semibold mb-2">Agendar una sesión</h3>
-        <p className="text-white/80 text-sm">Haz clic en "Agendar" para seleccionar terapeuta y agendar una consulta usando tus Inner Keys.</p>
+        <p className="text-white/80 text-sm">Haz clic en &quot;Agendar&quot; para seleccionar terapeuta y agendar una consulta usando tus Inner Keys.</p>
         <div className="mt-3 flex items-center gap-3">
           <button
             onClick={() => setPlannerOpen(true)}

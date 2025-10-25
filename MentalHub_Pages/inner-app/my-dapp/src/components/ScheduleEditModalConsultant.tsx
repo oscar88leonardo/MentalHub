@@ -33,7 +33,7 @@ interface Props {
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
-  const { profile, account, executeQuery, authenticateForWrite } = useCeramic();
+  const { account, executeQuery, authenticateForWrite } = useCeramic();
   const [busy, setBusy] = useState<"none" | "open">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
 
@@ -143,7 +143,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         setIsSaving(false);
         return;
       }
-      try { await authenticateForWrite(); } catch (e) {
+      try { await authenticateForWrite(); } catch {
         showToast('Se requiere autenticación para guardar cambios.', 'error');
         setIsSaving(false);
         return;
@@ -162,12 +162,12 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
       const res: any = await executeQuery(mutation);
       if (!res?.errors) {
         showToast('Cambios guardados', 'success');
-        try { onSaved && onSaved(); } catch {}
+        try { onSaved?.(); } catch {}
         onClose();
       } else {
         showToast('No se pudo guardar la consulta', 'error');
       }
-    } catch (e) {
+    } catch {
       showToast('Error al guardar', 'error');
     } finally {
       setIsSaving(false);
@@ -189,7 +189,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         openMeet,
         optimistic: true,
       });
-      try { onUpdated && onUpdated(); } catch {}
+      try { onUpdated?.(); } catch {}
     } catch (e: any) {
       const msg = e?.message === 'TIME_WINDOW'
         ? 'La sala solo está disponible en la franja horaria programada.'

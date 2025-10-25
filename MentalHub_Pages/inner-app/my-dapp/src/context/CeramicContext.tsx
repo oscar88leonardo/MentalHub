@@ -646,9 +646,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     }
     // Pasar variables si se proporcionan
     try {
-      // @ts-ignore - composeClient.executeQuery soporta variables opcionales
       return await composeClient.executeQuery(query, variables);
-    } catch (e) {
+    } catch {
       // Fallback por seguridad sin variables
       return await composeClient.executeQuery(query);
     }

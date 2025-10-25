@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+// import { revalidatePath } from "next/cache";
 import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { privateKeyToAccount } from "thirdweb/wallets";
 import { abi } from "@/abicontracts/MembersAirdrop";

@@ -136,10 +136,10 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         });
         showToast('Consulta finalizada', 'success');
         onUpdated?.();
-      } catch (apiError) {
+      } catch {
         showToast('Error al finalizar la consulta.', 'error');
       }
-    } catch (e) {
+    } catch {
       showToast('Error al finalizar la consulta.', 'error');
     } finally {
       setBusy('none');
