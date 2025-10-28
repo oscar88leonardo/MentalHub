@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import Image from "next/image";
-import { useActiveWallet } from "thirdweb/react";
+import { useActiveAccount } from "thirdweb/react";
 import { useCeramic } from "@/context/CeramicContext";
 
 interface HeaderProps {
@@ -11,8 +11,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, subtitle, onLogout }) => {
-  const activeWallet = useActiveWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
+  const account = useActiveAccount();
   const { isConnected: isCeramicConnected, isLoading, composeClient } = useCeramic();
   const isReadOnly = !isCeramicConnected && !!composeClient; // clientes listos sin DID => modo lectura
 

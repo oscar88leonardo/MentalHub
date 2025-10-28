@@ -25,6 +25,8 @@ export default function CeramicDebugPage() {
   const adminWallet = useAdminWallet();
   const selectedWallet = adminWallet || activeWallet;
   const account = selectedWallet ? selectedWallet.getAccount() : null;
+  // Mostrar siempre la dirección de la smart account (active wallet) en la UI
+  const aaAccount = activeWallet ? activeWallet.getAccount() : null;
 
   const [ceramic, setCeramic] = useState<CeramicClient | null>(null);
   const [compose, setCompose] = useState<ComposeClient | null>(null);
@@ -68,7 +70,7 @@ export default function CeramicDebugPage() {
 
   const ensureChainAndAccount = useCallback(async () => {
     if (!provider || !account) throw new Error("Provider/account not ready");
-    const chainHex = "0xe9fe"; // 59902
+    const chainHex = `0x${myChain.id.toString(16)}`; // chain from NEXT_PUBLIC_CHAIN
     const currentChainId = await provider.request?.({ method: "eth_chainId" });
     console.log("[CD] chainId", currentChainId);
     if ((currentChainId || "").toLowerCase() !== chainHex) {
@@ -236,7 +238,7 @@ export default function CeramicDebugPage() {
         <div className="p-4 rounded border">
           <h2 className="font-semibold mb-2">Wallet</h2>
           <div className="text-sm space-y-1">
-            <div>account: {account?.address || "-"}</div>
+            <div>account (AA): {aaAccount?.address || "-"}</div>
             <div>walletType: {adminWallet ? "adminWallet" : activeWallet ? "activeWallet" : "-"}</div>
             <div>provider: {provider ? "ready" : "-"}</div>
           </div>

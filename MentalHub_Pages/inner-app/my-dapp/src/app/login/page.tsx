@@ -25,7 +25,7 @@ const walletsThirdweb = [
         "phone",
       ],
     },
-    /*executionMode: {
+   /* executionMode: {
       mode: "EIP7702",
       sponsorGas: true,
     },*/
@@ -122,30 +122,6 @@ export default function LoginPage() {
               accountAbstraction={{
                 chain: myChain,
                 sponsorGas: true, 
-              }}
-              auth={{
-                isLoggedIn: async () => {
-                  return !!account;
-                },
-                doLogin: async () => {
-                  console.log("logging in!");
-                },
-                getLoginPayload: async () => ({
-                  address: "0x0000000000000000000000000000000000000000",
-                  chain_id: "0x1",
-                  domain: "dummy",
-                  uri: "https://dummy.com",
-                  version: "1",
-                  nonce: "0",
-                  issued_at: new Date().toISOString(),
-                  expiration_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-                  invalid_before: new Date().toISOString(),
-                  statement: "Sign in to Innerverse",
-                  resources: [],
-                }),
-                doLogout: async () => {
-                  console.log("logging out!");
-                },
               }}
               theme="light"
               className="w-full"
