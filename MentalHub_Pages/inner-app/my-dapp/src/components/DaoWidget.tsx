@@ -7,6 +7,8 @@ import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
 import Header from "./Header";
 import { ethers, formatEther, parseEther, isAddress, id } from "ethers";
+import { useActiveAccount, useActiveWalletChain, useSwitchActiveWalletChain } from "thirdweb/react";
+import { abi as governorAbi } from "@/abicontracts/MembersGovernor";
 
 const proposalCreated = prepareEvent({
   signature:
@@ -21,7 +23,8 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   const governorAddress = contracts.membersgovernor;
   
   // Move all hooks to the top before any conditional returns
-  const governor = useMemo(() => governorAddress ? getContract({ client, chain: myChain, address: governorAddress }) : null, [governorAddress]);
+  const governor = useMemo(() => governorAddress ? getContract(
+    { client, chain: myChain, address: governorAddress, abi: governorAbi as any}) : null, [governorAddress]);
   const [proposals, setProposals] = useState<Array<{
     id: string;
     description: string;
@@ -50,6 +53,19 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   const [isLoadingProposals, setIsLoadingProposals] = useState(false);
   const [lastLoadTime, setLastLoadTime] = useState<number>(0);
   const [manualRefresh, setManualRefresh] = useState<number>(0);
+
+  const account = useActiveAccount();
+  const activeChain = useActiveWalletChain();
+  const switchChain = useSwitchActiveWalletChain();
+  const memberToken = contracts.membersAirdrop;
+  const governanceToken = useMemo(
+    () => memberToken ? getContract({client, chain: myChain, address: memberToken}) : null,
+    [memberToken]);
+
+  const [myVotes, setMyVotes] = useState<bigint>(BigInt(0));
+  const [threshold, setThreshold] = useState<bigint>(BigInt(1));
+  const [delegatee, setDelegatee] = useState<string | null>(null);
+
 
   // Función helper para formatear fechas correctamente
   const formatDate = (timestamp: number) => {
@@ -193,18 +209,44 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   }, [governor]);
 
   useEffect(() => {
-    if (!governor) return;
-    
+    if (!governor || !governanceToken || !account) return;
+    let cancelled = false;
+    // carga de votos/umbral/delegatee
+    (async () => {
+      try {
+        const [v, t, d] = await Promise.all([
+          readContract({
+            contract: governanceToken,
+            method: "function getVotes(address) view returns (uint256)",
+            params: [account.address],
+          }),
+          readContract({
+            contract: governor,
+            method: "function proposalThreshold() view returns (uint256)",
+            params: [],
+          }),
+          readContract({
+            contract: governanceToken,
+            method: "function delegates(address) view returns (address)",
+            params: [account.address],
+          }).catch(() => "0x0000000000000000000000000000000000000000"),
+        ]);
+        if (cancelled) return;
+        setMyVotes(BigInt(v as any));
+        setThreshold(BigInt(t as any));
+        setDelegatee(d as string);
+      } catch {}
+    })();
+    //canceled = true;
+    // load proposals block
     // Solo cargar propuestas cuando se hace refresh manual o es la primera vez
     const now = Date.now();
     if (proposals.length > 0 && now - lastLoadTime < 30000) {
       console.log('⏸️ Evitando recarga automática - usar botón refresh');
       return;
-    }
-    
-    let cancelled = false;
+    }    
+    //let cancelled = false;
     setIsLoadingProposals(true);
-    
     (async () => {
       try {
         const provider = new ethers.JsonRpcProvider((myChain as any).rpc as string);
@@ -294,7 +336,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     })();
     
     return () => { cancelled = true; };
-  }, [governor, refreshTrigger, manualRefresh]);
+  }, [governor, governanceToken, account, refreshTrigger, manualRefresh]);
 
   // useEffect para votos - ELIMINADO para evitar re-renders automáticos
   // Los votos se actualizarán solo cuando se haga refresh manual
@@ -516,10 +558,51 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
                 </span>
               </div>
             </div>
+
+              {/* Indicadores de votos y delegación */}
+              <div className="mb-4 p-4 rounded-xl bg-white/10 border border-white/20">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-sm text-white/80">
+                    <div>Votos actuales: <span className="font-semibold">{myVotes.toString()}</span></div>
+                    <div>Umbral propuesta: <span className="font-semibold">{threshold.toString()}</span></div>
+                    {delegatee && (
+                      <div>
+                        Delegado a: <span className="font-mono">{delegatee.slice(0, 6)}…{delegatee.slice(-4)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {myVotes < threshold && (
+                    <TransactionButton
+                      transaction={() => {
+                        if (!governanceToken || !account) throw new Error("Conecta una wallet");
+                        return prepareContractCall({
+                          contract: governanceToken,
+                          method: "function delegate(address delegatee)",
+                          params: [account.address],
+                        });
+                      }}
+                      onTransactionConfirmed={() => {
+                        // refrescar datos y avisar que hay que esperar ~1 bloque
+                        setTimeout(() => setManualRefresh(prev => prev + 1), 1500);
+                        alert("Delegación realizada. Espera ~1 bloque y luego vuelve a intentar crear la propuesta.");
+                      }}
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium"
+                    >
+                      Delegar votos a mí
+                    </TransactionButton>
+                  )}
+                </div>
+              </div>
+            
               <TransactionButton
-                transaction={() => {
+                transaction={ async() => {
                   try {
-                    setIsCreatingProposal(true);
+                    
+                    if (!account) throw new Error("No se ha seleccionado una cuenta");
+                    if (!activeChain || activeChain.id !== myChain.id) {
+                      await switchChain(myChain);
+                    }
                     if (!governor) {
                       throw new Error("Governor contract not available");
                     }
@@ -554,10 +637,16 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
                 }}
                 onTransactionSent={() => {
                   // La transacción fue enviada, pero aún no confirmada
+                  setIsCreatingProposal(true);
                   console.log("Transacción enviada, esperando confirmación...");
                 }}
+                onError={(e)=> {
+                  setIsCreatingProposal(false);
+                  console.error("Error al crear propuesta:", e);
+                  alert( e?.message ||String(e));
+                }}
                 className="w-full md:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-                disabled={isCreatingProposal}
+                disabled={isCreatingProposal || myVotes < threshold}
               >
                 {isCreatingProposal ? (
                   <>

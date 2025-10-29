@@ -34,7 +34,7 @@ const wallets = [
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThirdwebProvider>
+    <ThirdwebProvider >
       <AutoConnect
         client={client}
         wallets={wallets}
