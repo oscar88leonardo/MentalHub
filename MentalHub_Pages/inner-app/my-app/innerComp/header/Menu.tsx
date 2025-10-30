@@ -73,7 +73,7 @@ const Menu = () => {
   ];
 
   useEffect(() => {
-    renderButton();
+    //renderButton();
     
     // Cerrar menú móvil cuando cambie el tamaño de ventana
     const handleResize = () => {
@@ -132,7 +132,7 @@ const Menu = () => {
     }
   };
         
-  const renderButton = () => {
+  /*const renderButton = () => {
       if (account != null) {
         return (
           <a
@@ -153,7 +153,7 @@ const Menu = () => {
           </a>
         );
       } 
-  };
+  };*/
   
 
   return (
@@ -162,8 +162,8 @@ const Menu = () => {
         <div className="desktop-menu">
             {renderUrl("VisionSection","Vision")}
             {renderUrl("DescriptionSection","Description")}
-            {renderUrl("NTFCollectSection","Digital Collections")}
-            <a
+            {/*renderUrl("NTFCollectSection","Digital Collections")*/}
+            {/*<a
               href="#"
               className="menu-link"
               onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
@@ -176,7 +176,7 @@ const Menu = () => {
               onClick={handleLinkClick}
             >
               DAO
-            </a>
+            </a> */}
             {renderUrl("PartnersSection","Partners")}
             {renderUrl("RoadMapSection","RoadMap")}
             {renderUrl("FAQsSection","FAQs")}
@@ -223,8 +223,8 @@ const Menu = () => {
             }}>
                 {renderUrl("VisionSection","Vision")}
                 {renderUrl("DescriptionSection","Description")}
-                {renderUrl("NTFCollectSection","Digital Collections")}
-                <a
+                {/*{renderUrl("NTFCollectSection","Digital Collections")}*/}
+                {/*<a
                   href="#"
                   className="menu-link"
                   onClick={(e) => handleAuthenticatedNavigation(e, './whitelist')}
@@ -237,21 +237,22 @@ const Menu = () => {
                   onClick={handleLinkClick}
                 >
                   DAO
-                </a>
+                </a>*/}
                 {renderUrl("PartnersSection","Partners")}
                 {renderUrl("RoadMapSection","RoadMap")}
                 {renderUrl("FAQsSection","FAQs")}
             </div>
           </div>
         )}
-
+        {/* Auth Warning - Solo visible en móvil 
         {showAuthWarning && (
           <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', backgroundColor: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', zIndex: 50 }}>
             Por favor, conecta tu wallet primero
           </div>
         )} 
+      */}
 
-        {/* Wallet Connection */}
+        {/* Wallet Connection 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <ConnectButton
               client={clientThridweb}
@@ -288,12 +289,14 @@ const Menu = () => {
               }}
             />
         </div>
+        */}
 
-        {/* Profile Button */}
+        {/* Profile Button 
         <div style={{ marginLeft: '1rem' }}>
             {renderButton()}
-        </div>
+        </div>*/}
     </div>
+    
   )
 }
 
