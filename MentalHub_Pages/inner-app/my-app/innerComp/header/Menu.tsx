@@ -2,26 +2,26 @@
 import React, { useEffect, useState, useContext } from "react";
 import { usePathname } from "next/navigation";
 import { Link } from "react-scroll";
-import { AppContext } from "../../context/AppContext";
-import { ConnectButton } from "thirdweb/react";
+//import { AppContext } from "../../context/AppContext";
+//import { ConnectButton } from "thirdweb/react";
 import "./Header.css";
 
-import {
+/*import {
   inAppWallet,
   createWallet,
-} from "thirdweb/wallets";
+} from "thirdweb/wallets";*/
 
-import {client as clientThridweb} from "../client";
-import { myChain } from "../myChain";
-import { useActiveWallet } from "thirdweb/react";
+//import {client as clientThridweb} from "../client";
+//import { myChain } from "../myChain";
+//import { useActiveWallet } from "thirdweb/react";
 
 const Menu = () => {
   // get global data from Appcontext
-  const context = useContext(AppContext);
-  if (context === null) {
-    throw new Error("useContext must be used within a provider");
-  }
-  const { logout, isConComposeDB } = context;
+  //const context = useContext(AppContext);
+  //if (context === null) {
+  //  throw new Error("useContext must be used within a provider");
+  //}
+  //const { logout, isConComposeDB } = context;
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const toggle = () => {
@@ -29,11 +29,12 @@ const Menu = () => {
     setIsOpen(!isOpen);
     console.log('New isOpen will be:', !isOpen);
   };
-  const activeWallet = useActiveWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
-  const [showAuthWarning, setShowAuthWarning] = useState(false);
+  //const activeWallet = useActiveWallet();
+  //const account = activeWallet ? activeWallet.getAccount() : null;
+ // const [showAuthWarning, setShowAuthWarning] = useState(false);
+  const INNER_APP_URL = process.env.NEXT_PUBLIC_INNER_APP_URL || '/inner-app/my-dapp';
   
-  // función para validar autenticación
+  /* función para validar autenticación
   const handleAuthenticatedNavigation = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
     setIsOpen(false); // Cerrar menú móvil al navegar
@@ -43,14 +44,14 @@ const Menu = () => {
       return;
     }
     window.location.href = path;
-  };
+  };*/
 
   // Cerrar menú cuando se hace click en un link
   const handleLinkClick = () => {
     setIsOpen(false);
   };
 
-  const walletsThirdweb = [
+/*  const walletsThirdweb = [
     inAppWallet({
       auth: {
         options: [
@@ -70,7 +71,7 @@ const Menu = () => {
     createWallet("me.rainbow"),
     createWallet("io.rabby"),
     createWallet("io.zerion.wallet"),
-  ];
+  ];*/
 
   useEffect(() => {
     //renderButton();
@@ -96,7 +97,7 @@ const Menu = () => {
           className="menu-link"
           onClick={(e) => {
             handleLinkClick();
-            handleAuthenticatedNavigation(e, './#NTFCollectSection');
+            /*handleAuthenticatedNavigation(e, './#NTFCollectSection');*/
           }}
         >
           {AuxText}
@@ -180,6 +181,15 @@ const Menu = () => {
             {renderUrl("PartnersSection","Partners")}
             {renderUrl("RoadMapSection","RoadMap")}
             {renderUrl("FAQsSection","FAQs")}
+            <a
+              href={INNER_APP_URL}
+              className="menu-link menu-cta"
+              onClick={handleLinkClick}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Inner App
+            </a>
         </div>
 
         {/* Mobile Menu Button - Solo visible en móvil */}
@@ -241,6 +251,15 @@ const Menu = () => {
                 {renderUrl("PartnersSection","Partners")}
                 {renderUrl("RoadMapSection","RoadMap")}
                 {renderUrl("FAQsSection","FAQs")}
+                <a
+                  href={INNER_APP_URL}
+                  className="menu-link menu-cta"
+                  onClick={handleLinkClick}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Inner App
+                </a>
             </div>
           </div>
         )}
