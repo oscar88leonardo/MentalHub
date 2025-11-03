@@ -12,7 +12,7 @@ https://drive.google.com/drive/folders/1ehLBarc9rHOkPQW02ssuCmk0KqXujVi0
 #Demo web App: 
 https://innerverse.care
 # (On going) Rediseñp y migración de Dapp:
-mental-hub-my-app-p3qk-git-my-dapp-leos-projects-1ca3b281.vercel.app
+https://mental-hub-my-app-p3qk-git-my-dapp-leos-projects-1ca3b281.vercel.app
 
 
 #########################################
