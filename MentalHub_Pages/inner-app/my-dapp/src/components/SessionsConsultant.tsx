@@ -12,11 +12,15 @@ import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
 import { abi } from "@/abicontracts/MembersAirdrop";
+import { watchSessionState } from "@/lib/sessionEvents";
 
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 interface SessionsConsultantProps { onLoadingKeysChange?: (loading: boolean) => void }
+
+// mapState para estados de la consulta
+const mapState = (x: number) => x === 0 ? 'Pending' : (x === 1 || x === 2) ? 'Active' : x === 3 ? 'Finished' : 'Pending';
 
 const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysChange }) => {
   const { profile, account, executeQuery, refreshProfile } = useCeramic();
@@ -48,13 +52,19 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     setTimeout(() => setToast(null), 3000);
   };
 
+  // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
+  const contract = useMemo(() => getContract(
+    { client: client!, 
+      chain: myChain, 
+      address: contracts.membersAirdrop, 
+      abi: abi as [] }), []);
+  
   const { defaultDate, scrollToTime } = useMemo(() => ({
     defaultDate: new Date(),
     scrollToTime: new Date(1970, 1, 1, 6),
   }), []);
 
   // Leer Inner Keys del usuario y verificar sesiones disponibles (solo cuando la wallet esté lista)
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
   const refreshKeyAvailability = useCallback(async () => {
     try {
       const addr = account?.address;
@@ -93,7 +103,13 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     refreshKeyAvailability();
   }, [refreshKeyAvailability]);
 
-  
+  // watchContractEvents para estados de la consulta
+  useEffect(() => {
+    const unwatch = watchSessionState(contract,(scheduleId, newState) => {
+      setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
+    });
+    return () => { try { unwatch?.(); } catch {} };  
+  }, [contract]);
 
   // Cargar lista de terapeutas (una vez; evita re-ejecución por cambios de referencia)
   useEffect(() => {
@@ -234,15 +250,40 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     loadPlannerData();
   }, [therapist, loadPlannerData]);
 
-  // Restaurar lectura on-chain previa (sin caché visible)
+  // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
   useEffect(() => {
-    const sig = mySchedEvents.map(e => `${e.id}:${e.tokenId ?? ''}`).join('|');
-    if (!mySchedEvents.length || sig === onChainSigRef.current) return;
-    onChainSigRef.current = sig;
+    if (!mySchedEvents.length || !contract) return;
+    
+    // Calcular rango visible según la vista
+    const startWeek = startOfWeek(mySchedDate, { weekStartsOn: 1 });
+    const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
+    let rangeStart = startWeek;
+    let rangeEnd = addDays(startWeek, 7);
+    
+    if (mySchedView === Views.DAY) {
+      rangeStart = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), mySchedDate.getDate());
+      rangeEnd = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), mySchedDate.getDate(), 23, 59, 59, 999);
+    } else if (mySchedView === Views.MONTH) {
+      rangeStart = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), 1);
+      rangeEnd = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth() + 1, 0, 23, 59, 59, 999);
+    } else {
+      // Para WEEK: asegurar que incluya toda la semana hasta el final del domingo
+      rangeStart = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate(), 0, 0, 0, 0);
+      rangeEnd = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate() + 7, 23, 59, 59, 999);
+    }
+    
+    const visible = mySchedEvents.filter(e => e.tokenId != null && e.start < rangeEnd && e.end > rangeStart);
+    if (!visible.length) return;
+    
+    const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
+    if (onChainSigRef.current === key) return;
+    
+    onChainSigRef.current = key;
+    
     (async () => {
       try {
-        const updated = await Promise.all(mySchedEvents.map(async (e) => {
-          if (!e.tokenId) return e;
+        const updates = await Promise.all(visible.map(async (e) => {
+          if (!e.tokenId) return { id: e.id, state: e.state };
           try {
             const stateNum = await readContract({
               contract,
@@ -250,16 +291,29 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
               params: [BigInt(e.tokenId), e.id]
             });
             const n = Number(stateNum as any);
-            const map = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
-            return { ...e, state: map(n) };
-          } catch {
-            return e;
+            return { id: e.id, state: mapState(n) };
+          } catch (err) {
+            console.warn(`Failed to read state for event ${e.id}:`, err);
+            return { id: e.id, state: e.state };
           }
         }));
-        setMySchedEvents(updated);
-      } catch {}
+        
+        // Verificar que la key no haya cambiado mientras leíamos
+        if (onChainSigRef.current !== key) {
+          console.log('Skipping update: key changed during read');
+          return;
+        }
+        
+        const byId = new Map<string, string>();
+        for (const u of updates) byId.set(u.id, u.state);
+        
+        setMySchedEvents(prev => prev.map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
+      } catch (err) {
+        console.error('Error reading on-chain states:', err);
+        onChainSigRef.current = '';
+      }
     })();
-  }, [mySchedEvents, contract]);
+  }, [mySchedEvents, contract, mySchedDate, mySchedView]);
 
   const eventPropGetter = useCallback((event: any) => {
     const isActive = event.state === 'Active';
@@ -321,7 +375,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     const qViewer = `
       query {
         viewer { innerverProfile {
-          schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
+          schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
             edges { node { id date_init date_finish state hudd { id name roomId profileId profile { name displayName } } NFTContract TokenID } }
           }
         } }
@@ -335,7 +389,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         query {
           node(id: "${pid}") {
             ... on InnerverProfile {
-              schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
+              schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
                 edges { node { id date_init date_finish state hudd { id name roomId profileId profile { name displayName } } NFTContract TokenID } }
               }
             }
@@ -537,8 +591,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                           params: [BigInt(cur.tokenId), cur.id]
                         });
                         const n = Number(stateNum as any);
-                        const map = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
-                        setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: map(n) } : ev));
+                        setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: mapState(n) } : ev));
                       }
                     } catch {}
                   }}

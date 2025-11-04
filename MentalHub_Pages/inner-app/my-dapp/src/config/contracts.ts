@@ -10,7 +10,7 @@ type Contracts = {
 const MAP: Record<ChainKey, Contracts> = {
   'arbitrum-sepolia': {
     membersgovernor: "0x51a109A3f06f3D6cE610b5c94CB3Be91553f1390", // MembersGovernorTimeBased actualizado con validación de 1 minuto
-    membersAirdrop: "0x0868c53AcD1D4713AbA14F0199C8006e039635D5", // NFT existente
+    membersAirdrop: "0x609ee5AC3154Aa8501Ccfd0D4521469Eb747E0B7",//"0x0868c53AcD1D4713AbA14F0199C8006e039635D5", // NFT existente
     whitelist: "0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88",
   },
   'metis-sepolia': {

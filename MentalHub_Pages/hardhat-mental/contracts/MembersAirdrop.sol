@@ -74,7 +74,9 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
     // Evento para tracking de mints sponsoreados
     event SponsoredMint(address indexed user , uint256 tokenId, uint256 sessions);
     event AirdropStarted(uint256 endTime, uint256 duration, uint8 timeUnit);
-
+    // Evento para tracking de estado de sesiones
+    event SessionStateChanged(uint256 indexed tokenId, string scheduleId, uint8 newState);
+    
     /**
      * @dev ERC721 constructor takes in a `name` and a `symbol` to the token collection.
      * Constructor for Crypto Devs takes in the baseURI to set _baseTokenURI for the collection.
@@ -189,6 +191,7 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
             // Si no existe la sesión, se crea una nueva en el índice disponible
             tokenSessions[tokenId][uint256(availableSession)] = Session(newState, scheduleId);
         }
+        emit SessionStateChanged(tokenId, scheduleId, uint8(newState));
     }
 
     function getSessionState(uint256 tokenId, string memory scheduleId) public view returns (SessionState) {

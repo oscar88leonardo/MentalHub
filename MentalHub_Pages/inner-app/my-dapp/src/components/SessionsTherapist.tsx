@@ -5,12 +5,12 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCeramic } from "@/context/CeramicContext";
 import ScheduleDetailsModal from "./ScheduleDetailsModal";
-import { getContract, readContract } from "thirdweb";
+import { getContract, readContract} from "thirdweb";
 import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
 import { abi } from "@/abicontracts/MembersAirdrop";
-
+import { watchSessionState } from "@/lib/sessionEvents";
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
@@ -28,6 +28,9 @@ interface EventItem {
   profileId?: string;
 }
 
+// mapstate para estados de la consulta
+const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+
 const SessionsTherapist: React.FC = () => {
   const { profile, executeQuery } = useCeramic();
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -39,6 +42,13 @@ const SessionsTherapist: React.FC = () => {
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
   const onChainSigRef = useRef<string>("");
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Active: true, Finished: true });
+
+   // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
+  const contract = useMemo(() => getContract(
+    { client: client!, 
+      chain: myChain, 
+      address: contracts.membersAirdrop, 
+      abi: abi as [] }), []);
 
   const { defaultDate, scrollToTime } = useMemo(() => ({
     defaultDate: new Date(),
@@ -64,7 +74,7 @@ const SessionsTherapist: React.FC = () => {
                       id
                       name
                       roomId
-                      schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
+                      schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
                         edges {
                           node {
                             id
@@ -100,7 +110,7 @@ const SessionsTherapist: React.FC = () => {
               id: sn.id,
               start: new Date(sn.date_init),
               end: new Date(sn.date_finish),
-              state: sn.state,
+              state: 'Pending',
               huddId: hnode.id,
               roomId: hnode.roomId,
               displayName: sn.profile?.displayName || "",
@@ -124,9 +134,9 @@ const SessionsTherapist: React.FC = () => {
   }, [profile?.id, executeQuery]);
 
   // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
   useEffect(() => {
-    if (!events.length) return;
+    if (!events.length || !contract) return;
+    
     // Calcular rango visible según la vista
     const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
     const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
@@ -139,11 +149,16 @@ const SessionsTherapist: React.FC = () => {
       rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
+    
     const visible = events.filter(e => e.tokenId != null && e.start < rangeEnd && e.end > rangeStart);
     if (!visible.length) return;
+    
     const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
     if (onChainSigRef.current === key) return;
+    
+    // Marcar como "en progreso" inmediatamente para evitar ejecuciones duplicadas
     onChainSigRef.current = key;
+    
     (async () => {
       try {
         const updates = await Promise.all(visible.map(async (e) => {
@@ -154,18 +169,48 @@ const SessionsTherapist: React.FC = () => {
               params: [BigInt(e.tokenId as number), e.id]
             });
             const n = Number(stateNum as any);
-            const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
-            return { id: e.id, state: mapState(n) } as { id: string; state: string };
-          } catch {
-            return { id: e.id, state: e.state };
+            return { id: e.id, state: mapState(n) };
+          } catch (err) {
+            console.warn(`Failed to read state for event ${e.id}:`, err);
+            return { id: e.id, state: e.state }; // Mantener estado actual si falla
           }
         }));
+        
+        // Verificar que la key no haya cambiado mientras leíamos
+        if (onChainSigRef.current !== key) {
+          console.log('Skipping update: key changed during read');
+          return;
+        }
+        
         const byId = new Map<string, string>();
-        for (const u of updates) byId.set(u.id, u.state);
-        setEvents(prev => prev.map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
-      } catch {}
+        for (const u of updates) {
+          byId.set(u.id, u.state);
+        }
+        
+        // Actualizar todos los eventos que tienen actualizaciones
+        setEvents(prev => {
+          const updated = prev.map(ev => {
+            if (byId.has(ev.id)) {
+              return { ...ev, state: byId.get(ev.id)! };
+            }
+            return ev;
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.error('Error reading on-chain states:', err);
+        // Resetear el ref para permitir reintento
+        onChainSigRef.current = '';
+      }
     })();
-  }, [events, contract, currentDate, currentView]);
+  }, [events, contract, currentDate, currentView]); 
+  // watchContractEvents para estados de la consulta
+ useEffect(() => {
+  const unwatch = watchSessionState(contract,(scheduleId, newState) => {
+    setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
+  });
+  return () => { try { unwatch?.(); } catch {} };  
+}, [contract]);
 
   const messages = useMemo(() => ({
     date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día',
@@ -293,7 +338,6 @@ const SessionsTherapist: React.FC = () => {
                     params: [BigInt(selected.tokenId), selected.id]
                   });
                   const n = Number(stateNum as any);
-                  const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
                   const newState = mapState(n);
                   setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState } : ev));
                 }
