@@ -37,7 +37,7 @@ sudo shutdown -h now
 smart contracts en  Arbitrum, Metis, Polygon, Astar-Shibuya testnets
 
 'arbitrum-sepolia': {
-      membersgovernor: "0x51a109A3f06f3D6cE610b5c94CB3Be91553f1390", // MembersGovernorTimeBased actualizado con validación de 1 minuto
+      membersgovernor: "0xE79e3c6CC2a258D0b74692F4A3645Db31f8A0AC0", // MembersGovernorTimeBased actualizado con validación de 1 minuto
       membersAirdrop: "0x609ee5AC3154Aa8501Ccfd0D4521469Eb747E0B7", 
       whitelist: "0x2C20B0E2d623610aEdEA9a1A10DE0AEbebad6f88",
     },
