@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { TransactionButton } from "thirdweb/react";
-import { getContract, prepareContractCall, getContractEvents, prepareEvent, readContract } from "thirdweb";
+import { getContract, prepareContractCall, getContractEvents, prepareEvent, readContract, sendTransaction } from "thirdweb";
 import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
 import Header from "./Header";
 import { ethers, formatEther, parseEther, isAddress, id } from "ethers";
-import { useActiveAccount, useActiveWalletChain, useSwitchActiveWalletChain } from "thirdweb/react";
+import { useAdminWallet,useActiveAccount, useActiveWalletChain, useSwitchActiveWalletChain } from "thirdweb/react";
 import { abi as governorAbi } from "@/abicontracts/MembersGovernor";
 
 const proposalCreated = prepareEvent({
@@ -45,6 +45,9 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   const [description, setDescription] = useState<string>("Propuesta demo");
   const [to, setTo] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
+  
+  
+  
   const [currentBlock, setCurrentBlock] = useState<number | null>(null);
   const [isCreatingProposal, setIsCreatingProposal] = useState<boolean>(false);
   const [proposalCreatedSuccess, setProposalCreatedSuccess] = useState<boolean>(false);
@@ -57,6 +60,8 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   const account = useActiveAccount();
   const activeChain = useActiveWalletChain();
   const switchChain = useSwitchActiveWalletChain();
+  const adminWallet = useAdminWallet();
+  const adminAccount = adminWallet ? adminWallet.getAccount() : null;
   const memberToken = contracts.membersAirdrop;
   const governanceToken = useMemo(
     () => memberToken ? getContract({client, chain: myChain, address: memberToken}) : null,
@@ -66,6 +71,12 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   const [threshold, setThreshold] = useState<bigint>(BigInt(1));
   const [delegatee, setDelegatee] = useState<string | null>(null);
 
+  // estados para días, horas y minutos en propuestas
+  const [votingDays, setVotingDays] = useState<string>("");
+  const [votingHours, setVotingHours] = useState<string>("");
+  const [votingMinutes, setVotingMinutes] = useState<string>("");
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [currentVotingPeriod, setCurrentVotingPeriod] = useState<bigint | null>(null);
 
   // Función helper para formatear fechas correctamente
   const formatDate = (timestamp: number) => {
@@ -78,6 +89,84 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     const seconds = date.getSeconds().toString().padStart(2, '0');
     
     return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+  };
+
+
+  // Función para verificar si la cuenta actual es owner
+  const checkIfOwner = async () => {
+    if (!governor || !adminAccount) return;
+    
+    try {
+      const ownerAddress = await readContract({
+        contract: governor,
+        method: "function owner() view returns (address)",
+        params: [],
+      });
+      
+      setIsOwner(ownerAddress?.toLowerCase() === adminAccount.address.toLowerCase());
+    } catch (error) {
+      console.error("Error verificando owner:", error);
+      setIsOwner(false);
+    }
+  };
+
+  // Función para cargar el período de votación actual
+  const loadCurrentVotingPeriod = async () => {
+    if (!governor) return;
+    
+    try {
+      const period = await readContract({
+        contract: governor,
+        method: "function votingPeriodSeconds() view returns (uint256)",
+        params: [],
+      });
+      
+      setCurrentVotingPeriod(period as bigint);
+    } catch (error) {
+      console.error("Error cargando período de votación:", error);
+    }
+  };
+
+  // Función para convertir días, horas, minutos a segundos
+  const convertToSeconds = (days: string, hours: string, minutes: string): bigint => {
+    const daysNum = BigInt(days || "0");
+    const hoursNum = BigInt(hours || "0");
+    const minutesNum = BigInt(minutes || "0");
+    
+    // Validar límites
+    const totalMinutes = daysNum * BigInt(24 * 60) + hoursNum * BigInt(60) + minutesNum;
+    const totalSeconds = totalMinutes * BigInt(60);
+    
+    return totalSeconds;
+  };
+
+  // Función para validar el período de votación
+  const validateVotingPeriod = (days: string, hours: string, minutes: string): { valid: boolean; error?: string } => {
+    const daysNum = parseInt(days || "0");
+    const hoursNum = parseInt(hours || "0");
+    const minutesNum = parseInt(minutes || "0");
+    
+    if (daysNum < 0 || hoursNum < 0 || minutesNum < 0) {
+      return { valid: false, error: "Los valores no pueden ser negativos" };
+    }
+    
+    if (daysNum === 0 && hoursNum === 0 && minutesNum === 0) {
+      return { valid: false, error: "El período debe ser al menos 1 minuto" };
+    }
+    
+    const totalSeconds = convertToSeconds(days, hours, minutes);
+    const minSeconds = BigInt(60); // 1 minuto
+    const maxSeconds = BigInt(30 * 24 * 60 * 60); // 30 días
+    
+    if (totalSeconds < minSeconds) {
+      return { valid: false, error: "El período mínimo es 1 minuto" };
+    }
+    
+    if (totalSeconds > maxSeconds) {
+      return { valid: false, error: "El período máximo es 30 días" };
+    }
+    
+    return { valid: true };
   };
 
   // Función para obtener timestamps de propuestas - VERSIÓN MEJORADA CON TIMESTAMPS REALES
@@ -302,24 +391,45 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
         const proposalsWithTimestamps = await Promise.all(
           parsed.map(async (p: any) => {
             const timestamps = await getProposalTimestamps(p.id);
-            
+
             // Obtener estado real del contrato
-            let contractState = null;
+            let contractState: number | undefined;
             try {
-              contractState = await readContract({
+              const state = await readContract({
                 contract: governor,
                 method: "function state(uint256) view returns (uint8)",
                 params: [BigInt(p.id)],
               });
+              contractState = Number(state);
             } catch (error) {
               console.error(`Error obteniendo estado para propuesta ${p.id}:`, error);
             }
-            
+
+            // Obtener votos actuales de la propuesta
+            let votes = {
+              againstVotes: BigInt(0),
+              forVotes: BigInt(0),
+              abstainVotes: BigInt(0),
+            };
+            try {
+              const [againstVotes, forVotes, abstainVotes] = (await readContract({
+                contract: governor,
+                method:
+                  "function proposalVotes(uint256) view returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)",
+                params: [BigInt(p.id)],
+              })) as unknown as [bigint, bigint, bigint];
+
+              votes = { againstVotes, forVotes, abstainVotes };
+            } catch (error) {
+              console.error(`Error cargando votos para propuesta ${p.id}:`, error);
+            }
+
             return {
               ...p,
               voteStartTimestamp: timestamps?.startTimestamp || 0,
               voteEndTimestamp: timestamps?.endTimestamp || 0,
-              contractState: contractState,
+              contractState,
+              ...votes,
             };
           })
         );
@@ -357,6 +467,61 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     
     return () => { cancelled = true; };
   }, [governorAddress]);
+
+  // Cargar campo para definir periodo de votacion si es owner 
+  useEffect(() => {
+    if (!governor || !adminAccount) {
+      setIsOwner(false);
+      setCurrentVotingPeriod(null);
+      return;
+    }
+    
+    let cancelled = false;
+    
+    const loadOwnerAndPeriod = async () => {
+      try {
+        // Verificar si es owner
+        const ownerAddress = await readContract({
+          contract: governor,
+          method: "function owner() view returns (address)",
+          params: [],
+        }).catch(() => null);
+        
+        if (cancelled) return;
+        
+        if (ownerAddress) {
+          setIsOwner(ownerAddress.toLowerCase() === adminAccount.address.toLowerCase());
+        } else {
+          setIsOwner(false);
+        }
+        
+        // Cargar período de votación actual
+        const period = await readContract({
+          contract: governor,
+          method: "function votingPeriodSeconds() view returns (uint256)",
+          params: [],
+        }).catch(() => null);
+        
+        if (cancelled) return;
+        
+        if (period) {
+          setCurrentVotingPeriod(period as bigint);
+        }
+      } catch (error) {
+        console.error("Error cargando datos de owner/período:", error);
+        if (!cancelled) {
+          setIsOwner(false);
+        }
+      }
+    };
+    
+    loadOwnerAndPeriod();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [governor, adminAccount]);
+  
 
   if (!governorAddress) {
     return (
@@ -397,24 +562,15 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     console.log('🔄 Refresh manual iniciado...');
     setManualRefresh(prev => prev + 1);
     setLastLoadTime(0); // Resetear para forzar recarga
-    
+
     // También cargar votos después de un breve delay
     setTimeout(async () => {
       if (!governor || !proposals.length) return;
-      
+
       try {
         console.log('📊 Cargando votos...');
-        const proposalsToUpdate = proposals.filter(p => 
-          !p.forVotes && !p.againstVotes && !p.abstainVotes
-        );
-        
-        if (proposalsToUpdate.length === 0) {
-          console.log('✅ Todos los votos ya están cargados');
-          return;
-        }
-        
         const updated = await Promise.all(
-          proposalsToUpdate.map(async (p) => {
+          proposals.map(async (p) => {
             try {
               const [againstVotes, forVotes, abstainVotes] = (await readContract({
                 contract: governor,
@@ -422,23 +578,22 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
                   "function proposalVotes(uint256) view returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes)",
                 params: [BigInt(p.id)],
               })) as unknown as [bigint, bigint, bigint];
+
               return { ...p, forVotes, againstVotes, abstainVotes };
-            } catch {
-              return { ...p };
+            } catch (error) {
+              console.error(`Error cargando votos para propuesta ${p.id}:`, error);
+              return p;
             }
           })
         );
-        
-        setProposals(prev => prev.map(p => {
-          const updatedP = updated.find(u => u.id === p.id);
-          return updatedP || p;
-        }));
-        
+
+        setProposals(updated);
+
         console.log('✅ Votos cargados exitosamente');
       } catch (e) {
         console.error('❌ Error cargando votos:', e);
       }
-    }, 2000); // Delay de 2 segundos para que se carguen las propuestas primero
+    }, 500); // pequeño delay para no saturar y permitir que propuestas nuevas se asienten
   };
 
   const handleProposalCreated = () => {
@@ -994,7 +1149,165 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
                   {balanceWei !== null ? `${formatEther(balanceWei)} ETH` : "Cargando..."}
                 </p>
               </div>
-            </div>
+            </div>          
+            {/* Sección de Período de Votación */}
+            <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30">
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h4 className="text-lg font-semibold text-white">Período de Votación</h4>
+              </div>
+              
+              <p className="text-xs text-white/70 mb-4">
+                El período de votación debe estar entre <span className="font-semibold text-purple-300">1 minuto</span> y <span className="font-semibold text-purple-300">30 días</span>. Solo el owner puede cambiar este valor.
+              </p>
+              
+              {/* Mostrar período actual */}
+              {currentVotingPeriod !== null && (
+                <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-white/80 mb-1">Período actual configurado:</div>
+                  <div className="text-lg font-bold text-purple-300">
+                    {(() => {
+                      const seconds = Number(currentVotingPeriod);
+                      const days = Math.floor(seconds / 86400);
+                      const hours = Math.floor((seconds % 86400) / 3600);
+                      const minutes = Math.floor((seconds % 3600) / 60);
+                      const parts = [];
+                      if (days > 0) parts.push(`${days} día${days > 1 ? 's' : ''}`);
+                      if (hours > 0) parts.push(`${hours} hora${hours > 1 ? 's' : ''}`);
+                      if (minutes > 0) parts.push(`${minutes} minuto${minutes > 1 ? 's' : ''}`);
+                      return parts.length > 0 ? parts.join(', ') : '0 minutos';
+                    })()}
+                  </div>
+                </div>
+              )}
+              
+              {/* Campos de entrada para días, horas, minutos */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {/* Campo de días */}
+                <div>
+                  <label className="block text-xs font-medium text-white/80 mb-2">
+                    Días
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="30"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                    value={votingDays}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || (parseInt(val) >= 0 && parseInt(val) <= 30)) {
+                        setVotingDays(val);
+                      }
+                    }}
+                    disabled={!isOwner}
+                  />
+                </div>
+                
+                {/* Campo de horas */}
+                <div>
+                  <label className="block text-xs font-medium text-white/80 mb-2">
+                    Horas
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                    value={votingHours}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || (parseInt(val) >= 0 && parseInt(val) <= 23)) {
+                        setVotingHours(val);
+                      }
+                    }}
+                    disabled={!isOwner}
+                  />
+                </div>
+                
+                {/* Campo de minutos */}
+                <div>
+                  <label className="block text-xs font-medium text-white/80 mb-2">
+                    Minutos
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                    value={votingMinutes}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || (parseInt(val) >= 0 && parseInt(val) <= 59)) {
+                        setVotingMinutes(val);
+                      }
+                    }}
+                    disabled={!isOwner}
+                  />
+                </div>
+              </div>
+              
+                            {/* Botón para actualizar período (solo si es owner) */}
+                            {isOwner && (votingDays || votingHours || votingMinutes) && (
+                <button
+                  onClick={async () => {
+                    if (!governor || !adminAccount) {
+                      alert("Admin wallet no disponible");
+                      return;
+                    }
+                    
+                    try {
+                      const validation = validateVotingPeriod(votingDays, votingHours, votingMinutes);
+                      if (!validation.valid) {
+                        alert(validation.error);
+                        return;
+                      }
+                      
+                      const totalSeconds = convertToSeconds(votingDays, votingHours, votingMinutes);
+                      
+                      const tx = prepareContractCall({
+                        contract: governor,
+                        method: "function setVotingPeriod(uint256 newPeriodSeconds)",
+                        params: [totalSeconds],
+                      });
+                      
+                      // Ejecutar transacción usando adminAccount
+                      const { transactionHash } = await sendTransaction({
+                        account: adminAccount,
+                        transaction: tx,
+                      });
+                      
+                      console.log("Transacción enviada:", transactionHash);
+                      
+                      // Limpiar campos y recargar período
+                      setVotingDays("");
+                      setVotingHours("");
+                      setVotingMinutes("");
+                      await loadCurrentVotingPeriod();
+                      alert("Período de votación actualizado exitosamente");
+                    } catch (error: any) {
+                      console.error("Error actualizando período:", error);
+                      alert(error?.message || String(error));
+                    }
+                  }}
+                  disabled={!adminAccount}
+                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 text-white font-medium hover:from-purple-600 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Actualizar
+                </button>
+              )}
+              
+              {!isOwner && (
+                <div className="text-xs text-yellow-300/80 italic p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  ⚠️ Solo el owner del contrato puede cambiar el período de votación
+                </div>
+              )}
+            </div>          
           </div>
         </div>
       </div>
