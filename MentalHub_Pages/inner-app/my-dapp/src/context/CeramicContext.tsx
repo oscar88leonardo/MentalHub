@@ -5,10 +5,10 @@ import { ComposeClient } from "@composedb/client";
 import { RuntimeCompositeDefinition } from "@composedb/types";
 import { DIDSession } from "did-session";
 import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
-import { useActiveWallet, useAdminWallet } from "thirdweb/react";
+import { useActiveWallet, useAdminWallet, useActiveAccount } from "thirdweb/react";
 import { EIP1193 } from "thirdweb/wallets";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
+import { myChain } from "@/config/chain";
 import { definition } from "@/__generated__/definition.js";
 
 // Types
@@ -107,7 +107,7 @@ interface CeramicContextType {
   
   // Thirdweb wallet info (like my-app)
   activeWallet: any;
-  account: any;
+  account: any; // prefer AA if available
   adminWallet: any;
   adminAccount: any;
   
@@ -144,7 +144,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   const [hasPersistedSession, setHasPersistedSession] = useState(false);
 
   const activeWallet = useActiveWallet();
-  const account = activeWallet ? activeWallet.getAccount() : null;
+  const aaAccount = useActiveAccount();
+  const account = aaAccount || (activeWallet ? activeWallet.getAccount() : null);
   const adminWallet = useAdminWallet();
   const adminAccount = adminWallet ? adminWallet.getAccount() : null;
 
@@ -169,11 +170,15 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       
       // Persist wallet state for page reloads
       if (account) {
-        sessionStorage.setItem("thirdweb:account", JSON.stringify({
-          address: account.address,
-          walletId: activeWallet?.id,
-          timestamp: Date.now()
-        }));
+        try {
+          const chainIdDec = myChain.id;
+          sessionStorage.setItem("thirdweb:account", JSON.stringify({
+            address: account.address,
+            walletId: activeWallet?.id,
+            chainId: chainIdDec,
+            timestamp: Date.now()
+          }));
+        } catch {}
         setHasPersistedSession(true);
         console.log("💾 Wallet state persisted to sessionStorage");
       }
@@ -277,10 +282,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       console.log("🔑 Creating new Ceramic session (in memory only)...");
       // Ensure correct chain before getting accountId
       try {
-        const targetChainIdHex = "0xe9fe"; // 59902
+        const targetChainIdHex = `0x${myChain.id.toString(16)}`; // chain from NEXT_PUBLIC_CHAIN
         const currentChainId = await authProvider.request?.({ method: "eth_chainId" });
         console.log("Current chainId:", currentChainId);
-        if (currentChainId?.toLowerCase() !== targetChainIdHex) {
+        if ((currentChainId || "").toLowerCase() !== targetChainIdHex) {
           console.log("Switching chain to:", targetChainIdHex);
           try {
             await authProvider.request?.({
@@ -288,12 +293,12 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
               params: [{ chainId: targetChainIdHex }],
             });
           } catch (switchErr) {
-            console.warn("wallet_switchEthereumChain failed, trying adminWallet.switchChain...",switchErr);
+            console.warn("wallet_switchEthereumChain failed, trying adminWallet.switchChain...", switchErr);
             try {
               await adminWallet?.switchChain?.(myChain);
             } catch (e) {
               console.error("Failed to switch chain:", e);
-              throw new Error("Unable to switch to required chain (59902)");
+              throw new Error(`Unable to switch to required chain (${myChain.id})`);
             }
           }
         }
@@ -646,9 +651,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     }
     // Pasar variables si se proporcionan
     try {
-      // @ts-ignore - composeClient.executeQuery soporta variables opcionales
       return await composeClient.executeQuery(query, variables);
-    } catch (e) {
+    } catch {
       // Fallback por seguridad sin variables
       return await composeClient.executeQuery(query);
     }

@@ -13,7 +13,7 @@ interface CatalogItem {
   comingSoon?: boolean;
 }
 
-const myAppBaseUrl = process.env.NEXT_PUBLIC_MY_APP_BASE_URL || "";
+// const myAppBaseUrl = process.env.NEXT_PUBLIC_MY_APP_BASE_URL || "";
 
 const items: CatalogItem[] = [
   {

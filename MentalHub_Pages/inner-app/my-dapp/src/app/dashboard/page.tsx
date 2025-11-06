@@ -4,17 +4,26 @@ import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
 import Sidebar from "@/components/Sidebar";
 import DashboardContent from "@/components/DashboardContent";
+import DaoWidget from "@/components/DaoWidget";
 import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
 import Availability from "@/components/Availability";
+import Sessions from "@/components/Sessions";
+import RoomsManager from "@/components/RoomsManager";
+import WhitelistWidget from "@/components/WhitelistWidget";
+import { useCeramic } from "@/context/CeramicContext";
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
+  const { disconnect: disconnectCeramic } = useCeramic();
   const [activeItem, setActiveItem] = useState('dashboard');
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
+      // Desconectar Ceramic y limpiar su estado en memoria
+      try { await disconnectCeramic(); } catch (e) { console.warn('Ceramic disconnect error:', e); }
+
       // Desconectar la billetera usando Thirdweb
       if (activeWallet) {
         await activeWallet.disconnect();
@@ -41,10 +50,18 @@ export default function DashboardPage() {
     switch (activeItem) {
       case 'profile':
         return <ProfilePage onLogout={handleLogout} />;
+      case 'rooms':
+        return <RoomsManager />;
       case 'availability':
         return <Availability onLogout={handleLogout} />;
+      case 'schedule':
+        return <Sessions onLogout={handleLogout} />;
       case 'nfts':
         return <InnerKeysCatalog onLogout={handleLogout} />;
+      case 'dao':
+        return <DaoWidget onLogout={handleLogout} />;
+      case 'whitelist':
+        return <WhitelistWidget />;
       case 'dashboard':
       default:
         return <DashboardContent onLogout={handleLogout} />;

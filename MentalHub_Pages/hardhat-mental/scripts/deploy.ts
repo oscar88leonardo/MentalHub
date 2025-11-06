@@ -3,9 +3,10 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
 async function main() {
+  /*
   // Parámetros fijos existentes para MembersAirdrop
   const { WHITELIST_CONTRACT_ADDRESS, METADATA_URL, GATEWAY_URI } = await import("../constants/cNFTCol");
-
+*/
   // Preparar overrides EIP-1559 para evitar mempool "already known" y reemplazos
   const fee = await ethers.provider.getFeeData();
   const bump = ethers.utils.parseUnits('10', 'gwei');
@@ -20,6 +21,7 @@ async function main() {
     overrides = { ...overrides, gasPrice };
   }
 
+/*
   // Desplegar MembersAirdrop si es necesario
   const MembersAirdrop = await ethers.getContractFactory("MembersAirdrop");
 
@@ -32,7 +34,9 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   const txMint = await members.ownerMint(deployer.address, 1, overrides);
   await txMint.wait();
-
+*/
+  const [deployer] = await ethers.getSigners();
+  const  members = await ethers.getContractAt("MembersAirdrop", "0xcc1515239C446f6f1a3D49fEb8953f68c4F84cDA");
   // Delegación de votos (ERC721Votes): imprescindible
   const delegateTx = await (members as any).delegate(deployer.address, overrides);
   await delegateTx.wait();

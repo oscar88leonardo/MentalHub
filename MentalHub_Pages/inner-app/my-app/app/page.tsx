@@ -4,7 +4,7 @@ import Roadmap from "../innerComp/Roadmap";
 import Vision from "../innerComp/Vision";
 import Descritpion from "../innerComp/Description";
 import FAQs from "../innerComp/FAQs";
-import NFTcoList from "../innerComp/NFTcoList";
+/*import NFTcoList from "../innerComp/NFTcoList";*/
 import Partners from "../innerComp/Partners";
 
 
@@ -18,7 +18,7 @@ export default function Home() {
     <div>
        <Vision />
        <Descritpion />
-       <NFTcoList /> 
+       {/*<NFTcoList />*/} 
        <Partners />
        <Roadmap />
        <FAQs />  

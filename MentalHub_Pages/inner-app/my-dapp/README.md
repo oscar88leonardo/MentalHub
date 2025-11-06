@@ -59,14 +59,8 @@ src/
 
 ## 🔧 Configuración de la Cadena
 
-El proyecto está configurado para usar la cadena con ID `59902`. Puedes cambiar esto en `src/lib/chain.ts`:
-
-```typescript
-export const myChain = defineChain({
-    id: 59902, // Cambia este ID por tu cadena preferida
-    rpc: "https://59902.rpc.thirdweb.com/" + (process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || ""),
-});
-```
+La DApp toma la red desde la variable `NEXT_PUBLIC_CHAIN` y construye `myChain` dinámicamente en `src/config/chain.ts`.
+Valores válidos: `arbitrum-sepolia`, `metis-sepolia`, `lisk-sepolia`, `shibuya`, `polygon-mumbai`.
 
 ## 🎨 Personalización
 

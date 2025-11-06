@@ -14,6 +14,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cloudflare-ipfs.com' },
       // dominio personalizado usado en logs
       { protocol: 'https', hostname: 'chocolate-sour-kite-810.mypinata.cloud' },
+      { protocol: 'https', hostname: 'ivory-magnetic-guineafowl-976.mypinata.cloud' },
     ],
   },
   // Estabiliza el tracing en monorepo y suprime warning de múltiples lockfiles

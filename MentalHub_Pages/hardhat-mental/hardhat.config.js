@@ -2,9 +2,13 @@ require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config({ path: ".env" });
 
-const METISNODE_HTTP_URL = process.env.METISNODE_HTTP_URL;
-const QUICKNODE_HTTP_URL = process.env.QUICKNODE_HTTP_URL;
+// wallet para deploys
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+// EVM Configs
+const SOLC_VERSION = "0.8.26";
+const EVM_VERSION = "cancun";
+const VIA_IR = false;
+
 const sanitizePk = (k) => {
   if (!k) return k;
   const trimmed = k.trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
@@ -13,24 +17,29 @@ const sanitizePk = (k) => {
 
 module.exports = {
   solidity: {
-    version: "0.8.26",
+    version: SOLC_VERSION,
     settings: {
-      evmVersion: "cancun",
+      evmVersion: EVM_VERSION,
       optimizer: {
         enabled: true,
         runs: 200
       },
-      viaIR: true
+      viaIR: VIA_IR
     },
   },
   networks: {
+    arbitrum_sepolia: {
+      url: "https://sepolia-rollup.arbitrum.io/rpc",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      chainId: 421614
+    },
     metis_sepolia: {
-      url: METISNODE_HTTP_URL || "http://127.0.0.1:8545",
+      url:  "https://metis-sepolia-rpc.publicnode.com",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
       chainId: 59902
     },
     polygon_mumbai: {
-      url: QUICKNODE_HTTP_URL || "http://127.0.0.1:8545",
+      url: "https://quiet-multi-bird.matic-testnet.discover.quiknode.pro/11514888637b7e0629fb4741b7832b3d89c88629/",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     shibuya: {
@@ -39,24 +48,10 @@ module.exports = {
       chainId: 81
     },
     lisk_sepolia: {
-      url: process.env.LISK_SEPOLIA_RPC || "https://4202.rpc.thirdweb.com",
+      url: "https://4202.rpc.thirdweb.com",
       accounts: PRIVATE_KEY ? [sanitizePk(PRIVATE_KEY)] : [],
       chainId: 4202
     }
   },
-  etherscan: {
-    apiKey: {
-      metis_sepolia: "metis_sepolia", // placeholder
-    },
-    customChains: [
-      {
-        network: "metis_sepolia",
-        chainId: 59902,
-        urls: {
-          apiURL: "https://sepolia-explorer.metisdevops.link/api",
-          browserURL: "https://sepolia-explorer.metisdevops.link"
-        }
-      }
-    ]
-  }
+  
 };

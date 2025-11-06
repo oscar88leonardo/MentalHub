@@ -43,5 +43,11 @@ body {
 .rbc-event {
   border-radius: 10px;
 }
+
+/* Ocultar texto en background events del calendario */
+.rbc-background-event .rbc-event-content,
+.rbc-background-event .rbc-event-label {
+  display: none !important;
+}
 .rbc-selected-cell { background: rgba(51, 153, 153, 0.12); }
 .rbc-slot-selection { background: rgba(77, 77, 204, 0.22); }

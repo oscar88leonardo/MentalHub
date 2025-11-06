@@ -1,13 +1,14 @@
 "use client"
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction } from "thirdweb";
+import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
 import { useActiveWallet, useAdminWallet, useReadContract } from "thirdweb/react";
 import { owner } from "thirdweb/extensions/common";
 import { client as clientThirdweb } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi as whitelistAbi, WHITELIST_CONTRACT_ADDRESS } from "@/constants/whitelist";
-import { abi as membersAbi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi as whitelistAbi } from "@/abicontracts/whitelist";
+import { abi as membersAbi } from "@/abicontracts/MembersAirdrop";
 
 interface NFTColMembersProps {
   embedded?: boolean;
@@ -19,6 +20,7 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
   const [loading, setLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [tokenIdsMinted, setTokenIdsMinted] = useState("0");
+  const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
 
   const activeWallet = useActiveWallet();
   const adminWallet = useAdminWallet();
@@ -28,14 +30,14 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
   const contract = getContract({
     client: clientThirdweb!,
     chain: myChain,
-    address: NFT_CONTRACT_ADDRESS,
+    address: contracts.membersAirdrop,
     abi: membersAbi as [],
   });
 
   const contractWhitelist = getContract({
     client: clientThirdweb!,
     chain: myChain,
-    address: WHITELIST_CONTRACT_ADDRESS,
+    address: contracts.whitelist!,
     abi: whitelistAbi as [],
   });
 
@@ -69,11 +71,16 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     params: [],
   });
 
-  const airdropMint = async (name: string, pathTypeContDig: string, pathContDigi: string, contSessions: number) => {
+  const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const airdropMint = async (_name: string, _pathTypeContDig: string, _pathContDigi: string, _contSessions: number) => {
     try {
-      if (dataWhitelist.isLoading) return;
-      if (dataWhitelist.data) {
-        const tx = prepareContractCall({
+      setLoading(true);
+    if (dataWhitelist.data) {
+      const tx = prepareContractCall({
           contract,
           method: resolveMethod("airdropMint"),
           params: [2],
@@ -81,36 +88,57 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
         });
         if (activeWallet && account) {
           await sendTransaction({ account, transaction: tx });
-          window.alert("You successfully minted a community member NFT!");
+          showToast('¡Mint realizado con éxito!', 'success');
         }
       } else {
-        window.alert("Sorry friend, you're not whitelisted");
+        showToast('No estás en la whitelist', 'error');
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const publicMint = async (name: string, pathTypeContDig: string, pathContDigi: string, contSessions: number) => {
+  const publicMint = async (_name: string, _pathTypeContDig: string, _pathContDigi: string, _contSessions: number) => {
     try {
+      setLoading(true);
+      let value: bigint = BigInt(0);
+      try {
+        if (!dataisSponsoredMint.data) {
+          const price = await readContract({
+            contract,
+            method: "function _price() view returns (uint256)",
+            params: [],
+          });
+          value = BigInt(price as any);
+        }
+      } catch (e) {
+        console.warn("No se pudo leer el precio on-chain, usando 0.", e);
+        value = BigInt(0);
+      }
+
       const tx = prepareContractCall({
         contract,
         method: resolveMethod("mint"),
         params: [2],
-        value: dataisSponsoredMint.data ? toWei("0") : toWei("0.01"),
+        value,
       });
       if (activeWallet && account) {
         await sendTransaction({ account, transaction: tx });
-        window.alert("You successfully minted a community member NFT!");
+        showToast('¡Mint realizado con éxito!', 'success');
       }
     } catch (err) {
       console.error(err);
-      window.alert(String(err));
+      showToast(String(err), 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   const startAirdrop = async (duration: number, isMinutes: boolean) => {
     try {
+      setLoading(true);
       const timeUnit = isMinutes ? 0 : 1;
       const tx = prepareContractCall({
         contract,
@@ -121,14 +149,16 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
         await sendTransaction({ account: adminAccount, transaction: tx });
         setAirdropStarted(true);
         setAirdropEnded(false);
-        window.alert("You successfully started the Airdrop!");
+        showToast('¡Airdrop iniciado!', 'success');
       }
     } catch (err) {
       console.error("Error al iniciar airdrop:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getOwner = async () => {
+  const getOwner = useCallback(async () => {
     try {
       const _owner = await owner({ contract });
       if (adminWallet && adminAccount) {
@@ -140,9 +170,15 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     } catch (err: any) {
       console.error(err.message);
     }
-  };
+  }, [adminWallet, adminAccount, contract]);
 
-  const getTokenIdsMinted = async () => {
+  useEffect(() => {
+    if (account) {
+      getOwner();
+    }
+  }, [account, getOwner]);
+
+  const getTokenIdsMinted = useCallback(async () => {
     try {
       if (datatokenIds.isLoading) return;
       if (datatokenIds.data) {
@@ -152,17 +188,11 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  useEffect(() => {
-    if (account) {
-      getOwner();
-    }
-  }, [account]);
+  }, [datatokenIds.isLoading, datatokenIds.data]);
 
   useEffect(() => {
     getTokenIdsMinted();
-  }, [datatokenIds.data]);
+  }, [getTokenIdsMinted]);
 
   useEffect(() => {
     const checkAirdropStatus = async () => {
@@ -203,14 +233,22 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
     if (!account) return null;
     if (loading) {
       return (
-        <button className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white/80 cursor-wait">Loading...</button>
+        <button className="px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white/80 cursor-wait inline-flex items-center gap-2" disabled aria-busy>
+          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+          Procesando...
+        </button>
       );
     }
 
     if (isOwner && (!airdropStarted || airdropEnded)) {
       return (
-        <button className="btn btn-light font-16 hcenter" onClick={() => startAirdrop(5, true)}>
-          Start Airdrop!
+        <button
+          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition-colors text-white border border-white/30"
+          onClick={() => startAirdrop(5, true)}
+          disabled={loading}
+          aria-busy={loading}
+        >
+          Start Airdrop 🚀
         </button>
       );
     }
@@ -230,8 +268,13 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
           <button
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white"
             onClick={() => airdropMint(name, pathTypeContDig, pathContDigi, contSessions)}
+            disabled={loading}
+            aria-busy={loading}
           >
-            Claim 🚀!
+            <span className="inline-flex items-center gap-2">
+              {loading && (<span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>)}
+              Claim 🚀!
+            </span>
           </button>
         </div>
       );
@@ -242,8 +285,13 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
         <button
           className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white"
           onClick={() => publicMint(name, pathTypeContDig, pathContDigi, contSessions)}
+          disabled={loading}
+          aria-busy={loading}
         >
-          Public Mint 🚀!
+          <span className="inline-flex items-center gap-2">
+            {loading && (<span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>)}
+            Public Mint 🚀!
+          </span>
         </button>
       );
     }
@@ -312,6 +360,19 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {renderNFT()}
         </div>
+        {toast && (
+          <div
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-lg shadow"
+            style={{
+              background: toast.type === 'error'
+                ? 'rgba(220,38,38,0.95)'
+                : (toast.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(55,65,81,0.95)'),
+              color: '#fff'
+            }}
+          >
+            {toast.text}
+          </div>
+        )}
       </div>
     );
   }
@@ -337,6 +398,19 @@ const NFTColMembers: React.FC<NFTColMembersProps> = ({ embedded = false }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {renderNFT()}
         </div>
+        {toast && (
+          <div
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-lg shadow"
+            style={{
+              background: toast.type === 'error'
+                ? 'rgba(220,38,38,0.95)'
+                : (toast.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(55,65,81,0.95)'),
+              color: '#fff'
+            }}
+          >
+            {toast.text}
+          </div>
+        )}
       </div>
     </div>
   );

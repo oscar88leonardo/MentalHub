@@ -1,5 +1,6 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useActiveAccount, useActiveWallet } from "thirdweb/react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
 import Header from "./Header";
@@ -7,10 +8,10 @@ import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
 import { resolveIpfsUrl } from "@/lib/ipfs";
 import { getContract, readContract } from "thirdweb";
-import { useReadContract } from "thirdweb/react";
 import { client } from "@/lib/client";
-import { myChain } from "@/lib/chain";
-import { abi, NFT_CONTRACT_ADDRESS } from "@/constants/MembersAirdrop";
+import { myChain } from "@/config/chain";
+import { contracts } from "@/config/contracts";
+import { abi } from "@/abicontracts/MembersAirdrop";
 
 interface ProfilePageProps {
   onLogout: () => void;
@@ -25,6 +26,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     account,
     adminAccount
   } = useCeramic();
+  const aaAccountHook = useActiveAccount();
+  const activeWallet = useActiveWallet();
+  const eoaAccount = activeWallet ? activeWallet.getAccount() : null;
+  const persistedAA = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("thirdweb:account");
+      if (!raw) return null;
+      const data = JSON.parse(raw) as { address?: string; walletId?: string; chainId?: number };
+      if (!data?.address) return null;
+      if (data.chainId !== myChain.id) return null;
+      if (activeWallet?.id && data.walletId && data.walletId !== activeWallet.id) return null;
+      return data.address as string;
+    } catch {
+      return null;
+    }
+  }, [activeWallet?.id]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isBootLoading, setIsBootLoading] = useState(true);
   const initialLoadDoneRef = useRef(false);
@@ -32,57 +49,100 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   // Mis Inner Keys (NFTs del usuario)
   const [userInnerKeys, setUserInnerKeys] = useState<any[]>([]);
-  // incializacion del contrato
-  const contract =   getContract({
+  // incializacion del contrato (memoizado para evitar recreación en cada render)
+  const contract = useMemo(() => getContract({
     client: client!,
     chain: myChain,
-    address: NFT_CONTRACT_ADDRESS,
+    address: contracts.membersAirdrop,
     // The ABI for the contract is defined here
     abi: abi as [],
-  });
-  // call the contract method walletofOwner 
-  const { data: ArrTokenIds, isLoading: isCheckingArrTokenIds } = useReadContract({
-    contract,
-    method: "walletOfOwner",
-    params: [ (account?.address || "") ],
-  });
+  }), []);
+  // Control de carga para Inner Keys
+  const [isCheckingArrTokenIds, setIsCheckingArrTokenIds] = useState(false);
 
   useEffect(() => {
-    if (ArrTokenIds !== undefined) {
-      console.log("isArrTokenIds:");
-      console.log(isCheckingArrTokenIds);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const candidatesRaw = [
+          aaAccountHook?.address || null,
+          persistedAA || null,
+          eoaAccount?.address || null,
+          account?.address || null,
+        ].filter((x): x is string => !!x);
 
-        if (ArrTokenIds && Array.isArray(ArrTokenIds)) {
-          console.log(ArrTokenIds.length); 
-          for (const TkId of ArrTokenIds) {
-            try {
-                      
-          readContract({
-            contract: contract,
-            method: "function gatewayURI(uint256 tokenId) view returns (string)",
-            params: [TkId],
-          }).then((urlGateway) => {
-            
-            console.log("urlGateway:", urlGateway);
-            if (typeof urlGateway === "string" && urlGateway) {
-              fetch(urlGateway)
-                .then(response => response.json())
-                .then(validNFTs => {
-                  console.log(validNFTs);
-                  setUserInnerKeys(prevNFTs => [...prevNFTs, validNFTs]);
-                })
-                .catch(err => console.error(err));
-            }
-          });
-            //const urlGateway = await nftContract.gatewayURI(TkId);
-          } catch (err) {
-            console.error(err);
+        const seenAddr = new Set<string>();
+        const candidates = candidatesRaw.filter((a) => {
+          const k = a.toLowerCase();
+          if (seenAddr.has(k)) return false;
+          seenAddr.add(k);
+          return true;
+        });
+
+        if (candidates.length === 0) {
+          setUserInnerKeys([]);
+          return;
+        }
+
+        setIsCheckingArrTokenIds(true);
+        setUserInnerKeys([]);
+
+        const allItems: any[] = [];
+        for (const addr of candidates) {
+          try {
+            const tokenIds = await readContract({
+              contract,
+              method: "function walletOfOwner(address _owner) view returns (uint256[])",
+              params: [addr],
+            });
+            if (!Array.isArray(tokenIds) || tokenIds.length === 0) continue;
+
+            const items = await Promise.all(
+              tokenIds.map(async (TkId: any) => {
+                try {
+                  const urlGateway = await readContract({
+                    contract: contract,
+                    method: "function gatewayURI(uint256 tokenId) view returns (string)",
+                    params: [TkId],
+                  });
+                  if (typeof urlGateway === "string" && urlGateway) {
+                    const resp = await fetch(urlGateway);
+                    const meta = await resp.json();
+                    const tokenIdStr = typeof TkId === "bigint" ? TkId.toString() : String(TkId);
+                    return { ...meta, tokenId: tokenIdStr };
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+                return null;
+              })
+            );
+            (items.filter(Boolean) as any[]).forEach((x) => allItems.push(x));
+          } catch (e) {
+            console.warn("walletOfOwner failed for", addr, e);
           }
         }
-      }
-    }
 
-  }, [ArrTokenIds]);  
+        if (cancelled) return;
+        const uniq = new Map<string, any>();
+        for (const it of allItems) {
+          const key = it?.tokenId || it?.pathImage || it?.name;
+          if (!key) continue;
+          if (!uniq.has(key)) uniq.set(key, it);
+        }
+        setUserInnerKeys(Array.from(uniq.values()));
+      } catch (e) {
+        if (!cancelled) {
+          console.error(e);
+          setUserInnerKeys([]);
+        }
+      } finally {
+        if (!cancelled) setIsCheckingArrTokenIds(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [aaAccountHook?.address, persistedAA, eoaAccount?.address, account?.address, contract]);
 
   // Carga inicial: sólo una vez con spinner
   useEffect(() => {
@@ -108,7 +168,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
 
   // Relectura al cambiar wallet (sin tocar el spinner inicial)
   useEffect(() => {
-    const currentAddr = (adminAccount?.address || account?.address || "").toLowerCase();
+    const currentAddr = (account?.address || "").toLowerCase();
     if (!currentAddr) return;
     if (lastWalletAddressRef.current === currentAddr) return;
     lastWalletAddressRef.current = currentAddr;
@@ -123,7 +183,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
         setIsRefreshing(false);
       }
     })();
-  }, [account?.address, adminAccount?.address, refreshProfile]);
+  }, [account?.address, refreshProfile]);
 
   // NO auto-conectar - Solo mostrar información del wallet
   useEffect(() => {
@@ -486,6 +546,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                 </div>
               )}
             </div>
+
+            {/* Salas (Huddle) - movidas al menú lateral */}
           </div>
         ) : (
           <div className="flex items-center justify-center min-h-[30vh]">

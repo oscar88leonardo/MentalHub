@@ -2,6 +2,7 @@
 import React from "react";
 import { ThirdwebProvider, AutoConnect } from "thirdweb/react";
 import { client } from "@/lib/client";
+import { myChain } from "@/config/chain";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 
 const wallets = [
@@ -33,8 +34,12 @@ const wallets = [
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThirdwebProvider>
-      <AutoConnect client={client} wallets={wallets} />
+    <ThirdwebProvider >
+      <AutoConnect
+        client={client}
+        wallets={wallets}
+        accountAbstraction={{ chain: myChain, sponsorGas: true }}
+      />
       {children}
     </ThirdwebProvider>
   );

@@ -1,12 +1,13 @@
 "use client"
 import React from "react";
-import { useActiveWallet, useAdminWallet } from "thirdweb/react";
+import { useActiveWallet, useAdminWallet, useActiveAccount } from "thirdweb/react";
 import { useCeramic } from "@/context/CeramicContext";
 
 const DebugWallet: React.FC = () => {
   const activeWallet = useActiveWallet();
   const adminWallet = useAdminWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
+  const aaAccount = useActiveAccount();
   const adminAccount = adminWallet ? adminWallet.getAccount() : null;
   const { isConnected, hasPersistedSession } = useCeramic();
 
@@ -24,6 +25,12 @@ const DebugWallet: React.FC = () => {
           <span className="text-gray-700 font-medium">Account:</span>
           <span className={account ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
             {account ? `✅ ${account.address.slice(0, 6)}...` : '❌ No disponible'}
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-gray-700 font-medium">AA Account:</span>
+          <span className={aaAccount ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+            {aaAccount ? `✅ ${aaAccount.address.slice(0, 6)}...` : '❌ No disponible'}
           </span>
         </div>
         <div className="flex items-center space-x-2">
