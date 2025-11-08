@@ -1,4 +1,3 @@
-import ora from 'ora'
 import { readFileSync } from "fs";
 import { CeramicClient } from "@ceramicnetwork/http-client";
 import {
@@ -11,15 +10,14 @@ import { Composite } from "@composedb/devtools";
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import { getResolver } from "key-did-resolver";
-import { fromString } from "uint8arrays/from-string";
+import { fromString } from "uint8arrays";
 
 const ceramic = new CeramicClient("https://ceramicnode.innerverse.care");
 
 /**
- * @param {Ora} spinner - to provide progress status.
- * @return {Promise<void>} - return void when composite finishes deploying.
+ * @return {Promise<void>} - return void cuando la composite termina de desplegarse.
  */
-export const writeComposite = async (spinner) => {
+export const writeComposite = async () => {
   await authenticate();
   const innerverseProfileComposite = await createComposite(
     ceramic,
@@ -113,6 +111,18 @@ export const writeComposite = async (spinner) => {
     schema: schedTherapProfileSchema,
   });
 
+  const workshopSchema = readFileSync(
+    "../composites/innerverseWorkshop.graphql",
+    {
+      encoding: "utf-8",
+    }
+  ).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const workshopComposite = await Composite.create({
+    ceramic,
+    schema: workshopSchema,
+  });
+
   const composite = Composite.from([
     innerverseProfileComposite,
     huddleComposite,
@@ -122,26 +132,27 @@ export const writeComposite = async (spinner) => {
     SchedHuddle01Composite,
     schedTherapComposite,
     schedTherapProfileComposite,
+    workshopComposite,
   ]);
 
   console.log("composite:");
   console.log(composite);
 
-  await writeEncodedComposite(composite, "../my-app/src/__generated__/definition.json");
-  spinner.info("creating composite for runtime usage");
+  await writeEncodedComposite(composite, "../my-dapp/src/__generated__/definition.json");
+  console.log("creating composite for runtime usage");
   await writeEncodedCompositeRuntime(
     ceramic,
-    "../my-app/src/__generated__/definition.json",
-    "../my-app/src/__generated__/definition.js"
+    "../my-dapp/src/__generated__/definition.json",
+    "../my-dapp/src/__generated__/definition.js"
   );
-  spinner.info("deploying composite");
+  console.log("deploying composite");
   const deployComposite = await readEncodedComposite(
     ceramic,
-    "../my-app/src/__generated__/definition.json"
+    "../my-dapp/src/__generated__/definition.json"
   );
 
   await deployComposite.startIndexingOn(ceramic);
-  spinner.succeed("composite deployed & ready for use");
+  console.log("composite deployed & ready for use");
 };
 
 /**
@@ -159,5 +170,4 @@ const authenticate = async () => {
   ceramic.did = did;
 };
 
-const spinner = ora();
-writeComposite(spinner)
+writeComposite()

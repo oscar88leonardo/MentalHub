@@ -11,6 +11,7 @@ import Availability from "@/components/Availability";
 import Sessions from "@/components/Sessions";
 import RoomsManager from "@/components/RoomsManager";
 import WhitelistWidget from "@/components/WhitelistWidget";
+import Workshops from "@/components/Workshops";
 import { useCeramic } from "@/context/CeramicContext";
 
 export default function DashboardPage() {
@@ -62,6 +63,8 @@ export default function DashboardPage() {
         return <DaoWidget onLogout={handleLogout} />;
       case 'whitelist':
         return <WhitelistWidget />;
+      case 'workshops':
+        return <Workshops />;
       case 'dashboard':
       default:
         return <DashboardContent onLogout={handleLogout} />;

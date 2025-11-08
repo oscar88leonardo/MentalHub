@@ -74,6 +74,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
       )
     },
     {
+      id: 'workshops',
+      label: 'Workshops',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 17l4 4 4-4m-4-5v9m4-13h1a4 4 0 014 4v6a4 4 0 01-4 4H7a4 4 0 01-4-4v-6a4 4 0 014-4h1" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4a4 4 0 110 8 4 4 0 010-8z" />
+        </svg>
+      )
+    },
+    {
       id: 'whitelist',
       label: 'Whitelist',
       icon: (

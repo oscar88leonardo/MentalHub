@@ -1,0 +1,26 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+  id: ID!
+}
+enum WorkshopState {
+  Upcoming   # Próximamente
+  Active     # Activo
+  Archived   # Archivado
+}
+
+type Workshop
+  @createModel(
+    accountRelation: LIST,
+    description: "Eventos Workshop creados por terapeutas"
+  )
+  @createIndex(fields: [{ path: "status" }, { path: "creatorId" }, { path: "startAt" }]) {
+  title: String! @string(minLength: 3, maxLength: 140)              # nombre
+  description: String! @string(minLength: 10, maxLength: 4096)      # descripción larga
+  image: String @string(maxLength: 400)                             # URL/IPFS de portada
+  status: WorkshopState!                                            # estado funcional
+  startAt: DateTime!                                                # fecha/hora de inicio
+  roomId: String! @string(minLength: 3, maxLength: 40)              # id de la sala Huddle
+  creatorId: StreamID! @documentReference(model: "InnerverProfile") # perfil del terapeuta
+  creator: InnerverProfile! @relationDocument(property: "creatorId")
+  capacity: Int @int(min: 1, max: 500)                              # opcional: aforo límite
+  tags: [String!] @list(maxLength: 10) @string(maxLength: 32)       # opcional: categorizar talleres
+}

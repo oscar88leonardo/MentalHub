@@ -15,8 +15,6 @@ type Huddle01
     profile: InnerverProfile! @relationDocument(property: "profileId")
 }
 
-
-
 enum State {
   Archived
   Active
