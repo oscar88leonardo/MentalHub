@@ -1,0 +1,10 @@
+type TherapistProfileV2 @loadModel(id: "$THERAPIST_V2_ID") {
+    id: ID!
+}
+
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    therapist_v2: [TherapistProfileV2] @relationFrom(model: "TherapistProfileV2", property: "profileId")
+}
+
+
+

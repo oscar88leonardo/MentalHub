@@ -1,0 +1,52 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") { id: ID! }
+
+enum Currency { ARS COP USD EUR }
+
+type TherapistProfileV2
+  @createModel(accountRelation: SINGLE, description: "Perfil profesional del terapeuta (v2)")
+  @createIndex(fields: [
+    { path: "primaryLanguage" },
+    { path: "timezone" },
+    { path: "yearsExperience" },
+    { path: "priceMin" },
+    { path: "acceptingNewClients" }
+  ]) {
+  profileId: StreamID! @documentReference(model: "InnerverProfile")
+  profile: InnerverProfile! @relationDocument(property: "profileId")
+
+  fullName: String! @string(maxLength: 80)
+
+  degrees: [String!] @list(maxLength: 6) @string(maxLength: 48)
+
+  licenseNumber: String @string(maxLength: 64)
+  licenseJurisdiction: String @string(maxLength: 64)
+  licenseCountry: String @string(maxLength: 2)
+
+  yearsExperience: Int @int(min: 0, max: 60)
+
+  approaches: [String!] @list(maxLength: 10) @string(maxLength: 32)
+  specialties: [String!] @list(maxLength: 8) @string(maxLength: 32)
+  populations: [String!] @list(maxLength: 10) @string(maxLength: 32)
+
+  languages: [String!] @list(maxLength: 8) @string(maxLength: 32)
+  primaryLanguage: String @string(maxLength: 32)
+
+  timezone: String! @string(maxLength: 64)
+
+  priceMin: Int @int(min: 0, max: 100000000)
+  priceMax: Int @int(min: 0, max: 100000000)
+  currency: Currency
+
+  bioShort: String! @string(maxLength: 280)
+  bioLong: String @string(maxLength: 1200)
+
+  introVideoUrl: String @string(maxLength: 300)
+
+  acceptingNewClients: Boolean
+
+  # Sala Huddle asociada al terapeuta
+  roomId: String @string(maxLength: 64)
+}
+
+
+

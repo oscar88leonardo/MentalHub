@@ -1,0 +1,451 @@
+﻿Objetivos del perfil
+* Encontrabilidad: que el buscador/match funcione (idiomas, enfoque, especialidades, disponibilidad, presupuesto).
+* Confianza: verificación profesional y señales (reseñas verificadas, respuesta promedio).
+* Seguridad & Compliance: consentimiento informado, contacto de emergencia, preferencias de comunicación seguras.
+* Privacidad por defecto: lo sensible se guarda pero no se muestra.
+________________
+
+
+1) Perfil de Terapeuta
+A. Campos esenciales (MVP)
+Campo
+	Tipo / límite
+	Ejemplo
+	Visibilidad
+	Validación
+	Nombre completo
+	string ≤ 80
+	“Dra. Nataly Mosquera”
+	Público
+	requerido, sin emojis
+	Nombre para mostrar
+	string ≤ 40
+	“Nataly (ACT/DBT)”
+	Público
+	opcional
+	Pronombres
+	enum
+	“ella/they”
+	Público (opt-in)
+	lista predef.
+	Titulación principal
+	enum multi
+	“Psicóloga (MP: 12345)”
+	Público
+	requerido
+	Nº de matrícula/licencia + jurisdicción
+	string ≤ 40
+	“MP 12345 – CABA”
+	Privado (con badge público “verificada”)
+	requerido si atiende
+	Años de experiencia
+	int 0–60
+	6
+	Público
+	≥0
+	Enfoques
+	tags (5–10)
+	“ACT, DBT, Mindfulness”
+	Público
+	≥1
+	Especialidades
+	tags (3–8)
+	“Ansiedad, TLP, Autoexigencia”
+	Público
+	≥1
+	Poblaciones
+	tags
+	“Adultos, Jóvenes 16+”
+	Público
+	opcional
+	Idiomas
+	tags
+	“Español, Inglés”
+	Público
+	≥1
+	Modalidad
+	enum multi
+	“Online 
+	Público
+	≥1
+	Zona horaria
+	tz
+	“America/Argentina/Buenos_Aires”
+	Privado
+	requerido
+	Disponibilidad
+	bloques
+	“Lu–Vi 9–13, 16–20”
+	Público
+	≥1 bloque
+	Honorarios
+	rango + moneda
+	“AR$20.000–28.000”
+	Público
+	requerido
+	Escala móvil
+	boolean
+	“Sí, cupos limitados”
+	Público
+	opcional
+	Bio corta
+	string ≤ 280
+	ver ejemplo abajo
+	Público
+	requerido
+	Bio extensa
+	string ≤ 1200
+	ver ejemplo abajo
+	Público
+	opcional
+	Política de cancelación
+	string ≤ 300
+	“24 h, se cobra 50%”
+	Público
+	requerido
+	Tiempo de respuesta promedio
+	auto
+	“<24 h”
+	Público
+	auto
+	Foto de perfil
+	imagen 1:1 (≤ 2 MB, JPG/PNG)
+	—
+	Público
+	mínimo 600×600
+	Video breve
+	url/mp4 ≤ 60s (≤ 20 MB)
+	saludo/presentación
+	Público
+	opcional
+	Ejemplos (contenido & tamaño):
+* Bio corta (≤280):
+“Psicóloga con enfoque ACT/DBT. Trabajo ansiedad, autoexigencia y regulación emocional. Sesiones online. Espacio cálido, práctico y basado en evidencia.”
+* Bio extensa (≤1200):
+“Integro ACT, DBT y mindfulness para acompañarte a construir una vida con sentido… (3–5 párrafos breves). Incluí: cómo trabajás, qué esperar en 1ª sesión, valores, población.
+*     
+  
+
+  
+
+ASI ES COMO LO VE EL CONSULTANTE DE UNMIND
+  
+
+  
+
+  
+
+así cuando buscan un psicólogo:
+  
+
+y se ve con esta pre descripción 
+  
+
+
+
+B. Campos de verificación (no públicos)
+   * Documento de identidad (PDF/JPG ≤ 5 MB).
+   * Certificado de matrícula/licencia (PDF/JPG ≤ 5 MB).
+   * Seguro de mala praxis (si aplica por país).
+   * Tax ID / Facturación (e.g., CUIT/Monotributo) — solo para pagos.
+   * Chequeos automáticos: fecha de vencimiento de licencia; flag de recordatorio 30 días antes.
+C. Campos de práctica (opcionales)
+   * Formatos: individual, pareja, grupo.
+   * Duración sesión: 45/60/90 min.
+   * Herramientas: tareas entre sesiones, plan de crisis, material psicoeducativo.
+   * Accesibilidad: lengua de señas, subtítulos, apto neurodivergencias.
+   * Ofrezco supervisión: sí/no.
+   * Acepto nuevos consultantes: sí/no/espera.
+D. Microcopy / placeholders
+   * Bio corta placeholder: “¿Qué te hace diferente en 1–2 frases?”
+   * Especialidades help-text: “Elegí 3–8 para mejorar tu match.”
+   * Honorarios tooltip: “Podés indicar rango o valor por sesión[a].”
+________________
+
+
+2) Perfil de Consultante
+A. Campos esenciales (MVP)
+Campo
+	Tipo / límite
+	Ejemplo
+	Visibilidad
+	Validación
+	Nombre
+	string ≤ 60
+	“María G.”
+	Privado (solo para terapeuta)
+	requerido
+	Nombre para mostrar
+	string ≤ 40
+	“María”
+	Privado
+	opcional
+	Pronombres
+	enum
+	“ella”
+	Privado
+	opcional
+	Fecha de nacimiento o rango etario
+	date / enum
+	“1997-05-14”
+	Privado
+	requerido
+	País/ciudad
+	string
+	“Buenos Aires, AR”
+	Privado
+	requerido
+	Zona horaria
+	tz
+	“America/Argentina/Buenos_Aires”
+	Privado
+	requerido
+	Idioma preferido
+	tags
+	“Español”
+	Privado
+	requerido
+	Email verificado
+	email
+	“maria@…”
+	Privado
+	requerido
+	Teléfono (para emergencias)
+	string
+	+54…
+	Privado
+	requerido
+	Contacto de emergencia
+	nombre + tel
+	“Nilda +54…”
+	Privado
+	requerido
+	Motivo de consulta (breve)
+	≤ 240
+	“Ansiedad, insomnio.”
+	Para match (no público)
+	requerido
+	Objetivos (bullet points)
+	3× ≤ 100 c/u
+	“Dormir mejor; menos rumiación…”
+	Privado
+	≥1
+	Preferencias de terapeuta
+	filtros
+	“mujer, ACT/DBT, online”
+	Privado
+	opcional
+	Presupuesto por sesión
+	rango + moneda
+	“AR$15.000–22.000”
+	Para match
+	opcional
+	Disponibilidad
+	bloques
+	“Lu–Mi 18–21”
+	Para match
+	requerido
+	Modalidad
+	enum
+	“Online”
+	Para match
+	requerido
+	Consentimientos
+	checkboxes
+	Términos, Privacidad, Riesgos
+	—
+	requerido
+	B. Campos sensibles (opt-in, con aviso claro)
+Recomendación: preguntar en categorías, no en texto libre, para minimizar PHI.
+   * Estado actual: ideas de autolesión[b] (sí/no – si “sí”, activar protocolo y recursos de crisis).
+   * Tratamientos previos: “terapia (sí/no)”, “psiquiatría (sí/no)”.
+   * Medicaciones: selector “sí/no” + texto opcional ≤ 120.
+   * Diagnósticos previos: selector multi con “prefiero no decir”.
+   * Preferencias culturales/espirituales: texto ≤ 120.
+   * Necesidades de accesibilidad: lista.
+C. Microcopy / placeholders
+   * Motivo de consulta: “En una frase: ¿qué te gustaría mejorar?”
+   * Objetivos: “3 metas concretas (ej.: ‘Dormir 7–8 h’, ‘Tolerar ansiedad en parciales’).”
+   * Presupuesto: [c]“Podés indicar un rango aproximado.”
+________________
+
+
+3) Qué se muestra y dónde
+Tarjeta pública del terapeuta (listado)
+   * Foto, nombre para mostrar, headline (≤70): “ACT/DBT • Ansiedad & regulación emocional”.
+   * Enfoques (máx. 3 chips), especialidades (máx. 3 chips), idiomas.
+   * “PACK”  • “Online” • Badge “Licencia verificada”.
+   * Botones: Ver perfil • Ver disponibilidad • Solicitar entrevista (15’).
+[d]
+Perfil completo del terapeuta
+   * Bio corta + video; bio extensa colapsable.
+   * Horarios disponibles (sin mostrar huecos exactos hasta confirmar).
+   * Política de cancelación; tiempos de respuesta; reseñas verificadas.
+   * Indicadores de confianza: “Última vez activo”, “% respuesta 24 h”.
+Vista privada terapeuta ↔ consultante (tras match)
+   * Datos del consultante esenciales (nombre, TZ, disponibilidad, motivo breve, objetivos).
+   * Campos sensibles solo si consultante habilitó compartir.
+________________
+
+
+4) Validaciones y límites recomendados
+   * Textos: recortar espacios, bloquear URLs en bios, sin emojis repetitivos, sin mayúsculas sostenidas.
+   * Tamaños: imagen ≤ 2 MB (min 600×600), video ≤ 20 MB / 60 s. PDFs ≤ 5 MB.
+   * Teléfono: formato E.164. Email con verificación.
+   * Honorarios: rango [min ≤ max]; moneda ISO-4217.
+   * Disponibilidad: no permitir superposición; TZ obligatoria.
+________________
+
+
+5) Consentimientos & seguridad (crítico)
+   * Consentimiento informado (firma/aceptación con timestamp): límites de la plataforma, privacidad, riesgos de tele-salud.
+   * Política de emergencia: aclarar que no es servicio de crisis; mostrar recursos locales según país cuando el consultante indica riesgo.
+   * Preferencias de contacto (recordatorios por email/SMS, horarios en los que NO contactar).
+   * Log de auditoría: cambios en perfil, verificación, consentimientos.
+________________
+
+
+6) Matching / Búsqueda (campos indexados y peso)
+   * Peso alto: idioma, zona horaria, modalidad, disponibilidad, presupuesto, especialidades.
+   * Peso medio: enfoques, población, ubicación.
+   * Peso bajo: años de experiencia, bio keywords.
+   * Reglas sugeridas:
+   * Filtro duro: idioma & TZ compatibles ±2 h (configurable).
+   * Si “riesgo actual = sí” → priorizar terapeutas con crisis/DBT.
+   * Si “presencial” → radio 5–10 km.
+   * Si “presupuesto < honorario mín.” → sugerir terapeutas con escala móvil.
+________________
+
+
+7) Ejemplos en JSON (listos para backend)
+Terapeuta (public_profile + private_verification)
+{
+  "public_profile": {
+    "display_name": "Nataly (ACT/DBT)",
+    "headline": "ACT/DBT • Ansiedad & regulación emocional",
+    "photo_url": "https://cdn.innerverse.care/p/nataly.jpg",
+    "bios": {
+      "short": "Psicóloga con enfoque ACT/DBT. Trabajo ansiedad, autoexigencia y regulación emocional. Online y Palermo.",
+      "long": "Integro ACT, DBT y mindfulness... (300–900 caracteres)"
+    },
+    "credentials": {
+      "degree": "Psicóloga",
+      "years_experience": 6,
+      "approaches": ["ACT", "DBT", "Mindfulness"],
+      "specialties": ["Ansiedad", "TLP", "Autoexigencia"],
+      "populations": ["Adultos", "Jóvenes 16+"]
+    },
+    "practice": {
+      "modalities": ["Online", "Presencial"],
+      "location_display": "Palermo, CABA (AR)",
+      "timezone": "America/Argentina/Buenos_Aires",
+      "availability_blocks": [
+        {"days": ["Mon","Tue","Wed","Thu","Fri"], "start":"09:00", "end":"13:00"},
+        {"days": ["Mon","Wed","Fri"], "start":"16:00", "end":"20:00"}
+      ],
+      "fees": {"currency":"ARS", "min":20000, "max":28000, "sliding_scale": true},
+      "insurance": ["Particular", "Reintegro"],
+      "cancellation_policy": "Cancelación con 24 h: 50%."
+    },
+    "media": {
+      "intro_video_url": null
+    },
+    "accepting_new_clients": true,
+    "verification_badges": ["Licencia verificada"]
+  },
+  "private_verification": {
+    "legal_name": "Dra. Nataly Mosquera",
+    "license_number": "MP 12345",
+    "license_jurisdiction": "CABA",
+    "tax_id": "XX-XXXXXXXX-X",
+    "documents": [
+      {"type":"ID", "url":"https://.../id.pdf"},
+      {"type":"LICENSE", "url":"https://.../license.pdf"}
+    ]
+  }
+}
+Consultante (match_profile)
+{
+  "identity": {
+    "first_name": "María",
+    "display_name": "María",
+    "pronouns": "ella",
+    "dob": "1997-05-14",
+    "country_city": "Buenos Aires, AR",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "email": "maria@example.com",
+    "phone_e164": "+54911XXXXXXXX",
+    "emergency_contact": {"name":"Nilda", "phone_e164":"+54911YYYYYYYY"}
+  },
+  "preferences": {
+    "languages": ["Español"],
+    "modalities": ["Online"],
+    "therapist_preferences": {"gender":"F", "approaches":["ACT","DBT"]},
+    "budget": {"currency":"ARS", "min":15000, "max":22000},
+    "availability_blocks": [
+      {"days":["Mon","Wed"], "start":"18:00", "end":"21:00"}
+    ]
+  },
+  "goals_and_needs": {
+    "presenting_problem_short": "Ansiedad e insomnio.",
+    "goals": ["Dormir 7–8 h", "Reducir rumiación", "Retomar ejercicio 2×/sem"]
+  },
+  "sensitive_opt_in": {
+    "current_risk": "no",
+    "prior_treatment": {"therapy": "sí", "psychiatry": "no"},
+    "medications": {"uses":"sí", "note":"prefiero hablarlo en sesión"},
+    "diagnoses": ["prefiero-no-decir"]
+  },
+  "consents": {
+    "terms": true,
+    "privacy": true,
+    "telehealth_risks": true,
+    "timestamp": "2025-11-06T18:20:00-03:00"
+  }
+}
+________________
+
+
+8) Onboarding en pasos (fluido y corto)
+Terapeuta (4–5 min)
+   1. Identidad & verificación rápida (subir licencia, se verifica asíncrono y se muestra “pendiente”).
+   2. Práctica: enfoques, especialidades, poblaciones.
+   3. Disponibilidad + TZ + modalidad.
+   4. Honorarios + política de cancelación.
+   5. Bio corta, foto, (video opcional). → Vista previa de tarjeta.
+Consultante (2–3 min)
+   1. Idioma, país/ciudad, TZ, modalidad.
+   2. Motivo de consulta (frase), objetivos (3 bullets).
+   3. Disponibilidad + presupuesto + preferencias.
+   4. Contacto de emergencia + consentimientos. → Resultados de match.
+________________
+
+
+9) Señales de calidad y confianza
+   * Badges: Licencia verificada, Respuesta <24h, 100+ sesiones, Formación ACT/DBT.
+   * Métricas mostrables: última actividad, tasa de respuesta, nº de reseñas verificadas (sin mostrar contenido sensible).
+   * Report/Block con flujo simple.
+________________
+
+
+10) Accesibilidad & Inclusión
+   * Campos para necesidades de accesibilidad.
+   * Pronombres y nombre elegido visibles solo si el usuario lo decide.
+   * Validar lectura fácil en bios (Flesch ≥ 60 aprox.).
+________________
+
+
+11) Política de datos (resumen práctico en UI)
+   * Minimización: solo pedimos lo necesario para match/atención.
+   * Control: el consultante decide qué comparte con su terapeuta y cuándo.
+   * Encriptación en tránsito y reposo; logs de acceso.
+   * Export/Erase bajo GDPR/leyes locales.
+________________
+
+
+
+
+[a]a revisar por los paquets y el enfoque porque hay gente como mi psico que puede durar 60min una sesión o las primeras 90min
+[b]acá sería importante tener sistematizado un boot para que pueda llamar a emergencias de acuerdo a cada país  y ciudad no sé si eso es posible y no se atienden personas en ese estado de manera virtual, yo me animo a hacer un seguimiento si está siendo medicada. Pero son casos insostenibles virtual sin el debido dispositivo y acompañamiento
+[c]ver como sería con lo de los packs
+[d]esto está bueno, no sería una sesión sino tipo como el screening telefonico que yo hago para ver si hacemos match, si le interesa la dinámica de trabajo etc
