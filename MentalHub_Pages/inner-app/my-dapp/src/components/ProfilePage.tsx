@@ -70,14 +70,28 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
   const [isConsultantModalOpen, setIsConsultantModalOpen] = useState(false);
   const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
 
-  // Abrir modal requerido automáticamente
+  // Abrir modal requerido automáticamente y cerrar otros modales
   useEffect(() => {
     if (requiredModal === 'basic') {
       setIsBasicModalOpen(true);
+      // Cerrar otros modales cuando se requiere el básico
+      setIsTherapistModalOpen(false);
+      setIsConsultantModalOpen(false);
     } else if (requiredModal === 'therapist') {
       setIsTherapistModalOpen(true);
+      // Cerrar modal básico cuando se abre el de terapeuta
+      setIsBasicModalOpen(false);
+      setIsConsultantModalOpen(false);
     } else if (requiredModal === 'consultant') {
       setIsConsultantModalOpen(true);
+      // Cerrar modal básico cuando se abre el de consultante
+      setIsBasicModalOpen(false);
+      setIsTherapistModalOpen(false);
+    } else {
+      // Si no hay modal requerido, cerrar todos
+      setIsBasicModalOpen(false);
+      setIsTherapistModalOpen(false);
+      setIsConsultantModalOpen(false);
     }
   }, [requiredModal]);
 
