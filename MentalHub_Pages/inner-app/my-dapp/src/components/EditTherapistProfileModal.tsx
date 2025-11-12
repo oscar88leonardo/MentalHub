@@ -404,13 +404,13 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
                 <div className="mt-2 p-3 rounded-lg border border-yellow-400/50 bg-yellow-500/10">
                   <p className="text-yellow-200 text-sm">
                     <strong>⚠️ Importante:</strong> La sala de videollamadas es esencial para tu práctica. 
-                    Se creará automáticamente al guardar. Si no se crea, usa "Renovar sala" después de guardar.
+                    Se creará automáticamente al guardar. Si no se crea, usa &quot;Renovar sala&quot; después de guardar.
                   </p>
                 </div>
               )}
               {roomId && (
                 <p className="text-white/60 text-xs mt-1">
-                  Tu sala está configurada. Usa "Renovar sala" solo si hay problemas técnicos con la sala actual.
+                  Tu sala está configurada. Usa &quot;Renovar sala&quot; solo si hay problemas técnicos con la sala actual.
                 </p>
               )}
             </div>

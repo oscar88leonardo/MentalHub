@@ -864,7 +864,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
 
   const upsertTherapistProfile = async (input: Partial<TherapistProfile> & { profileId?: string }) => {
     if (!profile && !input.profileId) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
-    const pid = input.profileId || profile?.id!;
+    const pid = input.profileId || profile?.id;
+    if (!pid) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
     const currentId = therapist?.id;
     await authenticateForWrite(currentId);
 
@@ -943,14 +944,15 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       throw new Error(res.errors.map((e: any) => e.message).join(" | "));
     }
     const id: string | undefined =
-      res?.data?.updateTherapistProfile?.document?.id || res?.data?.createTherapistProfile?.document?.id;
+      (res?.data as any)?.updateTherapistProfile?.document?.id || (res?.data as any)?.createTherapistProfile?.document?.id;
     await refreshProfile();
     return id || null;
   };
 
   const upsertConsultantProfile = async (input: Partial<ConsultantProfile> & { profileId?: string }) => {
     if (!profile && !input.profileId) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
-    const pid = input.profileId || profile?.id!;
+    const pid = input.profileId || profile?.id;
+    if (!pid) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
     const currentId = consultant?.id;
     await authenticateForWrite(currentId);
 
@@ -1029,7 +1031,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       throw new Error(res.errors.map((e: any) => e.message).join(" | "));
     }
     const id: string | undefined =
-      res?.data?.updateConsultantProfile?.document?.id || res?.data?.createConsultantProfile?.document?.id;
+      (res?.data as any)?.updateConsultantProfile?.document?.id || (res?.data as any)?.createConsultantProfile?.document?.id;
     await refreshProfile();
     return id || null;
   };
