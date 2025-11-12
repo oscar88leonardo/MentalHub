@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from "react";
-import { useCeramic } from "@/context/CeramicContext";
+import { useCeramic, TherapistProfile } from "@/context/CeramicContext";
 import { countries } from "@/lib/countries";
 import { mentalHealthDegrees } from "@/lib/mentalHealthDegrees";
 import { isTherapistProfileComplete } from "@/lib/profileValidation";
@@ -118,7 +118,7 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
         }
       }
       
-      const updatedTherapist = await upsertTherapistProfile({
+      const updatedTherapistId = await upsertTherapistProfile({
         profileId: profile.id,
         degrees: degrees,
         licenseNumber,
@@ -134,6 +134,25 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
         acceptingNewClients,
         roomId: finalRoomId,
       });
+      
+      // Construir el objeto TherapistProfile con los datos guardados para validación
+      const updatedTherapist: TherapistProfile | null = updatedTherapistId ? {
+        id: updatedTherapistId,
+        profileId: profile.id,
+        degrees: degrees,
+        licenseNumber,
+        licenseJurisdiction,
+        licenseCountry,
+        yearsExperience: toInt(yearsExperience),
+        approaches: parseList(approaches),
+        specialties: parseList(specialties),
+        populations: parseList(populations),
+        bioShort,
+        bioLong,
+        introVideoUrl,
+        acceptingNewClients,
+        roomId: finalRoomId,
+      } : null;
       
       // Verificar si el perfil está completo después de guardar
       const profileComplete = isTherapistProfileComplete(updatedTherapist);
