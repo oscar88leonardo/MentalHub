@@ -177,34 +177,34 @@ const Sidebar: React.FC<SidebarProps> = ({
               const isActive = activeItem === item.id;
               
               return (
-                <li key={item.id}>
-                  <button
+            <li key={item.id}>
+              <button
                     onClick={() => !isDisabled && onItemClick(item.id)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                       isActive
-                        ? 'text-white shadow-lg'
+                    ? 'text-white shadow-lg'
                         : isDisabled
                         ? 'text-white/40 cursor-not-allowed'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                    style={{
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                style={{
                       background: isActive 
-                        ? 'rgba(255, 255, 255, 0.2)' 
-                        : 'transparent',
+                    ? 'rgba(255, 255, 255, 0.2)' 
+                    : 'transparent',
                       backdropFilter: isActive ? 'blur(10px)' : 'none',
                       border: isActive 
-                        ? '1px solid rgba(255, 255, 255, 0.3)' 
-                        : 'none',
+                    ? '1px solid rgba(255, 255, 255, 0.3)' 
+                    : 'none',
                       textShadow: '0 1px 2px rgba(0,0,0,0.1)',
                       opacity: isDisabled ? 0.5 : 1
-                    }}
+                }}
                     title={isDisabled ? 'Completa tu perfil para acceder a esta opción' : undefined}
-                  >
+              >
                     <span className={`${isActive ? 'text-white' : isDisabled ? 'text-white/40' : 'text-white/70'}`}>
-                      {item.icon}
-                    </span>
-                    <span className="font-medium">{item.label}</span>
+                  {item.icon}
+                </span>
+                <span className="font-medium">{item.label}</span>
                     {isDisabled && (
                       <span className="ml-auto text-xs text-white/40">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,8 +212,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </svg>
                       </span>
                     )}
-                  </button>
-                </li>
+              </button>
+            </li>
               );
             })}
         </ul>

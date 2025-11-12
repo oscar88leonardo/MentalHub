@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
 import Sidebar from "@/components/Sidebar";
@@ -22,23 +22,65 @@ import {
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
-  const { disconnect: disconnectCeramic, profile, therapist, consultant, isConnected, isLoading } = useCeramic();
+  const { 
+    disconnect: disconnectCeramic, 
+    profile, 
+    therapist, 
+    consultant, 
+    isConnected, 
+    isLoading,
+    refreshProfile
+  } = useCeramic();
   const [activeItem, setActiveItem] = useState('dashboard');
   const [requiredModal, setRequiredModal] = useState<'basic' | 'therapist' | 'consultant' | null>(null);
+  const initialLoadDoneRef = useRef(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const router = useRouter();
 
-  // Validar perfil al cargar
+  // Cargar datos del perfil automáticamente al montar (sin autenticación)
   useEffect(() => {
-    if (!isLoading && isConnected) {
-      const modal = getRequiredModal(profile, therapist, consultant);
-      if (modal) {
-        setRequiredModal(modal);
-        setActiveItem('profile'); // Cambiar a vista de perfil
-      } else {
-        setRequiredModal(null);
+    let cancelled = false;
+    const loadData = async () => {
+      if (initialLoadDoneRef.current) return; // Ya se cargaron los datos
+      
+      try {
+        console.log("📖 Cargando perfil automáticamente (modo lectura)...");
+        await refreshProfile();
+        if (!cancelled) {
+          initialLoadDoneRef.current = true; // Marcar como cargado
+          setDataLoaded(true); // Actualizar estado para disparar validación
+          console.log("✅ Perfil cargado");
+        }
+      } catch (error) {
+        console.error("❌ Error cargando perfil:", error);
+        if (!cancelled) {
+          initialLoadDoneRef.current = true; // Marcar como cargado incluso si falla para evitar bucles
+          setDataLoaded(true); // Marcar como cargado incluso si falla
+        }
       }
+    };
+    
+    loadData();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Sin dependencias - solo se ejecuta una vez al montar
+
+  // Validar perfil cuando los datos cambien (después de la carga inicial)
+  useEffect(() => {
+    // Solo validar si ya se intentó cargar al menos una vez
+    if (!dataLoaded) return;
+    
+    const modal = getRequiredModal(profile, therapist, consultant);
+    if (modal) {
+      setRequiredModal(modal);
+      // Solo cambiar a perfil si no estamos ya ahí
+      if (activeItem !== 'profile') {
+        setActiveItem('profile');
+      }
+    } else {
+      setRequiredModal(null);
     }
-  }, [profile, therapist, consultant, isConnected, isLoading]);
+  }, [dataLoaded, profile, therapist, consultant, activeItem]); // Incluir dataLoaded para que se ejecute cuando los datos estén listos
 
   const handleLogout = async () => {
     try {
@@ -166,3 +208,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

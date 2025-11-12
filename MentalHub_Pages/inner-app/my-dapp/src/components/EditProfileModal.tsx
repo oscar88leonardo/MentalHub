@@ -286,10 +286,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
         if (onSave) {
           onSave();
         }
-        setTimeout(() => {
-          onClose();
-          setSuccess(false);
-        }, 1500);
+      setTimeout(() => {
+        onClose();
+        setSuccess(false);
+      }, 1500);
       } else {
         // Si está forzado y no está completo, mostrar mensaje
         setError("Por favor completa todos los campos requeridos (nombre y rol)");
@@ -362,14 +362,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
               {profile ? 'Editar Perfil' : 'Completar Perfil'}
             </h2>
             {!isForced && (
-              <button
-                onClick={handleClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <button
+              onClick={handleClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             )}
             {isForced && (
               <div className="w-8 h-8 flex items-center justify-center">
@@ -539,14 +539,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                         );
                       })}
                     </div>
-                    <input
+                  <input
                       type="text"
-                      value={languages}
-                      onChange={(e) => setLanguages(e.target.value)}
+                    value={languages}
+                    onChange={(e) => setLanguages(e.target.value)}
                       placeholder="O ingresa códigos manualmente (ej: es, en)"
                       className="w-full px-4 py-2 rounded-xl border-0 text-white placeholder-white/60 text-sm"
-                      style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                    />
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
                     <p className="text-white/60 text-xs">También puedes escribir códigos ISO separados por comas</p>
                   </div>
                 </div>
