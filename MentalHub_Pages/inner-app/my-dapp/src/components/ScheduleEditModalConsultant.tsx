@@ -31,7 +31,7 @@ interface Props {
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
-  const { account, authenticateForWrite } = useCeramic();
+  const { account, authenticateForWrite, executeQuery } = useCeramic();
   const [busy, setBusy] = useState<"none" | "open">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
 
