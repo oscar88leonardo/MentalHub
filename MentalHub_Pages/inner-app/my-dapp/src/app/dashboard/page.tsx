@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
 import Sidebar from "@/components/Sidebar";
@@ -13,12 +13,32 @@ import RoomsManager from "@/components/RoomsManager";
 import WhitelistWidget from "@/components/WhitelistWidget";
 import Workshops from "@/components/Workshops";
 import { useCeramic } from "@/context/CeramicContext";
+import { 
+  isBasicProfileComplete, 
+  isTherapistProfileComplete, 
+  isConsultantProfileComplete,
+  getRequiredModal 
+} from "@/lib/profileValidation";
 
 export default function DashboardPage() {
   const activeWallet = useActiveWallet();
-  const { disconnect: disconnectCeramic } = useCeramic();
+  const { disconnect: disconnectCeramic, profile, therapist, consultant, isConnected, isLoading } = useCeramic();
   const [activeItem, setActiveItem] = useState('dashboard');
+  const [requiredModal, setRequiredModal] = useState<'basic' | 'therapist' | 'consultant' | null>(null);
   const router = useRouter();
+
+  // Validar perfil al cargar
+  useEffect(() => {
+    if (!isLoading && isConnected) {
+      const modal = getRequiredModal(profile, therapist, consultant);
+      if (modal) {
+        setRequiredModal(modal);
+        setActiveItem('profile'); // Cambiar a vista de perfil
+      } else {
+        setRequiredModal(null);
+      }
+    }
+  }, [profile, therapist, consultant, isConnected, isLoading]);
 
   const handleLogout = async () => {
     try {
@@ -44,13 +64,56 @@ export default function DashboardPage() {
   };
 
   const handleItemClick = (item: string) => {
+    // Si hay un modal requerido, solo permitir navegar a 'profile'
+    if (requiredModal && item !== 'profile') {
+      setActiveItem('profile');
+      return;
+    }
+    
+    // Verificar validaciones antes de permitir navegación
+    if (!isBasicProfileComplete(profile)) {
+      setRequiredModal('basic');
+      setActiveItem('profile');
+      return;
+    }
+    
+    if (profile?.rol === 'Terapeuta' && !isTherapistProfileComplete(therapist)) {
+      if (item !== 'profile') {
+        setRequiredModal('therapist');
+        setActiveItem('profile');
+        return;
+      }
+    }
+    
+    if (profile?.rol === 'Consultante' && !isConsultantProfileComplete(consultant)) {
+      if (item !== 'profile') {
+        setRequiredModal('consultant');
+        setActiveItem('profile');
+        return;
+      }
+    }
+    
     setActiveItem(item);
+  };
+
+  const handleModalComplete = () => {
+    // Cuando se completa un modal, verificar si hay otro requerido
+    // Solo actualizar el estado del modal requerido, sin cambiar la página activa
+    const nextModal = getRequiredModal(profile, therapist, consultant);
+    setRequiredModal(nextModal);
+    // No cambiar activeItem - el usuario permanece en la página donde está
   };
 
   const renderContent = () => {
     switch (activeItem) {
       case 'profile':
-        return <ProfilePage onLogout={handleLogout} />;
+        return (
+          <ProfilePage 
+            onLogout={handleLogout}
+            requiredModal={requiredModal}
+            onModalComplete={handleModalComplete}
+          />
+        );
       case 'rooms':
         return <RoomsManager />;
       case 'availability':
@@ -81,7 +144,19 @@ export default function DashboardPage() {
     >
       {/* Sidebar fijo */}
       <div className="flex-shrink-0">
-        <Sidebar activeItem={activeItem} onItemClick={handleItemClick} />
+        <Sidebar 
+          activeItem={requiredModal ? 'profile' : activeItem} 
+          onItemClick={handleItemClick}
+          profile={profile}
+          therapist={therapist}
+          consultant={consultant}
+          isProfileComplete={
+            isBasicProfileComplete(profile) && 
+            (profile?.rol === 'Terapeuta' 
+              ? isTherapistProfileComplete(therapist) 
+              : isConsultantProfileComplete(consultant))
+          }
+        />
       </div>
       
       {/* Área de contenido principal */}

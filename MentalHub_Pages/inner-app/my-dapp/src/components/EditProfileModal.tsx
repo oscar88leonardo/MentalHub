@@ -2,11 +2,17 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Image from "next/image";
+import { countries } from "@/lib/countries";
+import { languages as languageList } from "@/lib/languages";
+import { timezones } from "@/lib/timezones";
+import { genderOptions } from "@/lib/genderOptions";
+import { isBasicProfileComplete } from "@/lib/profileValidation";
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   isForced?: boolean;
+  onSave?: () => void; // Callback opcional que se llama solo cuando se guarda exitosamente
 }
 
 interface IpfsResponse {
@@ -14,7 +20,7 @@ interface IpfsResponse {
   [key: string]: any;
 }
 
-const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, isForced = false }) => {
+const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, isForced = false, onSave }) => {
   const { profile, executeQuery, refreshProfile, authenticateForWrite } = useCeramic();
   
   // Estados del formulario
@@ -22,7 +28,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
   const [rol, setRol] = useState("");
   const [pfp, setPfp] = useState("");
   const [email, setEmail] = useState("");
-  const [gender, setGender] = useState<"" | "Masculino" | "Femenino">("");
+  const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -124,7 +130,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     ];
     if (safePfp) contentParts.push(`pfp: "${safePfp}"`);
     if (safeEmail) contentParts.push(`email: "${safeEmail}"`);
-    if (gender) contentParts.push(`gender: ${gender}`);
+    if (gender) contentParts.push(`gender: "${esc(gender)}"`);
     if (birthDate) contentParts.push(`birthDate: "${new Date(birthDate).toISOString()}"`);
     if (country) contentParts.push(`country: "${esc(country)}"`);
     if (city) contentParts.push(`city: "${esc(city)}"`);
@@ -256,11 +262,39 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       // Refrescar el perfil
       await refreshProfile();
       
+      // Verificar si el perfil está completo después de guardar
+      const updatedProfile = await executeQuery(`
+        query {
+          viewer {
+            innerverseProfile {
+              id
+              name
+              rol
+            }
+          }
+        }
+      `);
+      
+      const profileData = updatedProfile?.data?.viewer?.innerverseProfile;
+      const profileComplete = isBasicProfileComplete(profileData);
+      
       setSuccess(true);
-      setTimeout(() => {
-        onClose();
+      
+      // Solo cerrar si el perfil está completo o si no está forzado
+      if (profileComplete || !isForced) {
+        // Llamar onSave si existe (solo cuando se guarda exitosamente)
+        if (onSave) {
+          onSave();
+        }
+        setTimeout(() => {
+          onClose();
+          setSuccess(false);
+        }, 1500);
+      } else {
+        // Si está forzado y no está completo, mostrar mensaje
+        setError("Por favor completa todos los campos requeridos (nombre y rol)");
         setSuccess(false);
-      }, 1500);
+      }
 
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -281,8 +315,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     }
   };
 
-  // Manejar cierre del modal (siempre permite cerrar)
+  // Manejar cierre del modal
   const handleClose = () => {
+    // Si está forzado, verificar que el perfil esté completo antes de permitir cerrar
+    if (isForced) {
+      const trimmedName = name.trim();
+      const hasValidRol = rol && (rol === "Terapeuta" || rol === "Consultante");
+      
+      if (!trimmedName || !hasValidRol) {
+        setError("Por favor completa todos los campos requeridos antes de continuar");
+        return;
+      }
+    }
+    
     setError(null);
     setSuccess(false);
     onClose();
@@ -316,20 +361,33 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
             >
               {profile ? 'Editar Perfil' : 'Completar Perfil'}
             </h2>
-            <button
-              onClick={handleClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-            >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {!isForced && (
+              <button
+                onClick={handleClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+            {isForced && (
+              <div className="w-8 h-8 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            )}
           </div>
           <p 
             className="text-white/80 mt-2"
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
           >
-            {profile ? 'Actualiza tu información personal' : 'Completa tu perfil para comenzar'}
+            {isForced 
+              ? 'Completa tu perfil básico para continuar. Este paso es obligatorio.'
+              : profile 
+                ? 'Actualiza tu información personal' 
+                : 'Completa tu perfil para comenzar'}
           </p>
         </div>
 
@@ -394,14 +452,24 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                     <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                       País (ISO-2)
                     </label>
-                    <input
+                    <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
-                      maxLength={2}
-                      placeholder="AR, CO, US"
-                      className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
-                      style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                    />
+                      className="w-full px-4 py-3 rounded-xl border-0 text-white"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <option value="" className="bg-gray-800 text-white">Selecciona un país</option>
+                      {countries.map((c) => (
+                        <option key={c.code} value={c.code} className="bg-gray-800 text-white">
+                          {c.name} ({c.code})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
@@ -420,37 +488,90 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                     Zona horaria
                   </label>
-                  <input
+                  <select
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    placeholder="America/Bogota"
-                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
-                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                  />
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <option value="" className="bg-gray-800 text-white">Selecciona una zona horaria</option>
+                    {timezones.map((tz) => (
+                      <option key={tz.value} value={tz.value} className="bg-gray-800 text-white">
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                    Idiomas (coma-separados)
+                    Idiomas (selecciona múltiples)
                   </label>
-                  <input
-                    value={languages}
-                    onChange={(e) => setLanguages(e.target.value)}
-                    placeholder="Español, Inglés"
-                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
-                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                  />
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {languageList.map((lang) => {
+                        const currentLangs = languages.split(",").map(x => x.trim()).filter(Boolean);
+                        const isSelected = currentLangs.includes(lang.code);
+                        return (
+                          <label
+                            key={lang.code}
+                            className="flex items-center space-x-2 text-white/90 cursor-pointer p-2 rounded-lg hover:bg-white/5"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                const current = languages.split(",").map(x => x.trim()).filter(Boolean);
+                                if (e.target.checked) {
+                                  setLanguages([...current, lang.code].join(", "));
+                                } else {
+                                  setLanguages(current.filter(c => c !== lang.code).join(", "));
+                                }
+                              }}
+                              className="w-4 h-4 rounded"
+                            />
+                            <span className="text-sm">{lang.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <input
+                      type="text"
+                      value={languages}
+                      onChange={(e) => setLanguages(e.target.value)}
+                      placeholder="O ingresa códigos manualmente (ej: es, en)"
+                      className="w-full px-4 py-2 rounded-xl border-0 text-white placeholder-white/60 text-sm"
+                      style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                    <p className="text-white/60 text-xs">También puedes escribir códigos ISO separados por comas</p>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                     Idioma principal
                   </label>
-                  <input
+                  <select
                     value={primaryLanguage}
                     onChange={(e) => setPrimaryLanguage(e.target.value)}
-                    placeholder="Español"
-                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
-                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
-                  />
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <option value="" className="bg-gray-800 text-white">Selecciona un idioma</option>
+                    {languageList.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-gray-800 text-white">
+                        {lang.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {/* Monedas y tarifas */}
@@ -612,7 +733,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                 </label>
                 <select
                   value={gender}
-                  onChange={(e) => setGender(e.target.value as any)}
+                  onChange={(e) => setGender(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border-0 text-white"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
@@ -622,8 +743,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   }}
                 >
                   <option value="" className="bg-gray-800 text-white">Sin especificar</option>
-                  <option value="Masculino" className="bg-gray-800 text-white">Masculino</option>
-                  <option value="Femenino" className="bg-gray-800 text-white">Femenino</option>
+                  {genderOptions.map((go) => (
+                    <option key={go.value} value={go.value} className="bg-gray-800 text-white">
+                      {go.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

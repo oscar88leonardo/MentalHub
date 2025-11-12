@@ -8,7 +8,7 @@ type InnerverProfile @createModel(accountRelation: SINGLE, description: "Innerve
 
   # Datos personales
   email: String @string(maxLength: 120)
-  gender: Gender
+  gender: String @string(maxLength: 32)
   birthDate: DateTime
 
   # Ubicación e idiomas centralizados
@@ -28,9 +28,4 @@ type InnerverProfile @createModel(accountRelation: SINGLE, description: "Innerve
 enum Rol {
   Terapeuta
   Consultante
-}
-
-enum Gender {
-  Masculino
-  Femenino
 }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Header from "./Header";
 import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
+import EditProfileModal from "./EditProfileModal";
 import EditTherapistProfileModal from "./EditTherapistProfileModal";
 import EditConsultantProfileModal from "./EditConsultantProfileModal";
 import { resolveIpfsUrl } from "@/lib/ipfs";
@@ -17,9 +18,11 @@ import { abi } from "@/abicontracts/MembersAirdrop";
 
 interface ProfilePageProps {
   onLogout: () => void;
+  requiredModal?: 'basic' | 'therapist' | 'consultant' | null;
+  onModalComplete?: () => void;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onModalComplete }) => {
   const { 
     profile, 
     isConnected, 
@@ -65,6 +68,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   const [isCheckingArrTokenIds, setIsCheckingArrTokenIds] = useState(false);
   const [isTherapistModalOpen, setIsTherapistModalOpen] = useState(false);
   const [isConsultantModalOpen, setIsConsultantModalOpen] = useState(false);
+  const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
+
+  // Abrir modal requerido automáticamente
+  useEffect(() => {
+    if (requiredModal === 'basic') {
+      setIsBasicModalOpen(true);
+    } else if (requiredModal === 'therapist') {
+      setIsTherapistModalOpen(true);
+    } else if (requiredModal === 'consultant') {
+      setIsConsultantModalOpen(true);
+    }
+  }, [requiredModal]);
 
   // Helper: chips renderer
   const Chips = ({ items }: { items?: Array<string | number> }) => {
@@ -400,7 +415,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                 Info. Consultante
               </button>
             )}
-            <EditProfileButton isNewUser={!profile} />
+            {requiredModal !== 'basic' && <EditProfileButton isNewUser={!profile} />}
           </div>
         </div>
 
@@ -735,8 +750,39 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           </div>
         )}
         {/* Modales */}
-        <EditTherapistProfileModal isOpen={isTherapistModalOpen} onClose={() => setIsTherapistModalOpen(false)} />
-        <EditConsultantProfileModal isOpen={isConsultantModalOpen} onClose={() => setIsConsultantModalOpen(false)} />
+        <EditProfileModal
+          isOpen={isBasicModalOpen}
+          onClose={() => {
+            setIsBasicModalOpen(false);
+          }}
+          onSave={() => {
+            // Solo llamar onModalComplete cuando se guarda exitosamente
+            if (onModalComplete) onModalComplete();
+          }}
+          isForced={requiredModal === 'basic'}
+        />
+        <EditTherapistProfileModal
+          isOpen={isTherapistModalOpen}
+          onClose={() => {
+            setIsTherapistModalOpen(false);
+          }}
+          onSave={() => {
+            // Solo llamar onModalComplete cuando se guarda exitosamente
+            if (onModalComplete) onModalComplete();
+          }}
+          isForced={requiredModal === 'therapist'}
+        />
+        <EditConsultantProfileModal
+          isOpen={isConsultantModalOpen}
+          onClose={() => {
+            setIsConsultantModalOpen(false);
+          }}
+          onSave={() => {
+            // Solo llamar onModalComplete cuando se guarda exitosamente
+            if (onModalComplete) onModalComplete();
+          }}
+          isForced={requiredModal === 'consultant'}
+        />
         </div>
       </div>
     </div>

@@ -1,13 +1,29 @@
 "use client"
 import React from "react";
 import Image from "next/image";
+import { InnerverProfile, TherapistProfile, ConsultantProfile } from "@/context/CeramicContext";
 
 interface SidebarProps {
   activeItem: string;
   onItemClick: (item: string) => void;
+  profile?: InnerverProfile | null;
+  therapist?: TherapistProfile | null;
+  consultant?: ConsultantProfile | null;
+  isProfileComplete?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  activeItem, 
+  onItemClick, 
+  profile, 
+  therapist, 
+  consultant, 
+  isProfileComplete = false 
+}) => {
+  const userRole = profile?.rol;
+  const isTherapist = userRole === 'Terapeuta';
+  const isConsultant = userRole === 'Consultante';
+
   const menuItems = [
     {
       id: 'dashboard',
@@ -53,7 +69,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
         </svg>
-      )
+      ),
+      roles: ['Terapeuta'] // Solo visible para terapeutas
     },
     {
       id: 'availability',
@@ -62,7 +79,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-      )
+      ),
+      roles: ['Terapeuta'] // Solo visible para terapeutas
     },
     {
       id: 'nfts',
@@ -145,33 +163,59 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
       {/* Navigation - Scrolleable */}
       <nav className="flex-1 mt-6 px-4 overflow-y-auto">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => onItemClick(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  activeItem === item.id
-                    ? 'text-white shadow-lg'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
-                }`}
-                style={{
-                  background: activeItem === item.id 
-                    ? 'rgba(255, 255, 255, 0.2)' 
-                    : 'transparent',
-                  backdropFilter: activeItem === item.id ? 'blur(10px)' : 'none',
-                  border: activeItem === item.id 
-                    ? '1px solid rgba(255, 255, 255, 0.3)' 
-                    : 'none',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                }}
-              >
-                <span className={`${activeItem === item.id ? 'text-white' : 'text-white/70'}`}>
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.label}</span>
-              </button>
-            </li>
-          ))}
+          {menuItems
+            .filter((item) => {
+              // Filtrar por rol: si el item tiene roles definidos, solo mostrarlo para esos roles
+              if (item.roles && userRole) {
+                return item.roles.includes(userRole);
+              }
+              // Si no tiene roles definidos, mostrarlo siempre
+              return true;
+            })
+            .map((item) => {
+              const isDisabled = !isProfileComplete && item.id !== 'profile';
+              const isActive = activeItem === item.id;
+              
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => !isDisabled && onItemClick(item.id)}
+                    disabled={isDisabled}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                      isActive
+                        ? 'text-white shadow-lg'
+                        : isDisabled
+                        ? 'text-white/40 cursor-not-allowed'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                    }`}
+                    style={{
+                      background: isActive 
+                        ? 'rgba(255, 255, 255, 0.2)' 
+                        : 'transparent',
+                      backdropFilter: isActive ? 'blur(10px)' : 'none',
+                      border: isActive 
+                        ? '1px solid rgba(255, 255, 255, 0.3)' 
+                        : 'none',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      opacity: isDisabled ? 0.5 : 1
+                    }}
+                    title={isDisabled ? 'Completa tu perfil para acceder a esta opción' : undefined}
+                  >
+                    <span className={`${isActive ? 'text-white' : isDisabled ? 'text-white/40' : 'text-white/70'}`}>
+                      {item.icon}
+                    </span>
+                    <span className="font-medium">{item.label}</span>
+                    {isDisabled && (
+                      <span className="ml-auto text-xs text-white/40">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
         </ul>
       </nav>
 
