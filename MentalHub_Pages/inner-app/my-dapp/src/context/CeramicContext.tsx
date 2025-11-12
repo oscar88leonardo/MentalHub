@@ -12,7 +12,7 @@ import { myChain } from "@/config/chain";
 import { definition } from "@/__generated__/definition.js";
 
 // Types
-interface InnerverProfile {
+export interface InnerverProfile {
   id: string;
   name: string;
   displayName: string;
