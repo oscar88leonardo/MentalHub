@@ -393,7 +393,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     onChainSigRef.current = '';
     setMySchedEvents(prev => {
       const byId = new Map(prev.map(e => [e.id, e.state]));
-      return mapped.map(m => {
+      return mapped.map((m: { id: string; state: string }) => {
         const prevState = byId.get(m.id);
         if (prevState && (prevState === 'Active' || prevState === 'Finished') && m.state === 'Pending') {
           return { ...m, state: prevState };
