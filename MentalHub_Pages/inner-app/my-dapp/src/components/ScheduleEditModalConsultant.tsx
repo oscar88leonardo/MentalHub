@@ -15,9 +15,7 @@ interface ScheduleItem {
   id: string;
   start: Date;
   end: Date;
-  huddId: string;
   roomId: string;
-  roomName: string;
   tokenId?: number;
   nftContract?: string;
   therapistName?: string;
@@ -33,7 +31,7 @@ interface Props {
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
-  const { account, executeQuery, authenticateForWrite } = useCeramic();
+  const { account, authenticateForWrite } = useCeramic();
   const [busy, setBusy] = useState<"none" | "open">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
 
@@ -42,8 +40,6 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
   const [end, setEnd] = useState<Date>(schedule.end);
   const [tokenId, setTokenId] = useState<string>(schedule.tokenId != null ? String(schedule.tokenId) : "");
   const [isSaving, setIsSaving] = useState(false);
-  const [rooms, setRooms] = useState<Array<{ id: string; name: string; roomId: string }>>([]);
-  const [room, setRoom] = useState<string>(schedule.huddId);
   const [status, setStatus] = useState<string>('Pending');
   const isEditable = status === 'Pending';
 
@@ -98,30 +94,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
     return () => { cancelled = true; };
   }, [schedule?.id, schedule?.tokenId, contract]);
 
-  // Cargar salas del terapeuta (si therapistId disponible)
-  useEffect(() => {
-    const loadRooms = async () => {
-      if (!schedule?.therapistId) return;
-      const q = `
-        query {
-          node(id: "${schedule.therapistId}") {
-            ... on InnerverProfile {
-              hudds(last: 100, filters: { where: { state: { in: Active } } }) {
-                edges { node { id name roomId } }
-              }
-            }
-          }
-        }
-      `;
-      try {
-        const res: any = await executeQuery(q);
-        const edges = res?.data?.node?.hudds?.edges || [];
-        const mapped = edges.map((e: any) => ({ id: e.node.id, name: e.node.name, roomId: e.node.roomId }));
-        setRooms(mapped);
-      } catch {}
-    };
-    loadRooms();
-  }, [schedule?.therapistId, executeQuery]);
+// (Se elimina carga de salas; se usa roomId fijo en la cita)
 
   const showToast = (text: string, type: "error" | "success" | "info" = "info") => {
     setToast({ text, type });
@@ -137,12 +110,6 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         setIsSaving(false);
         return;
       }
-      // Validar que la sala seleccionada pertenezca al mismo terapeuta
-      if (room && !rooms.find(r => r.id === room)) {
-        showToast('La sala seleccionada no pertenece al terapeuta de esta consulta.', 'error');
-        setIsSaving(false);
-        return;
-      }
       try { await authenticateForWrite(); } catch {
         showToast('Se requiere autenticación para guardar cambios.', 'error');
         setIsSaving(false);
@@ -153,7 +120,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
       const mutation = `
         mutation {
           updateSchedule(
-            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", huddId: "${room}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId || 0} } }
+            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId || 0} } }
           ) {
             document { id }
           }
@@ -184,8 +151,6 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         start,
         end,
         defaultRoomId: schedule.roomId,
-        selectedRoomId: room || undefined,
-        rooms: rooms.map(r => ({ id: r.id, roomId: r.roomId })),
         openMeet,
         optimistic: true,
       });
@@ -222,14 +187,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
               <p className="text-white/80 text-sm">Estado: <span className="font-semibold text-white">{status}</span></p>
             </div>
             <div>
-              <p className="text-white/80 text-sm">Sala</p>
-              <select value={room} onChange={(e) => setRoom(e.target.value)} disabled={!isEditable} className="w-full px-3 py-2 rounded border bg-white text-black disabled:opacity-60">
-                <option value="">Selecciona sala</option>
-                {rooms.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-              <p className="text-white/70 text-xs mt-1">Sala actual: <span className="font-semibold text-white">{schedule.roomName || '—'}</span></p>
+              <p className="text-white/80 text-sm">Sala actual: <span className="font-semibold text-white">{schedule.roomId || '—'}</span></p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

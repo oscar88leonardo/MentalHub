@@ -70,8 +70,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
   const [isConsultantModalOpen, setIsConsultantModalOpen] = useState(false);
   const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
 
-  // Abrir modal requerido automáticamente y cerrar otros modales
+  // Abrir modal requerido automáticamente y cerrar otros modales (solo si hay conexión)
   useEffect(() => {
+    if (!isConnected) {
+      setIsBasicModalOpen(false);
+      setIsTherapistModalOpen(false);
+      setIsConsultantModalOpen(false);
+      return;
+    }
     if (requiredModal === 'basic') {
       setIsBasicModalOpen(true);
       // Cerrar otros modales cuando se requiere el básico
@@ -93,7 +99,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
       setIsTherapistModalOpen(false);
       setIsConsultantModalOpen(false);
     }
-  }, [requiredModal]);
+  }, [requiredModal, isConnected]);
 
   // Helper: chips renderer
   const Chips = ({ items }: { items?: Array<string | number> }) => {

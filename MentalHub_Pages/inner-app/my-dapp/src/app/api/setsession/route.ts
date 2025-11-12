@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   try {
 
     const account = privateKeyToAccount({
-      client,
+      client: client!,
       privateKey: PRIVATE_KEY,
     });
 
@@ -40,13 +40,27 @@ export async function POST(req: Request) {
     //console.log("contract setSession:");
     //console.log(contract);
     
-    // Pre-chequeo: si ya está en el mismo estado, no ejecutar transacción
+    // Helper para retry/backoff en caso de 429
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const withRetry = async <T,>(fn: () => Promise<T>, retries = 3, delay = 800): Promise<T> => {
+      try { return await fn(); }
+      catch (e: any) {
+        const msg = String(e?.message || "");
+        if (retries > 0 && (e?.code === 429 || msg.includes("Too Many"))) {
+          await sleep(delay);
+          return withRetry(fn, retries - 1, delay * 2);
+        }
+        throw e;
+      }
+    };
+
+    // Pre-chequeo: si ya está en el mismo estado, no ejecutar transacción (tolerante a errores)
     try {
-      const current = await readContract({
+      const current = await withRetry(() => readContract({
         contract,
         method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
         params: [BigInt(body.tokenId), body.scheduleId],
-      });
+      }));
       if (Number(current) === Number(body.state)) {
         return NextResponse.json({ status: "success", msg: "noop (same state)" }, { status: 200 });
       }
@@ -63,12 +77,10 @@ export async function POST(req: Request) {
     });
 
     if (account) {
-      //let tx = null;
-      
-      const { transactionHash } = await sendTransaction({
+      const { transactionHash } = await withRetry(() => sendTransaction({
         account: account!,
         transaction: tx,
-      });
+      }));
       console.log("transactionHash setSession:");
       console.log(transactionHash);
 

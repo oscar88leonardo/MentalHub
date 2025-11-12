@@ -14,10 +14,8 @@ interface EventItem {
   start: Date;
   end: Date;
   state: string;
-  huddId: string;
   roomId: string;
   displayName: string;
-  roomName: string;
   tokenId?: number;
   nftContract?: string;
 }
@@ -34,8 +32,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [availableSessions, setAvailableSessions] = useState<number | null>(null);
   const { profile, executeQuery } = useCeramic();
-  const [rooms, setRooms] = useState<Array<{ id: string; name: string; roomId: string }>>([]);
-  const [room, setRoom] = useState<string>("");
+  // Sin gestión de múltiples salas
 
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
 
@@ -55,29 +52,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
     run();
   }, [event.tokenId, contract]);
 
-  // Cargar salas activas del terapeuta autenticado y preseleccionar la sala actual del evento
-  useEffect(() => {
-    (async () => {
-      try {
-        const q = `
-          query {
-            node(id: "${profile?.id}") {
-              ... on InnerverProfile {
-                hudds(last: 100, filters: { where: { state: { in: Active } } }) {
-                  edges { node { id name roomId } }
-                }
-              }
-            }
-          }
-        `;
-        const res: any = await executeQuery(q);
-        const edges = res?.data?.node?.hudds?.edges || [];
-        const mapped = edges.map((e: any) => ({ id: e.node.id, name: e.node.name, roomId: e.node.roomId }));
-        setRooms(mapped);
-        setRoom("");
-      } catch {}
-    })();
-  }, [profile?.id, executeQuery]);
+  // Se elimina la carga de salas
 
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
@@ -93,8 +68,6 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         start: event.start,
         end: event.end,
         defaultRoomId: event.roomId,
-        selectedRoomId: room || undefined,
-        rooms: rooms.map(r => ({ id: r.id, roomId: r.roomId })),
         openMeet,
         optimistic: true,
       });
@@ -169,20 +142,12 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         )}
         <div className="p-4 space-y-2 text-white/90">
           <p><span className="font-semibold">Consultante:</span> {event.displayName || 'N/A'}</p>
-          <p><span className="font-semibold">Sala:</span> {event.roomName}</p>
+          <p><span className="font-semibold">Sala:</span> {event.roomId}</p>
           <p><span className="font-semibold">Inicio:</span> {event.start.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Fin:</span> {event.end.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Estado:</span> {event.state}</p>
           <p><span className="font-semibold">Inner Key:</span> Id: {event.tokenId ?? '—'} {availableSessions != null && (<span className="text-white/80">- # sesiones: {availableSessions}</span>)}</p>
-          <div className="mt-2">
-            <p className="text-white/80 text-sm">Seleccionar sala</p>
-            <select value={room} onChange={(e) => setRoom(e.target.value)} className="w-full px-3 py-2 rounded border bg-white text-black">
-              <option value="">{event.roomName || 'Sala por defecto'}</option>
-              {rooms.map(r => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Sin selección de sala */}
         </div>
         <div className="p-4 flex justify-end gap-3">
           {event.state === 'Active' && (

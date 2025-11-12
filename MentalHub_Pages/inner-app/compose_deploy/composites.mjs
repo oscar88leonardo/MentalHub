@@ -24,33 +24,10 @@ export const writeComposite = async () => {
     "../composites/innerverseProfile.graphql"
   );
   //console.log(innerverseProfileComposite.modelIDs);
-  const huddleSchema = readFileSync("../composites/innerverseHuddle01.graphql", {
-    encoding: "utf-8",
-  }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-  
-  const huddleComposite = await Composite.create({
-    ceramic,
-    schema: huddleSchema,
-  });
-  //console.log(huddleComposite.modelIDs)
-  const huddsProfileSchema = readFileSync(
-    "../composites/innerverseHuddProfile.graphql",
-    {
-      encoding: "utf-8",
-    }
-  )
-    .replace("$HUDD_ID", huddleComposite.modelIDs[1])
-    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-  //console.log(huddsProfileSchema);
-  const huddsProfileComposite = await Composite.create({
-    ceramic,
-    schema: huddsProfileSchema,
-  });
 
   const scheduleSchema = readFileSync("../composites/innerverseSchedule.graphql", {
     encoding: "utf-8",
-  }).replace("$HUDD_ID", huddleComposite.modelIDs[1])
-    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  }).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
   
   const scheduleComposite = await Composite.create({
     ceramic,
@@ -64,26 +41,13 @@ export const writeComposite = async () => {
       encoding: "utf-8",
     }
   )
-    .replace("$SCHE_ID", scheduleComposite.modelIDs[2])
+    // innerverseSchedule now has 2 models: loader(InnerverProfile) and Schedule (index 1)
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[1])
     .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
   
   const schedProfileComposite = await Composite.create({
     ceramic,
     schema: schedProfileSchema,
-  });
-
-  const SchedHuddle01Schema = readFileSync(
-    "../composites/innerverseSchedHuddle01.graphql",
-    {
-      encoding: "utf-8",
-    }
-  )
-    .replace("$HUDD_ID", huddleComposite.modelIDs[1])
-    .replace("$SCHE_ID", scheduleComposite.modelIDs[2])
-  //console.log(huddsProfileSchema);
-  const SchedHuddle01Composite = await Composite.create({
-    ceramic,
-    schema: SchedHuddle01Schema,
   });
 
   const schedTherapSchema = readFileSync("../composites/innerverseSchedTherapist.graphql", {
@@ -109,6 +73,19 @@ export const writeComposite = async () => {
   const schedTherapProfileComposite = await Composite.create({
     ceramic,
     schema: schedTherapProfileSchema,
+  });
+
+  // Nueva relación inversa para Schedule -> therapist (sin Huddle01)
+  const schedTherapistLinkSchema = readFileSync(
+    "../composites/innerverseScheduleTherapistLink.graphql",
+    { encoding: "utf-8" }
+  )
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const schedTherapistLinkComposite = await Composite.create({
+    ceramic,
+    schema: schedTherapistLinkSchema,
   });
 
   const workshopSchema = readFileSync(
@@ -171,13 +148,11 @@ export const writeComposite = async () => {
 
   const composite = Composite.from([
     innerverseProfileComposite,
-    huddleComposite,
-    huddsProfileComposite,
     scheduleComposite,
     schedProfileComposite,
-    SchedHuddle01Composite,
     schedTherapComposite,
     schedTherapProfileComposite,
+    schedTherapistLinkComposite,
     workshopComposite,
     therapistComposite,
     therapistProfileComposite,

@@ -19,6 +19,7 @@ export const THIRDWEB_FALLBACK_RPC = CLIENT_ID ? `https://${CHAINS[CHAIN].id}.rp
 
 export const myChain = defineChain({
   id: CHAINS[CHAIN].id,
+  //rpc: THIRDWEB_FALLBACK_RPC,
   rpc: CHAINS[CHAIN].rpc || THIRDWEB_FALLBACK_RPC,
 });
 

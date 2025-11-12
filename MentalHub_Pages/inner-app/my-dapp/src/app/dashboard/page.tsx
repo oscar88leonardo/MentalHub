@@ -9,7 +9,6 @@ import InnerKeysCatalog from "@/components/InnerKeysCatalog";
 import ProfilePage from "@/components/ProfilePage";
 import Availability from "@/components/Availability";
 import Sessions from "@/components/Sessions";
-import RoomsManager from "@/components/RoomsManager";
 import WhitelistWidget from "@/components/WhitelistWidget";
 import Workshops from "@/components/Workshops";
 import { useCeramic } from "@/context/CeramicContext";
@@ -69,6 +68,11 @@ export default function DashboardPage() {
   useEffect(() => {
     // Solo validar si ya se intentó cargar al menos una vez
     if (!dataLoaded) return;
+    // No forzar modales si no hay conexión (logout/desconectado)
+    if (!isConnected) {
+      setRequiredModal(null);
+      return;
+    }
     
     const modal = getRequiredModal(profile, therapist, consultant);
     if (modal) {
@@ -80,10 +84,12 @@ export default function DashboardPage() {
     } else {
       setRequiredModal(null);
     }
-  }, [dataLoaded, profile, therapist, consultant, activeItem]); // Incluir dataLoaded para que se ejecute cuando los datos estén listos
+  }, [dataLoaded, isConnected, profile, therapist, consultant, activeItem]); // Incluir dataLoaded para que se ejecute cuando los datos estén listos
 
   const handleLogout = async () => {
     try {
+      // Asegurar que no quede ningún modal forzado abierto
+      setRequiredModal(null);
       // Desconectar Ceramic y limpiar su estado en memoria
       try { await disconnectCeramic(); } catch (e) { console.warn('Ceramic disconnect error:', e); }
 
@@ -156,8 +162,6 @@ export default function DashboardPage() {
             onModalComplete={handleModalComplete}
           />
         );
-      case 'rooms':
-        return <RoomsManager />;
       case 'availability':
         return <Availability onLogout={handleLogout} />;
       case 'schedule':

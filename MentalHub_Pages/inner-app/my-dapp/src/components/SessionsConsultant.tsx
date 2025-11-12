@@ -28,7 +28,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   useEffect(() => { executeQueryRef.current = executeQuery; }, [executeQuery]);
   const [therapist, setTherapist] = useState<string>("");
   const [therapistName, setTherapistName] = useState<string>("");
-  const [therapistRooms, setTherapistRooms] = useState<Array<{ node: { id: string; name: string } }>>([]);
+  const [therapistRoomId, setTherapistRoomId] = useState<string>("");
   const [therapists, setTherapists] = useState<Array<{ node: { id: string; name: string } }>>([]);
   const [events, setEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string }>>([]);
   const [busyTherapEvents, setBusyTherapEvents] = useState<Array<{ id: string; start: Date; end: Date }>>([]);
@@ -43,9 +43,10 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const [hasAvailableKey, setHasAvailableKey] = useState(false);
   const [isLoadingKeys, setIsLoadingKeys] = useState(false);
   const [isLoadingAvail, setIsLoadingAvail] = useState(false);
-  const [mySchedEvents, setMySchedEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string; huddId: string; roomId: string; roomName: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }>>([]);
-  const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; huddId: string; roomId: string; roomName: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string } | null>(null);
+  const [mySchedEvents, setMySchedEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }>>([]);
+  const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string } | null>(null);
   const onChainSigRef = useRef<string>("");
+  const lastOnchainCheckRef = useRef<number>(0);
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
@@ -142,16 +143,9 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             sched_therap(last: 200, filters: { where: { state: { in: [Active] } } }) {
               edges { node { id date_init date_finish state } }
             }
-            hudds(last: 50, filters: { where: { state: { in: Active } } }) {
-              edges {
-                node {
-                  id
-                  name
-                  schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
-                    edges { node { id date_init date_finish state } }
-                  }
-                }
-              }
+            therapist(last: 1) { edges { node { roomId } } }
+            therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active] } } }) {
+              edges { node { id date_init date_finish state roomId } }
             }
           }
         }
@@ -165,17 +159,11 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       const availEdges = node?.sched_therap?.edges || [];
       const mappedAvail = availEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish), state: e.node.state }));
       setEvents(mappedAvail);
-      const hEdges = node?.hudds?.edges || [];
-      setTherapistRooms(hEdges.map((he: any) => ({ node: { id: he?.node?.id, name: he?.node?.name } })));
-      const mappedBusy: Array<{ id: string; start: Date; end: Date }> = [];
-      for (const he of hEdges) {
-        const scheds = he?.node?.schedules?.edges || [];
-        for (const s of scheds) {
-          const sn = s?.node;
-          if (!sn) continue;
-          mappedBusy.push({ id: sn.id, start: new Date(sn.date_init), end: new Date(sn.date_finish) });
-        }
-      }
+      const roomId = node?.therapist?.edges?.[0]?.node?.roomId || "";
+      setTherapistRoomId(roomId);
+      const sEdges = node?.therapist_sched?.edges || [];
+      const mappedBusy: Array<{ id: string; start: Date; end: Date }> =
+        sEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish) }));
       const validBusy = (() => {
         const byKey = new Set<string>();
         return mappedBusy
@@ -203,32 +191,17 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       query {
         node(id: "${therapist}") {
           ... on InnerverProfile {
-            hudds(last: 50, filters: { where: { state: { in: Active } } }) {
-              edges {
-                node {
-                  id
-                  name
-                  schedules(filters: { where: { state: { in: [Pending, Active] } } }, last: 200) {
-                    edges { node { id date_init date_finish state } }
-                  }
-                }
-              }
+            therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active] } } }) {
+              edges { node { id date_init date_finish state } }
             }
           }
         }
       }
     `;
     const res: any = await executeQueryRef.current(q);
-    const hEdges = res?.data?.node?.hudds?.edges || [];
-    const mappedBusy: Array<{ id: string; start: Date; end: Date }> = [];
-    for (const he of hEdges) {
-      const scheds = he?.node?.schedules?.edges || [];
-      for (const s of scheds) {
-        const sn = s?.node;
-        if (!sn) continue;
-        mappedBusy.push({ id: sn.id, start: new Date(sn.date_init), end: new Date(sn.date_finish) });
-      }
-    }
+    const sEdges = res?.data?.node?.therapist_sched?.edges || [];
+    const mappedBusy: Array<{ id: string; start: Date; end: Date }> =
+      sEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish) }));
     const validBusy = (() => {
       const byKey = new Set<string>();
       return mappedBusy
@@ -272,28 +245,31 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       rangeEnd = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate() + 7, 23, 59, 59, 999);
     }
     
-    const visible = mySchedEvents.filter(e => e.tokenId != null && e.start < rangeEnd && e.end > rangeStart);
+    const visible = mySchedEvents.filter(
+      (e) => typeof e.tokenId === 'number' && e.tokenId > 0 && e.start < rangeEnd && e.end > rangeStart
+    );
     if (!visible.length) return;
     
     const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
     if (onChainSigRef.current === key) return;
     
     onChainSigRef.current = key;
+    // Evitar lecturas on-chain demasiado frecuentes (cooldown 10s)
+    if (Date.now() - lastOnchainCheckRef.current < 10000) return;
     
     (async () => {
       try {
         const updates = await Promise.all(visible.map(async (e) => {
           if (!e.tokenId) return { id: e.id, state: e.state };
           try {
-            const stateNum = await readContract({
+            const n = await readContract({
               contract,
               method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
               params: [BigInt(e.tokenId), e.id]
             });
-            const n = Number(stateNum as any);
-            return { id: e.id, state: mapState(n) };
-          } catch (err) {
-            console.warn(`Failed to read state for event ${e.id}:`, err);
+            return { id: e.id, state: mapState(Number(n)) };
+          } catch (err: any) {
+            console.warn(`\nFailed to read state for event ${e.id}:`, err?.message ?? err);
             return { id: e.id, state: e.state };
           }
         }));
@@ -301,6 +277,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         // Verificar que la key no haya cambiado mientras leíamos
         if (onChainSigRef.current !== key) {
           console.log('Skipping update: key changed during read');
+          lastOnchainCheckRef.current = Date.now();
           return;
         }
         
@@ -309,8 +286,10 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         
         setMySchedEvents(prev => prev.map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
       } catch (err) {
-        console.error('Error reading on-chain states:', err);
-        onChainSigRef.current = '';
+        console.error('Error reading on-chain states:', (err as any)?.message ?? err);
+        // Aplicar cooldown sin reiniciar firma para evitar bucles
+      } finally {
+        lastOnchainCheckRef.current = Date.now();
       }
     })();
   }, [mySchedEvents, contract, mySchedDate, mySchedView]);
@@ -376,7 +355,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       query {
         viewer { innerverProfile {
           schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
-            edges { node { id date_init date_finish state hudd { id name roomId profileId profile { name displayName } } NFTContract TokenID } }
+            edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
           }
         } }
       }
@@ -390,7 +369,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
           node(id: "${pid}") {
             ... on InnerverProfile {
               schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
-                edges { node { id date_init date_finish state hudd { id name roomId profileId profile { name displayName } } NFTContract TokenID } }
+                edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
               }
             }
           }
@@ -404,17 +383,24 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       start: new Date(e.node.date_init),
       end: new Date(e.node.date_finish),
       state: e.node.state,
-      huddId: e.node.hudd?.id,
-      roomId: e.node.hudd?.roomId,
-      roomName: e.node.hudd?.name,
+      roomId: e.node.roomId,
       tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
-      therapistName: e.node.hudd?.profile?.displayName || e.node.hudd?.profile?.name || undefined,
+      therapistName: e.node.therapist?.displayName || e.node.therapist?.name || undefined,
       nftContract: e.node.NFTContract || undefined,
-      therapistId: e.node.hudd?.profileId || undefined,
+      therapistId: e.node.therapistId || undefined,
     }));
     // Forzar relectura on-chain al abrir el modal
     onChainSigRef.current = '';
-    setMySchedEvents(mapped);
+    setMySchedEvents(prev => {
+      const byId = new Map(prev.map(e => [e.id, e.state]));
+      return mapped.map(m => {
+        const prevState = byId.get(m.id);
+        if (prevState && (prevState === 'Active' || prevState === 'Finished') && m.state === 'Pending') {
+          return { ...m, state: prevState };
+        }
+        return m;
+      });
+    });
     // Siempre navegar a la semana de la fecha actual al abrir el modal
     setMySchedDate(new Date());
     setMySchedView(Views.WEEK);
@@ -465,7 +451,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                 <label className="block text-white font-medium mb-2">Terapeuta</label>
                 <select
                   value={therapist}
-                  onChange={(e) => { setTherapist(e.target.value); setEvents([]); setTherapistRooms([]); setBusyTherapEvents([]); }}
+                  onChange={(e) => { setTherapist(e.target.value); setEvents([]); setBusyTherapEvents([]); setTherapistRoomId(""); }}
                   className="w-full px-3 py-2 rounded border bg-white text-black"
                 >
                   <option value="">Selecciona terapeuta</option>
@@ -558,14 +544,14 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                       event: ({ event }: { event: any }) => (
                         <div className="text-sm">
                           <p className="font-semibold">{event.therapistName ? `Terapeuta: ${event.therapistName}` : 'Consulta'}</p>
-                          <p className="text-xs text-gray-600">Sala: {event.roomName || '—'}</p>
+                          <p className="text-xs text-gray-600">Sala: {event.roomId || '—'}</p>
                         </div>
                       ),
                     },
                   } as any}
                   eventPropGetter={eventPropGetter as any}
                   onSelectEvent={(e: any) => {
-                    setSelectedSched({ id: e.id, start: e.start, end: e.end, huddId: e.huddId, roomId: e.roomId, roomName: e.roomName, tokenId: e.tokenId, therapistName: e.therapistName, nftContract: e.nftContract, therapistId: e.therapistId, state: e.state });
+                    setSelectedSched({ id: e.id, start: e.start, end: e.end, roomId: e.roomId, tokenId: e.tokenId, therapistName: e.therapistName, nftContract: e.nftContract, therapistId: e.therapistId, state: e.state });
                   }}
                   onNavigate={(d) => setMySchedDate(d)}
                   onView={(v) => setMySchedView(v)}
@@ -613,7 +599,8 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         onClose={() => setModalOpen(false)}
         onSaved={async () => { await loadBusySlots(); await refreshKeyAvailability(); }}
         therapistName={therapistName}
-        therapistRooms={therapistRooms}
+        therapistId={therapist}
+        roomIdString={therapistRoomId}
         dateInit={selStart}
         dateFinish={selEnd}
       />

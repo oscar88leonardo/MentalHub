@@ -2,9 +2,7 @@ type InnerverProfile @loadModel(id: "$PROFILE_ID") {
     id: ID!
 }
 
-type Huddle01 @loadModel(id: "$HUDD_ID") {
-    id: ID!
-}
+ 
 
 type Schedule
     @createModel(accountRelation: LIST, description: "Schedule Therapist") 
@@ -17,8 +15,9 @@ type Schedule
     created: DateTime!
     profileId: StreamID! @documentReference(model: "InnerverProfile")
     profile: InnerverProfile! @relationDocument(property: "profileId")
-    huddId: StreamID! @documentReference(model: "Huddle01")
-    hudd: Huddle01! @relationDocument(property: "huddId")
+    therapistId: StreamID! @documentReference(model: "InnerverProfile")
+    therapist: InnerverProfile! @relationDocument(property: "therapistId")
+    roomId: String! @string(minLength: 3, maxLength: 40)
     NFTContract: String! @string(maxLength: 50)
     TokenID: Int!
 }

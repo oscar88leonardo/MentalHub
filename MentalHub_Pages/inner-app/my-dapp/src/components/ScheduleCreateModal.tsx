@@ -9,21 +9,19 @@ import { abi } from "@/abicontracts/MembersAirdrop";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-interface TherapistRoomEdge { node: { id: string; name: string } }
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSaved?: () => void | Promise<void>;
   therapistName?: string;
-  therapistRooms: TherapistRoomEdge[];
+  therapistId?: string;
+  roomIdString?: string;
   dateInit: Date;
   dateFinish: Date;
 }
 
-const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therapistName, therapistRooms, dateInit, dateFinish }) => {
+const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therapistName, therapistId, roomIdString, dateInit, dateFinish }) => {
   const { profile, account, executeQuery, refreshProfile, authenticateForWrite } = useCeramic();
-  const [roomId, setRoomId] = useState<string>("");
   const [tokenId, setTokenId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
@@ -65,11 +63,11 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
     setEnd(dateFinish);
   }, [dateInit, dateFinish]);
 
-  const canSave = useMemo(() => !!roomId && !!tokenId && !isSaving && end > start, [roomId, tokenId, isSaving, start, end]);
+  const canSave = useMemo(() => !!roomIdString && !!tokenId && !isSaving && end > start, [roomIdString, tokenId, isSaving, start, end]);
 
   const handleSave = async () => {
     if (!profile?.id) return;
-    if (!roomId || !tokenId) return;
+    if (!therapistId || !roomIdString || !tokenId) return;
     setIsSaving(true);
     try {
       // Asegurar autenticación de escritura en Ceramic
@@ -86,7 +84,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       const mutation = `
         mutation {
           createSchedule(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", created: "${now.toISOString()}", state: Pending, huddId: "${roomId}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
+            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}", state: Pending, NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
           ) {
             document { id }
           }
@@ -164,13 +162,15 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
             </div>
           </div>
           <div>
-            <label className="block text-white font-medium mb-2">Sala</label>
-            <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="w-full px-3 py-2 rounded border bg-white text-black">
-              <option value="">Selecciona una sala</option>
-              {therapistRooms.map((r) => (
-                <option key={r.node.id} value={r.node.id}>{r.node.name}</option>
-              ))}
-            </select>
+            <label className="block text-white font-medium mb-2">Sala del terapeuta</label>
+            <div className="w-full px-3 py-2 rounded border bg-white text-black">
+              {roomIdString || '—'}
+            </div>
+            {!roomIdString && (
+              <p className="text-red-200 text-xs mt-1">
+                No se encontró la sala del terapeuta. Pídele que configure su sala en su perfil.
+              </p>
+            )}
           </div>
 
           <div>

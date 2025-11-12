@@ -19,10 +19,8 @@ interface EventItem {
   start: Date;
   end: Date;
   state: string;
-  huddId: string;
   roomId: string;
   displayName: string;
-  roomName: string;
   tokenId?: number;
   nftContract?: string;
   profileId?: string;
@@ -33,6 +31,8 @@ const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x ===
 
 const SessionsTherapist: React.FC = () => {
   const { profile, executeQuery } = useCeramic();
+  const executeQueryRef = useRef(executeQuery);
+  useEffect(() => { executeQueryRef.current = executeQuery; }, [executeQuery]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [availEvents, setAvailEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +41,7 @@ const SessionsTherapist: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
   const onChainSigRef = useRef<string>("");
+  const lastOnchainCheckRef = useRef<number>(0);
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Active: true, Finished: true });
 
    // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
@@ -68,26 +69,18 @@ const SessionsTherapist: React.FC = () => {
                 sched_therap(last: 200, filters: { where: { state: { in: [Active] } } }) {
                   edges { node { id date_init date_finish state } }
                 }
-                hudds(last: 100, filters: { where: { state: { in: Active } } }) {
+                therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active, Finished] } } }) {
                   edges {
                     node {
                       id
-                      name
+                      date_init
+                      date_finish
+                      state
                       roomId
-                      schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
-                        edges {
-                          node {
-                            id
-                            date_init
-                            date_finish
-                            state
-                            profileId
-                            profile { displayName }
-                            NFTContract
-                            TokenID
-                          }
-                        }
-                      }
+                      profileId
+                      profile { displayName }
+                      NFTContract
+                      TokenID
                     }
                   }
                 }
@@ -95,33 +88,35 @@ const SessionsTherapist: React.FC = () => {
             }
           }
         `;
-        const res: any = await executeQuery(q);
+        const res: any = await executeQueryRef.current(q);
         const node = res?.data?.node;
-        const hudds = node?.hudds?.edges || [];
         const schedTherap = node?.sched_therap?.edges || [];
-        const mapped: EventItem[] = [];
-        for (const h of hudds) {
-          const hnode = h?.node;
-          const schedEdges = hnode?.schedules?.edges || [];
-          for (const s of schedEdges) {
-            const sn = s?.node;
-            if (!sn) continue;
-            mapped.push({
-              id: sn.id,
-              start: new Date(sn.date_init),
-              end: new Date(sn.date_finish),
-              state: 'Pending',
-              huddId: hnode.id,
-              roomId: hnode.roomId,
-              displayName: sn.profile?.displayName || "",
-              roomName: hnode.name,
-              tokenId: typeof sn.TokenID === 'number' ? sn.TokenID : (sn.TokenID ? Number(sn.TokenID) : undefined),
-              nftContract: sn.NFTContract || undefined,
-              profileId: sn.profileId || undefined,
-            });
-          }
-        }
-        setEvents(mapped);
+        const sEdges = node?.therapist_sched?.edges || [];
+        const mapped: EventItem[] = sEdges.map((e: any) => {
+          const sn = e?.node;
+          return {
+            id: sn.id,
+            start: new Date(sn.date_init),
+            end: new Date(sn.date_finish),
+            // Usar el estado del Schedule en ComposeDB como base
+            state: (sn?.state as any) ?? 'Pending',
+            roomId: sn.roomId,
+            displayName: sn.profile?.displayName || "",
+            tokenId: typeof sn.TokenID === 'number' ? sn.TokenID : (sn.TokenID ? Number(sn.TokenID) : undefined),
+            nftContract: sn.NFTContract || undefined,
+            profileId: sn.profileId || undefined,
+          };
+        });
+        setEvents(prev => {
+          const prevById = new Map(prev.map(e => [e.id, e.state]));
+          return mapped.map(m => {
+            const prevState = prevById.get(m.id);
+            if (prevState && (prevState === 'Active' || prevState === 'Finished') && m.state === 'Pending') {
+              return { ...m, state: prevState };
+            }
+            return m;
+          });
+        });
         const avail = schedTherap.map((e: any) => ({ id: e?.node?.id, start: new Date(e?.node?.date_init), end: new Date(e?.node?.date_finish), state: e?.node?.state }));
         setAvailEvents(avail);
       } catch (e) {
@@ -131,11 +126,13 @@ const SessionsTherapist: React.FC = () => {
       }
     };
     run();
-  }, [profile?.id, executeQuery]);
+  }, [profile?.id]);
 
   // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
   useEffect(() => {
     if (!events.length || !contract) return;
+    // Evitar lecturas on-chain demasiado frecuentes (cooldown 10s)
+    if (Date.now() - lastOnchainCheckRef.current < 10000) return;
     
     // Calcular rango visible según la vista
     const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -150,7 +147,9 @@ const SessionsTherapist: React.FC = () => {
       rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
     
-    const visible = events.filter(e => e.tokenId != null && e.start < rangeEnd && e.end > rangeStart);
+    const visible = events.filter(
+      (e) => typeof e.tokenId === 'number' && e.tokenId > 0 && e.start < rangeEnd && e.end > rangeStart
+    );
     if (!visible.length) return;
     
     const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
@@ -170,8 +169,8 @@ const SessionsTherapist: React.FC = () => {
             });
             const n = Number(stateNum as any);
             return { id: e.id, state: mapState(n) };
-          } catch (err) {
-            console.warn(`Failed to read state for event ${e.id}:`, err);
+          } catch (err: any) {
+            console.warn(`Failed to read state for event ${e.id}:`, err?.message ?? err);
             return { id: e.id, state: e.state }; // Mantener estado actual si falla
           }
         }));
@@ -179,6 +178,7 @@ const SessionsTherapist: React.FC = () => {
         // Verificar que la key no haya cambiado mientras leíamos
         if (onChainSigRef.current !== key) {
           console.log('Skipping update: key changed during read');
+          lastOnchainCheckRef.current = Date.now();
           return;
         }
         
@@ -197,10 +197,11 @@ const SessionsTherapist: React.FC = () => {
           });
           return updated;
         });
-      } catch (err) {
-        console.error('Error reading on-chain states:', err);
-        // Resetear el ref para permitir reintento
-        onChainSigRef.current = '';
+      } catch (err: any) {
+        console.error('Error reading on-chain states:', err?.message ?? err);
+        // Aplicar cooldown sin reiniciar la firma para evitar bucles
+      } finally {
+        lastOnchainCheckRef.current = Date.now();
       }
     })();
   }, [events, contract, currentDate, currentView]); 
@@ -258,8 +259,8 @@ const SessionsTherapist: React.FC = () => {
     return (
       <div>
         <div>{event?.displayName || 'Consulta'}</div>
-        {event?.roomName && (
-          <div className="text-gray-600 text-xs">Sala: {event.roomName}</div>
+        {event?.roomId && (
+          <div className="text-gray-600 text-xs">Sala: {event.roomId}</div>
         )}
       </div>
     );
