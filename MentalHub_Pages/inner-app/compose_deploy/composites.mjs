@@ -123,49 +123,50 @@ export const writeComposite = async () => {
     schema: workshopSchema,
   });
 
-  // Perfiles extendidos v2 (Terapeuta y Consultante)
-  const therapistSchemaV2 = readFileSync(
-    "../composites/therapistProfileV2.graphql",
+  // Perfiles extendidos sin versionado (Terapeuta y Consultante)
+  const therapistSchema = readFileSync(
+    "../composites/therapistProfile.graphql",
     { encoding: "utf-8" }
   ).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
 
-  const therapistCompositeV2 = await Composite.create({
+  const therapistComposite = await Composite.create({
     ceramic,
-    schema: therapistSchemaV2,
+    schema: therapistSchema,
   });
 
-  const therapistV2ProfileSchema = readFileSync(
-    "../composites/innerverseTherapistV2Profile.graphql",
-    { encoding: "utf-8" }
-  )
-    .replace("$THERAPIST_V2_ID", therapistCompositeV2.modelIDs[1])
-    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
-
-  const therapistV2ProfileComposite = await Composite.create({
-    ceramic,
-    schema: therapistV2ProfileSchema,
-  });
-
-  const consultantSchemaV2 = readFileSync(
-    "../composites/consultantProfileV2.graphql",
+  const consultantSchema = readFileSync(
+    "../composites/consultantProfile.graphql",
     { encoding: "utf-8" }
   ).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
 
-  const consultantCompositeV2 = await Composite.create({
+  const consultantComposite = await Composite.create({
     ceramic,
-    schema: consultantSchemaV2,
+    schema: consultantSchema,
   });
 
-  const consultantV2ProfileSchema = readFileSync(
-    "../composites/innerverseConsultantV2Profile.graphql",
+  // Relaciones inversas sin versionado
+  const therapistProfileSchema = readFileSync(
+    "../composites/innerverseTherapistProfile.graphql",
     { encoding: "utf-8" }
   )
-    .replace("$CONSULTANT_V2_ID", consultantCompositeV2.modelIDs[1])
+    .replace("$THERAPIST_ID", therapistComposite.modelIDs[1])
     .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
 
-  const consultantV2ProfileComposite = await Composite.create({
+  const therapistProfileComposite = await Composite.create({
     ceramic,
-    schema: consultantV2ProfileSchema,
+    schema: therapistProfileSchema,
+  });
+
+  const consultantProfileSchema = readFileSync(
+    "../composites/innerverseConsultantProfile.graphql",
+    { encoding: "utf-8" }
+  )
+    .replace("$CONSULTANT_ID", consultantComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const consultantProfileComposite = await Composite.create({
+    ceramic,
+    schema: consultantProfileSchema,
   });
 
   const composite = Composite.from([
@@ -178,10 +179,10 @@ export const writeComposite = async () => {
     schedTherapComposite,
     schedTherapProfileComposite,
     workshopComposite,
-    therapistCompositeV2,
-    therapistV2ProfileComposite,
-    consultantCompositeV2,
-    consultantV2ProfileComposite,
+    therapistComposite,
+    therapistProfileComposite,
+    consultantComposite,
+    consultantProfileComposite,
   ]);
 
   console.log("composite:");

@@ -6,6 +6,8 @@ import Image from "next/image";
 import Header from "./Header";
 import DebugWallet from "./DebugWallet";
 import EditProfileButton from "./EditProfileButton";
+import EditTherapistProfileModal from "./EditTherapistProfileModal";
+import EditConsultantProfileModal from "./EditConsultantProfileModal";
 import { resolveIpfsUrl } from "@/lib/ipfs";
 import { getContract, readContract } from "thirdweb";
 import { client } from "@/lib/client";
@@ -24,7 +26,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
     error, 
     refreshProfile,    
     account,
-    adminAccount
+    adminAccount,
+    therapist,
+    consultant
   } = useCeramic();
   const aaAccountHook = useActiveAccount();
   const activeWallet = useActiveWallet();
@@ -59,6 +63,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
   }), []);
   // Control de carga para Inner Keys
   const [isCheckingArrTokenIds, setIsCheckingArrTokenIds] = useState(false);
+  const [isTherapistModalOpen, setIsTherapistModalOpen] = useState(false);
+  const [isConsultantModalOpen, setIsConsultantModalOpen] = useState(false);
+
+  // Helper: chips renderer
+  const Chips = ({ items }: { items?: Array<string | number> }) => {
+    if (!items || items.length === 0) return <span>—</span>;
+    return (
+      <div className="flex flex-wrap gap-2">
+        {items.map((it, idx) => (
+          <span
+            key={idx}
+            className="px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs"
+          >
+            {String(it)}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -356,7 +379,29 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
           </div>
 
           {/* Botón de editar perfil (autenticación solo al guardar) */}
-          <EditProfileButton isNewUser={!profile} />
+          <div className="flex items-center space-x-3">
+            {profile?.rol === "Terapeuta" && (
+              <button
+                onClick={() => setIsTherapistModalOpen(true)}
+                disabled={!profile}
+                className="px-4 py-3 rounded-xl text-white font-medium transition-colors disabled:opacity-50"
+                style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
+              >
+                Info. Terapeuta
+              </button>
+            )}
+            {profile?.rol === "Consultante" && (
+              <button
+                onClick={() => setIsConsultantModalOpen(true)}
+                disabled={!profile}
+                className="px-4 py-3 rounded-xl text-white font-medium transition-colors disabled:opacity-50"
+                style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
+              >
+                Info. Consultante
+              </button>
+            )}
+            <EditProfileButton isNewUser={!profile} />
+          </div>
         </div>
 
         {profile ? (
@@ -395,81 +440,195 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
                   <h2 className="text-3xl font-bold text-white mb-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                     {profile.name || 'Usuario'}
                   </h2>
-                  <p className="text-white/90 text-lg mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                    {profile.email || 'usuario@innerverse.com'}
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-white/80 text-sm font-medium">Perfil verificado</span>
+                  {profile.email && (
+                    <p className="text-white/90 text-lg mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                      {profile.email}
+                    </p>
+                  )}
+                  <div className="flex items-center flex-wrap gap-2">
+                    {profile.rol && (
+                      <span className="px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs">
+                        {profile.rol}
+                      </span>
+                    )}
+                    {profile.createdAt && (
+                      <span className="text-white/80 text-sm">
+                        Creado: {formatDate(profile.createdAt)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Género</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.gender || '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Monedas</p>
+                      <Chips items={profile.currencies || []} />
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Tarifas</p>
+                      <Chips items={profile.ratesByCurrency || []} />
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Fecha de nacimiento</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.birthDate ? formatDate(profile.birthDate) : '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">País</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.country || '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Ciudad</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.city || '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Zona horaria</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.timezone || '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Idiomas</p>
+                      <Chips items={profile.languages || []} />
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs mb-1">Idioma principal</p>
+                      <div className="p-2 rounded-lg border border-white/20 text-white/90" style={{ background:'rgba(255,255,255,0.05)'}}>
+                        {profile.primaryLanguage || '—'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Profile Details */}
-            <div 
-              className="rounded-2xl p-8 shadow-xl"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              <h3 className="text-2xl font-bold text-white mb-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                Información del Perfil
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-white/80 text-sm font-medium block mb-2">Nombre Completo</label>
-                  <div 
-                    className="p-4 rounded-xl text-white font-medium"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(5px)'
-                    }}
-                  >
-                    {profile.name || 'No especificado'}
+            {/* Se elimina la sección 'Información del Perfil'; info básica se muestra en la tarjeta superior */}
+
+            {/* TherapistProfile Summary */}
+            {therapist && (
+              <div 
+                className="rounded-2xl p-8 shadow-xl"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <h3 className="text-2xl font-bold text-white mb-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  Perfil Terapeuta 
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Años de experiencia</label>
+                    <div className="p-4 rounded-xl text-white font-medium" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {typeof therapist.yearsExperience === "number" ? therapist.yearsExperience : '—'}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="text-white/80 text-sm font-medium block mb-2">Email</label>
-                  <div 
-                    className="p-4 rounded-xl text-white font-medium"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(5px)'
-                    }}
-                  >
-                    {profile.email || 'No especificado'}
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Enfoques</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      <Chips items={therapist.approaches} />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="text-white/80 text-sm font-medium block mb-2">Teléfono</label>
-                  <div 
-                    className="p-4 rounded-xl text-white font-medium"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(5px)'
-                    }}
-                  >
-                    {profile.phone || 'No especificado'}
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Especialidades</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      <Chips items={therapist.specialties} />
+                    </div>
                   </div>
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Acepta nuevos consultantes</label>
+                    <div className="p-4 rounded-xl text-white font-medium" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {therapist.acceptingNewClients === true ? 'Sí' : therapist.acceptingNewClients === false ? 'No' : '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Mi sala</label>
+                    <div className="p-4 rounded-xl text-white font-medium flex items-center justify-between" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      <span>{therapist.roomId || '—'}</span>
+                      {therapist.roomId && (
+                        <a
+                          href={`https://innerverse.huddle01.app/room/${therapist.roomId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1 rounded bg-blue-600 text-white"
+                        >
+                          Abrir sala
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-white/80 text-sm font-medium block mb-2">Bio corta</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {therapist.bioShort || '—'}
+                    </div>
+                  </div>
+                  {therapist.bioLong && (
+                    <div className="md:col-span-2">
+                      <label className="text-white/80 text-sm font-medium block mb-2">Bio larga</label>
+                      <div className="p-4 rounded-xl text-white whitespace-pre-wrap" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                        {therapist.bioLong}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="text-white/80 text-sm font-medium block mb-2">Fecha de Registro</label>
-                  <div 
-                    className="p-4 rounded-xl text-white font-medium"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(5px)'
-                    }}
-                  >
-                    {profile.createdAt ? formatDate(profile.createdAt) : 'No disponible'}
+              </div>
+            )}
+
+            {/* ConsultantProfile Summary */}
+            {consultant && (
+              <div 
+                className="rounded-2xl p-8 shadow-xl"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <h3 className="text-2xl font-bold text-white mb-6" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  Perfil Consultante
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <label className="text-white/80 text-sm font-medium block mb-2">Motivo breve</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {consultant.presentingProblemShort || '—'}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-white/80 text-sm font-medium block mb-2">Objetivos</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      <Chips items={consultant.goals} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Emergencia (nombre)</label>
+                    <div className="p-4 rounded-xl text-white font-medium" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {consultant.emergencyContactName || '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Emergencia (tel)</label>
+                    <div className="p-4 rounded-xl text-white font-medium" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      {consultant.emergencyContactPhoneE164 || '—'}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Wallet Information */}
             {account && (
@@ -575,6 +734,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout }) => {
             </div>
           </div>
         )}
+        {/* Modales */}
+        <EditTherapistProfileModal isOpen={isTherapistModalOpen} onClose={() => setIsTherapistModalOpen(false)} />
+        <EditConsultantProfileModal isOpen={isConsultantModalOpen} onClose={() => setIsConsultantModalOpen(false)} />
         </div>
       </div>
     </div>

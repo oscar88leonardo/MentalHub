@@ -17,10 +17,19 @@ interface InnerverProfile {
   name: string;
   displayName: string;
   email?: string;
-  phone?: string;
+  gender?: 'Masculino' | 'Femenino';
+  birthDate?: string;
+  country?: string;
+  city?: string;
+  timezone?: string;
+  languages?: string[];
+  primaryLanguage?: string;
+  created?: string;
   createdAt?: string;
   rol: 'Terapeuta' | 'Consultante';
   pfp?: string;
+  currencies?: string[];
+  ratesByCurrency?: string[];
   hudds?: {
     edges: Array<{
       node: {
@@ -82,6 +91,44 @@ interface InnerverProfile {
   };
 }
 
+// Perfiles extendidos (sin versionado)
+export interface TherapistProfile {
+  id: string;
+  profileId: string;
+  degrees?: string[];
+  licenseNumber?: string;
+  licenseJurisdiction?: string;
+  licenseCountry?: string;
+  yearsExperience?: number;
+  approaches?: string[];
+  specialties?: string[];
+  populations?: string[];
+  bioShort: string;
+  bioLong?: string;
+  introVideoUrl?: string;
+  acceptingNewClients?: boolean;
+  roomId?: string;
+}
+
+export interface ConsultantProfile {
+  id: string;
+  profileId: string;
+  presentingProblemShort: string;
+  goals?: string[];
+  therapistGenderPreference?: string;
+  emergencyContactName?: string;
+  emergencyContactPhoneE164?: string;
+  consentTerms?: boolean;
+  consentPrivacy?: boolean;
+  consentTelehealthRisks?: boolean;
+  consentedAt?: string; // ISO
+  priorTherapy?: boolean;
+  priorPsychiatry?: boolean;
+  medicationsUsed?: boolean;
+  medicationsNote?: string;
+  diagnoses?: string[];
+}
+
 interface ProfileQueryResult {
   data?: {
     viewer?: {
@@ -104,6 +151,8 @@ interface CeramicContextType {
   
   // User data
   profile: InnerverProfile | null;
+  therapist: TherapistProfile | null;
+  consultant: ConsultantProfile | null;
   
   // Thirdweb wallet info (like my-app)
   activeWallet: any;
@@ -117,6 +166,8 @@ interface CeramicContextType {
   refreshProfile: () => Promise<void>;
   executeQuery: (query: string, variables?: Record<string, any>) => Promise<any>;
   authenticateForWrite: (streamId?: string) => Promise<boolean>; // authenticate only when needed; can include stream capability
+  upsertTherapistProfile: (input: Partial<TherapistProfile> & { profileId?: string }) => Promise<string | null>;
+  upsertConsultantProfile: (input: Partial<ConsultantProfile> & { profileId?: string }) => Promise<string | null>;
 }
 
 const CeramicContext = createContext<CeramicContextType | null>(null);
@@ -140,6 +191,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   const [ceramic, setCeramic] = useState<CeramicClient | null>(null);
   const [composeClient, setComposeClient] = useState<ComposeClient | null>(null);
   const [profile, setProfile] = useState<InnerverProfile | null>(null);
+  const [therapist, setTherapist] = useState<TherapistProfile | null>(null);
+  const [consultant, setConsultant] = useState<ConsultantProfile | null>(null);
   const [isThirdwebReady, setIsThirdwebReady] = useState(false);
   const [hasPersistedSession, setHasPersistedSession] = useState(false);
 
@@ -216,7 +269,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         console.log("🔧 Initializing Ceramic clients...");
         const ceramicClient = new CeramicClient("https://ceramicnode.innerverse.care");
         const composeClient = new ComposeClient({
-          ceramic: (ceramicClient as unknown) as any, // use same instance so DID/capability stays in sync
+          ceramic: (ceramicClient as unknown) as any, // ensure same instance is used internally
           definition: (definition as unknown) as RuntimeCompositeDefinition,
         });
 
@@ -475,6 +528,17 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
               displayName
               rol
               pfp
+              email
+              gender
+              birthDate
+              country
+              city
+              timezone
+              languages
+              primaryLanguage
+              currencies
+              ratesByCurrency
+              created
             }
           }
         }
@@ -570,9 +634,75 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       console.log("==========================");
       
       if (result?.data?.viewer?.innerverProfile) {
-        setProfile(result.data.viewer.innerverProfile);
+        const base = result.data.viewer.innerverProfile as InnerverProfile;
+        if (base && base.created && !base.createdAt) (base as any).createdAt = base.created;
+        setProfile(base);
         console.log("✅ Profile loaded successfully (viewer):", result.data.viewer.innerverProfile);
-        return;
+        // try to load v2 extended profiles using relationFrom
+        try {
+          const pid = result.data.viewer.innerverProfile.id;
+          const extQ = `
+            query {
+              node(id: "${pid}") {
+                ... on InnerverProfile {
+                  therapist(first: 1) {
+                    edges {
+                      node {
+                        id
+                        profileId
+                        degrees
+                        licenseNumber
+                        licenseJurisdiction
+                        licenseCountry
+                        yearsExperience
+                        approaches
+                        specialties
+                        populations
+                        bioShort
+                        bioLong
+                        introVideoUrl
+                        acceptingNewClients
+                        roomId
+                      }
+                    }
+                  }
+                  consultant(first: 1) {
+                    edges {
+                      node {
+                        id
+                        profileId
+                        presentingProblemShort
+                        goals
+                        therapistGenderPreference
+                        emergencyContactName
+                        emergencyContactPhoneE164
+                        consentTerms
+                        consentPrivacy
+                        consentTelehealthRisks
+                        consentedAt
+                        priorTherapy
+                        priorPsychiatry
+                        medicationsUsed
+                        medicationsNote
+                        diagnoses
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+          const extRes: any = await composeClient.executeQuery(extQ);
+          const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
+          const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
+          setTherapist(tNode);
+          setConsultant(cNode);
+        } catch (e) {
+          console.warn("Failed to load extended profiles:", e);
+          setTherapist(null);
+          setConsultant(null);
+        }
+        return; // completed success path
       }
 
       // Fallback sin firma: resolver por DID de la wallet (did:pkh)
@@ -597,6 +727,17 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
                 displayName
                 rol
                 pfp
+                email
+                gender
+                birthDate
+                country
+                city
+                timezone
+                languages
+                primaryLanguage
+                currencies
+                ratesByCurrency
+                created
               }
             }
           }
@@ -606,8 +747,32 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       console.log("byAccountRes:", JSON.stringify(byAccountRes, null, 2));
       const accProfile = byAccountRes?.data?.node?.innerverProfile as InnerverProfile | undefined;
       if (accProfile) {
+        if (accProfile.created && !accProfile.createdAt) (accProfile as any).createdAt = accProfile.created;
         setProfile(accProfile);
         console.log("✅ Profile loaded successfully (by DID node)", accProfile);
+        // Also try extended
+        try {
+          const pid = accProfile.id;
+          const extQ = `
+            query {
+              node(id: "${pid}") {
+                ... on InnerverProfile {
+                  therapist(first: 1) { edges { node { id profileId degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
+                  consultant(first: 1) { edges { node { id profileId presentingProblemShort goals therapistGenderPreference emergencyContactName emergencyContactPhoneE164 consentTerms consentPrivacy consentTelehealthRisks consentedAt priorTherapy priorPsychiatry medicationsUsed medicationsNote diagnoses } } }
+                }
+              }
+            }
+          `;
+          const extRes: any = await composeClient.executeQuery(extQ);
+          const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
+          const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
+          setTherapist(tNode);
+          setConsultant(cNode);
+        } catch (e) {
+          console.warn("Failed to load extended profiles:", e);
+          setTherapist(null);
+          setConsultant(null);
+        }
         return;
       }
 
@@ -623,6 +788,15 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
                 displayName
                 rol
                 pfp
+                email
+                gender
+                birthDate
+                country
+                city
+                timezone
+                languages
+                primaryLanguage
+                created
               }
             }
           }
@@ -632,8 +806,32 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       console.log("byIndexRes:", JSON.stringify(byIndexRes, null, 2));
       const idxNode = byIndexRes?.data?.innerverProfileIndex?.edges?.[0]?.node as InnerverProfile | undefined;
       if (idxNode) {
+        if (idxNode.created && !idxNode.createdAt) (idxNode as any).createdAt = idxNode.created;
         setProfile(idxNode);
         console.log("✅ Profile loaded successfully (by index)", idxNode);
+        // Also try extended
+        try {
+          const pid = idxNode.id;
+      const extQ = `
+        query {
+          node(id: "${pid}") {
+            ... on InnerverProfile {
+              therapist(first: 1) { edges { node { id profileId degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
+              consultant(first: 1) { edges { node { id profileId presentingProblemShort goals therapistGenderPreference emergencyContactName emergencyContactPhoneE164 consentTerms consentPrivacy consentTelehealthRisks consentedAt priorTherapy priorPsychiatry medicationsUsed medicationsNote diagnoses } } }
+            }
+          }
+        }
+      `;
+          const extRes: any = await composeClient.executeQuery(extQ);
+          const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
+          const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
+          setTherapist(tNode);
+          setConsultant(cNode);
+        } catch (e) {
+          console.warn("Failed to load extended profiles:", e);
+          setTherapist(null);
+          setConsultant(null);
+        }
         return;
       }
 
@@ -658,6 +856,184 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     }
   };
 
+  // Helper: escape string for GraphQL literal
+  const gq = (s?: string | null) => {
+    if (s === undefined || s === null) return "";
+    return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  };
+
+  const upsertTherapistProfile = async (input: Partial<TherapistProfile> & { profileId?: string }) => {
+    if (!profile && !input.profileId) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
+    const pid = input.profileId || profile?.id!;
+    const currentId = therapist?.id;
+    await authenticateForWrite(currentId);
+
+    const p: Partial<TherapistProfile> = {
+      profileId: pid,
+      degrees: input.degrees ?? therapist?.degrees,
+      licenseNumber: input.licenseNumber ?? therapist?.licenseNumber,
+      licenseJurisdiction: input.licenseJurisdiction ?? therapist?.licenseJurisdiction,
+      licenseCountry: input.licenseCountry ?? therapist?.licenseCountry,
+      yearsExperience: input.yearsExperience ?? therapist?.yearsExperience,
+      approaches: input.approaches ?? therapist?.approaches,
+      specialties: input.specialties ?? therapist?.specialties,
+      populations: input.populations ?? therapist?.populations,
+      bioShort: input.bioShort ?? therapist?.bioShort,
+      bioLong: input.bioLong ?? therapist?.bioLong,
+      introVideoUrl: input.introVideoUrl ?? therapist?.introVideoUrl,
+      acceptingNewClients: input.acceptingNewClients ?? therapist?.acceptingNewClients,
+      roomId: input.roomId ?? therapist?.roomId,
+    };
+
+    if (!p.bioShort) {
+      throw new Error("Debes completar la bio corta antes de guardar.");
+    }
+
+    const listToGql = (arr?: string[]) =>
+      (Array.isArray(arr) && arr.length ? `[${arr.map((x) => `"${gq(x)}"`).join(", ")}]` : "");
+    const parts: string[] = [];
+    if (!currentId) parts.push(`profileId: "${gq(p.profileId as string)}"`);
+    parts.push(`bioShort: "${gq(p.bioShort)}"`);
+
+    const pushStr = (k: string, v?: string | null) => { if (v && v.trim().length) parts.push(`${k}: "${gq(v)}"`); };
+    const pushInt = (k: string, v?: number | null) => { if (typeof v === "number" && Number.isFinite(v)) parts.push(`${k}: ${v}`); };
+    const pushBool = (k: string, v?: boolean | null) => { if (typeof v === "boolean") parts.push(`${k}: ${v}`); };
+
+    pushStr("licenseNumber", p.licenseNumber as string | undefined);
+    pushStr("licenseJurisdiction", p.licenseJurisdiction as string | undefined);
+    pushStr("licenseCountry", p.licenseCountry as string | undefined);
+    pushInt("yearsExperience", p.yearsExperience as number | undefined);
+    pushStr("bioLong", p.bioLong as string | undefined);
+    pushStr("introVideoUrl", p.introVideoUrl as string | undefined);
+    pushBool("acceptingNewClients", p.acceptingNewClients as boolean | undefined);
+    pushStr("roomId", p.roomId as string | undefined);
+    if (Array.isArray(p.degrees) && p.degrees.length) parts.push(`degrees: ${listToGql(p.degrees)}`);
+    if (Array.isArray(p.approaches) && p.approaches.length) parts.push(`approaches: ${listToGql(p.approaches)}`);
+    if (Array.isArray(p.specialties) && p.specialties.length) parts.push(`specialties: ${listToGql(p.specialties)}`);
+    if (Array.isArray(p.populations) && p.populations.length) parts.push(`populations: ${listToGql(p.populations)}`);
+
+    const content = parts.join("\n                ");
+    const q = currentId
+      ? `
+        mutation {
+          updateTherapistProfile(
+            input: {
+              id: "${currentId}"
+              content: {
+                ${content}
+              }
+            }
+          ) { document { id } }
+        }
+      `
+      : `
+        mutation {
+          createTherapistProfile(
+            input: {
+              content: {
+                ${content}
+              }
+            }
+          ) { document { id } }
+        }
+      `;
+    const res = await executeQuery(q);
+    if (res?.errors?.length) {
+      console.error("TherapistProfile mutation error:", JSON.stringify(res.errors, null, 2));
+      throw new Error(res.errors.map((e: any) => e.message).join(" | "));
+    }
+    const id: string | undefined =
+      res?.data?.updateTherapistProfile?.document?.id || res?.data?.createTherapistProfile?.document?.id;
+    await refreshProfile();
+    return id || null;
+  };
+
+  const upsertConsultantProfile = async (input: Partial<ConsultantProfile> & { profileId?: string }) => {
+    if (!profile && !input.profileId) throw new Error("Se requiere profileId (InnerverProfile) para crear/actualizar");
+    const pid = input.profileId || profile?.id!;
+    const currentId = consultant?.id;
+    await authenticateForWrite(currentId);
+
+    const p: Partial<ConsultantProfile> = {
+      profileId: pid,
+      presentingProblemShort: input.presentingProblemShort ?? consultant?.presentingProblemShort,
+      goals: input.goals ?? consultant?.goals,
+      therapistGenderPreference: input.therapistGenderPreference ?? consultant?.therapistGenderPreference,
+      emergencyContactName: input.emergencyContactName ?? consultant?.emergencyContactName,
+      emergencyContactPhoneE164: input.emergencyContactPhoneE164 ?? consultant?.emergencyContactPhoneE164,
+      consentTerms: input.consentTerms ?? consultant?.consentTerms,
+      consentPrivacy: input.consentPrivacy ?? consultant?.consentPrivacy,
+      consentTelehealthRisks: input.consentTelehealthRisks ?? consultant?.consentTelehealthRisks,
+      consentedAt: input.consentedAt ?? consultant?.consentedAt,
+      priorTherapy: input.priorTherapy ?? consultant?.priorTherapy,
+      priorPsychiatry: input.priorPsychiatry ?? consultant?.priorPsychiatry,
+      medicationsUsed: input.medicationsUsed ?? consultant?.medicationsUsed,
+      medicationsNote: input.medicationsNote ?? consultant?.medicationsNote,
+      diagnoses: input.diagnoses ?? consultant?.diagnoses,
+    };
+
+    if (!p.presentingProblemShort) {
+      throw new Error("Debes completar el motivo breve antes de guardar.");
+    }
+
+    const listToGql = (arr?: string[]) =>
+      (Array.isArray(arr) && arr.length ? `[${arr.map((x) => `"${gq(x)}"`).join(", ")}]` : "");
+    const parts: string[] = [];
+    if (!currentId) parts.push(`profileId: "${gq(p.profileId as string)}"`);
+    parts.push(`presentingProblemShort: "${gq(p.presentingProblemShort)}"`);
+
+    const pushStr = (k: string, v?: string | null) => { if (v && v.trim().length) parts.push(`${k}: "${gq(v)}"`); };
+    const pushBool = (k: string, v?: boolean | null) => { if (typeof v === "boolean") parts.push(`${k}: ${v}`); };
+
+    if (Array.isArray(p.goals) && p.goals.length) parts.push(`goals: ${listToGql(p.goals)}`);
+    pushStr("therapistGenderPreference", p.therapistGenderPreference as string | undefined);
+    pushStr("emergencyContactName", p.emergencyContactName as string | undefined);
+    pushStr("emergencyContactPhoneE164", p.emergencyContactPhoneE164 as string | undefined);
+    pushBool("consentTerms", p.consentTerms as boolean | undefined);
+    pushBool("consentPrivacy", p.consentPrivacy as boolean | undefined);
+    pushBool("consentTelehealthRisks", p.consentTelehealthRisks as boolean | undefined);
+    pushStr("consentedAt", p.consentedAt as string | undefined);
+    pushBool("priorTherapy", p.priorTherapy as boolean | undefined);
+    pushBool("priorPsychiatry", p.priorPsychiatry as boolean | undefined);
+    pushBool("medicationsUsed", p.medicationsUsed as boolean | undefined);
+    pushStr("medicationsNote", p.medicationsNote as string | undefined);
+    if (Array.isArray(p.diagnoses) && p.diagnoses.length) parts.push(`diagnoses: ${listToGql(p.diagnoses)}`);
+
+    const mutation = currentId
+      ? `
+        mutation {
+          updateConsultantProfile(
+            input: {
+              id: "${currentId}"
+              content: {
+                ${parts.join("\n                ")}
+              }
+            }
+          ) { document { id } }
+        }
+      `
+      : `
+        mutation {
+          createConsultantProfile(
+            input: {
+              content: {
+                ${parts.join("\n                ")}
+              }
+            }
+          ) { document { id } }
+        }
+      `;
+    const res = await executeQuery(mutation);
+    if (res?.errors?.length) {
+      console.error("ConsultantProfile mutation error:", JSON.stringify(res.errors, null, 2));
+      throw new Error(res.errors.map((e: any) => e.message).join(" | "));
+    }
+    const id: string | undefined =
+      res?.data?.updateConsultantProfile?.document?.id || res?.data?.createConsultantProfile?.document?.id;
+    await refreshProfile();
+    return id || null;
+  };
+
   const contextValue: CeramicContextType = {
     isConnected,
     isLoading,
@@ -666,6 +1042,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     ceramic,
     composeClient,
     profile,
+    therapist,
+    consultant,
     // Thirdweb wallet info (like my-app)
     activeWallet,
     account,
@@ -677,6 +1055,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     refreshProfile,
     executeQuery,
     authenticateForWrite, // NEW
+    upsertTherapistProfile,
+    upsertConsultantProfile,
   };
 
   return (

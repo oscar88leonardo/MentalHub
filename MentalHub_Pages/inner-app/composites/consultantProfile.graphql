@@ -1,38 +1,19 @@
 type InnerverProfile @loadModel(id: "$PROFILE_ID") { id: ID! }
 
-enum Currency { ARS COP USD EUR }
-
-type ConsultantProfileV2
-  @createModel(accountRelation: SINGLE, description: "Perfil del consultante para matching (v2)")
+type ConsultantProfile
+  @createModel(accountRelation: SINGLE, description: "Perfil del consultante para matching")
   @createIndex(fields: [
-    { path: "primaryLanguage" },
-    { path: "timezone" },
-    { path: "budgetMin" }
+    { path: "presentingProblemShort" }
   ]) {
   profileId: StreamID! @documentReference(model: "InnerverProfile")
   profile: InnerverProfile! @relationDocument(property: "profileId")
-
-  displayName: String @string(maxLength: 40)
-
-  birthDate: DateTime
-  country: String @string(maxLength: 2)
-  city: String @string(maxLength: 64)
-  timezone: String! @string(maxLength: 64)
-
-  languages: [String!] @list(maxLength: 5) @string(maxLength: 32)
-  primaryLanguage: String @string(maxLength: 32)
 
   presentingProblemShort: String! @string(maxLength: 240)
   goals: [String!] @list(maxLength: 3) @string(maxLength: 100)
 
   therapistGenderPreference: String @string(maxLength: 16)
 
-  budgetMin: Int @int(min: 0, max: 100000000)
-  budgetMax: Int @int(min: 0, max: 100000000)
-  currency: Currency
-
-  # Contacto y emergencia
-  email: String @string(maxLength: 120)
+  # Contacto de emergencia
   emergencyContactName: String @string(maxLength: 80)
   emergencyContactPhoneE164: String @string(maxLength: 32)
 
@@ -42,13 +23,12 @@ type ConsultantProfileV2
   consentTelehealthRisks: Boolean
   consentedAt: DateTime
 
-  # Datos sensibles opt-in (riesgo excluido)
+  # Datos sensibles opt‑in
   priorTherapy: Boolean
   priorPsychiatry: Boolean
   medicationsUsed: Boolean
   medicationsNote: String @string(maxLength: 120)
   diagnoses: [String!] @list(maxLength: 10) @string(maxLength: 48)
 }
-
 
 

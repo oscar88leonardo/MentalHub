@@ -21,6 +21,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
   const [name, setName] = useState("");
   const [rol, setRol] = useState("");
   const [pfp, setPfp] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState<"" | "Masculino" | "Femenino">("");
+  const [birthDate, setBirthDate] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [languages, setLanguages] = useState("");
+  const [primaryLanguage, setPrimaryLanguage] = useState("");
+  const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
+  const [currencyPrices, setCurrencyPrices] = useState<Record<string, { min?: number; max?: number }>>({});
   const [imageProfile, setImageProfile] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,11 +42,41 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       setName(profile.name || "");
       setRol(profile.rol || "");
       setPfp(profile.pfp || "");
+      setEmail(profile.email || "");
+      setGender(((profile as any).gender as any) || "");
+      setBirthDate(profile.birthDate ? profile.birthDate.substring(0, 10) : "");
+      setCountry(profile.country || "");
+      setCity(profile.city || "");
+      setTimezone(profile.timezone || "");
+      setLanguages((profile.languages || []).join(", "));
+      setPrimaryLanguage(profile.primaryLanguage || "");
+      setSelectedCurrencies((profile as any)?.currencies || []);
+      const map: Record<string, { min?: number; max?: number }> = {};
+      ((profile as any)?.ratesByCurrency || []).forEach((s: string) => {
+        const [cur, range] = (s || "").split(":");
+        if (!cur) return;
+        if (!range) { map[cur] = {}; return; }
+        const [minStr, maxStr] = range.split("-");
+        const min = minStr ? Number(minStr) : undefined;
+        const max = maxStr ? Number(maxStr) : undefined;
+        map[cur] = { min, max };
+      });
+      setCurrencyPrices(map);
     } else if (isOpen && !profile) {
       // Usuario nuevo - campos vacíos
       setName("");
       setRol("");
       setPfp("");
+      setEmail("");
+      setGender("");
+      setBirthDate("");
+      setCountry("");
+      setCity("");
+      setTimezone("");
+      setLanguages("");
+      setPrimaryLanguage("");
+      setSelectedCurrencies([]);
+      setCurrencyPrices({});
     }
   }, [isOpen, profile]);
 
@@ -69,51 +109,87 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     }
   };
 
-  // Función para crear/actualizar perfil en Ceramic
+  // Función para crear/actualizar perfil en Ceramic (omite campos vacíos)
   const updateProfileInCeramic = async (username: string, rol: string, pfp: string) => {
-    const safeName = username.replace(/"/g, '\\"');
-    const safePfp = pfp.replace(/"/g, '\\"');
+    const esc = (value: string) => value.replace(/"/g, '\\"');
+    const safeName = esc(username);
+    const safePfp = pfp ? esc(pfp) : "";
+    const safeEmail = email ? esc(email) : "";
+
+    // Construir contenido dinámicamente, omitiendo campos opcionales vacíos
+    const contentParts: string[] = [
+      `name: "${safeName}"`,
+      `displayName: "${safeName}"`,
+      `rol: ${rol}`,
+    ];
+    if (safePfp) contentParts.push(`pfp: "${safePfp}"`);
+    if (safeEmail) contentParts.push(`email: "${safeEmail}"`);
+    if (gender) contentParts.push(`gender: ${gender}`);
+    if (birthDate) contentParts.push(`birthDate: "${new Date(birthDate).toISOString()}"`);
+    if (country) contentParts.push(`country: "${esc(country)}"`);
+    if (city) contentParts.push(`city: "${esc(city)}"`);
+    if (timezone) contentParts.push(`timezone: "${esc(timezone)}"`);
+    const langs = languages.split(",").map((x) => x.trim()).filter(Boolean);
+    if (langs.length) {
+      contentParts.push(`languages: [${langs.map((lang) => `"${esc(lang)}"`).join(", ")}]`);
+    }
+    if (primaryLanguage) contentParts.push(`primaryLanguage: "${esc(primaryLanguage)}"`);
+    if (selectedCurrencies.length) {
+      contentParts.push(`currencies: [${selectedCurrencies.map(c => `"${c}"`).join(", ")}]`);
+    }
+    const ratesByCurrency = selectedCurrencies
+      .map(cur => {
+        const v = currencyPrices[cur] || {};
+        const min = (typeof v.min === "number" && Number.isFinite(v.min)) ? String(v.min) : "";
+        const max = (typeof v.max === "number" && Number.isFinite(v.max)) ? String(v.max) : "";
+        if (!min && !max) return null;
+        return max ? `${cur}:${min}-${max}` : `${cur}:${min}`;
+      })
+      .filter(Boolean) as string[];
+    if (ratesByCurrency.length) {
+      contentParts.push(`ratesByCurrency: [${ratesByCurrency.map(s => `"${s.replace(/"/g, '\\"')}"`).join(", ")}]`);
+    }
+    if (!profile?.id) {
+      contentParts.push(`created: "${new Date().toISOString()}"`);
+    }
+    const contentBlock = contentParts.join("\n            ");
 
     const mutation = profile?.id
       ? `
-      mutation {
+      mutation UpdateProfile {
         updateInnerverProfile(input: {
           id: "${profile.id}"
           content: {
-            name: "${safeName}"
-            displayName: "${safeName}"
-            rol: ${rol}
-            pfp: "${safePfp}"
+            ${contentBlock}
           }
         }) {
           document {
+            id
             name
             displayName
             rol
             pfp
+            email
           }
         }
-      }
-    `
+      }`
       : `
-      mutation {
+      mutation CreateProfile {
         createInnerverProfile(input: {
           content: {
-            name: "${safeName}"
-            displayName: "${safeName}"
-            rol: ${rol}
-            pfp: "${safePfp}"
+            ${contentBlock}
           }
         }) {
           document {
+            id
             name
             displayName
             rol
             pfp
+            email
           }
         }
-      }
-    `;
+      }`;
 
     console.log("Executing mutation:", mutation);
     const res = await executeQuery(mutation);
@@ -125,8 +201,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
 
   // Función principal para guardar
   const handleSave = async () => {
-    if (!name.trim()) {
-      setError("El nombre es requerido");
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("El nombre completo es requerido");
+      return;
+    }
+    if (!rol || (rol !== "Terapeuta" && rol !== "Consultante")) {
+      setError("Debes seleccionar un rol válido (Terapeuta o Consultante)");
+      return;
+    }
+    // Validación básica de email si fue ingresado
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("El correo electrónico no es válido");
       return;
     }
 
@@ -165,7 +251,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
 
       // Actualizar perfil en Ceramic
       console.log("Updating profile in Ceramic...");
-      await updateProfileInCeramic(name, rol, finalPfp);
+      await updateProfileInCeramic(trimmedName, rol, finalPfp);
       
       // Refrescar el perfil
       await refreshProfile();
@@ -195,13 +281,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     }
   };
 
-  // Manejar cierre del modal
+  // Manejar cierre del modal (siempre permite cerrar)
   const handleClose = () => {
-    if (!isForced || profile !== null) {
-      setError(null);
-      setSuccess(false);
-      onClose();
-    }
+    setError(null);
+    setSuccess(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -215,7 +299,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       }}
     >
       <div 
-        className="w-full max-w-2xl rounded-2xl shadow-2xl"
+        className="w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] flex flex-col"
         style={{
           background: 'rgba(255, 255, 255, 0.15)',
           backdropFilter: 'blur(10px)',
@@ -224,7 +308,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
         }}
       >
         {/* Header */}
-        <div className="p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+        <div className="p-6 border-b shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
           <div className="flex items-center justify-between">
             <h2 
               className="text-2xl font-bold text-white"
@@ -235,7 +319,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
             <button
               onClick={handleClose}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-              disabled={isForced && profile === null}
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -250,8 +333,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
           </p>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content (scrollable) */}
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Columna izquierda */}
             <div className="space-y-6">
@@ -302,6 +385,140 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   <option value="Consultante" className="bg-gray-800 text-white">Consultante</option>
                 </select>
               </div>
+              
+              {/* Datos personales centralizados */}
+              <div className="grid grid-cols-1 gap-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                      País (ISO-2)
+                    </label>
+                    <input
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      maxLength={2}
+                      placeholder="AR, CO, US"
+                      className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                      style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                      Ciudad
+                    </label>
+                    <input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ciudad"
+                      className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                      style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    Zona horaria
+                  </label>
+                  <input
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    placeholder="America/Bogota"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    Idiomas (coma-separados)
+                  </label>
+                  <input
+                    value={languages}
+                    onChange={(e) => setLanguages(e.target.value)}
+                    placeholder="Español, Inglés"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    Idioma principal
+                  </label>
+                  <input
+                    value={primaryLanguage}
+                    onChange={(e) => setPrimaryLanguage(e.target.value)}
+                    placeholder="Español"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+              </div>
+              {/* Monedas y tarifas */}
+              <div>
+                <label 
+                  className="block text-white font-medium mb-2"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
+                >
+                  Monedas
+                </label>
+                <div className="grid grid-cols-2 gap-2 text-white">
+                  {["ARS","COP","USD","EUR"].map(code => (
+                    <label key={code} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedCurrencies.includes(code)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setSelectedCurrencies((prev) => {
+                            const next = checked ? Array.from(new Set([...prev, code])) : prev.filter(c => c !== code);
+                            // limpiar precios si se desmarca
+                            if (!checked) {
+                              setCurrencyPrices((mp) => {
+                                const { [code]: _, ...rest } = mp;
+                                return rest;
+                              });
+                            }
+                            return next;
+                          });
+                        }}
+                      />
+                      <span>{code}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedCurrencies.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {selectedCurrencies.map(cur => (
+                      <div key={cur} className="flex items-center gap-3">
+                        <span className="text-white/90 w-12">{cur}</span>
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={currencyPrices[cur]?.min ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value === "" ? undefined : Number(e.target.value);
+                            setCurrencyPrices(prev => ({ ...prev, [cur]: { ...(prev[cur]||{}), min: v } }));
+                          }}
+                          className="w-28 px-3 py-2 rounded-xl border-0 text-white placeholder-white/60"
+                          style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)' }}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={currencyPrices[cur]?.max ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value === "" ? undefined : Number(e.target.value);
+                            setCurrencyPrices(prev => ({ ...prev, [cur]: { ...(prev[cur]||{}), max: v } }));
+                          }}
+                          className="w-28 px-3 py-2 rounded-xl border-0 text-white placeholder-white/60"
+                          style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
             </div>
 
             {/* Columna derecha */}
@@ -361,12 +578,78 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                   </div>
                 </div>
               </div>
+
+              {/* Correo electrónico */}
+              <div>
+                <label 
+                  className="block text-white font-medium mb-2"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
+                >
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="usuario@correo.com"
+                  className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                  }}
+                />
+              </div>
+
+              {/* Género */}
+              <div>
+                <label 
+                  className="block text-white font-medium mb-2"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
+                >
+                  Género
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as any)}
+                  className="w-full px-4 py-3 rounded-xl border-0 text-white"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <option value="" className="bg-gray-800 text-white">Sin especificar</option>
+                  <option value="Masculino" className="bg-gray-800 text-white">Masculino</option>
+                  <option value="Femenino" className="bg-gray-800 text-white">Femenino</option>
+                </select>
+              </div>
+
+              {/* Fecha de nacimiento */}
+              <div>
+                <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  Fecha de nacimiento
+                </label>
+                <input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                  style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                />
+              </div>
             </div>
           </div>
 
+        </div>
+
+        {/* Footer (sticky) */}
+        <div className="p-6 border-t shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
           {/* Mensajes de estado */}
           {error && (
-            <div className="mt-6 p-4 rounded-xl bg-red-500/20 border border-red-500/30">
+            <div className="mb-4 p-4 rounded-xl bg-red-500/20 border border-red-500/30">
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -375,9 +658,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
               </div>
             </div>
           )}
-
           {success && (
-            <div className="mt-6 p-4 rounded-xl bg-green-500/20 border border-green-500/30">
+            <div className="mb-4 p-4 rounded-xl bg-green-500/20 border border-green-500/30">
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -386,12 +668,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
               </div>
             </div>
           )}
-
-          {/* Botones */}
-          <div className="mt-8 flex justify-end space-x-4">
+          <div className="flex justify-end space-x-4">
             <button
               onClick={handleClose}
-              disabled={isLoading || (isForced && profile === null)}
+              disabled={isLoading}
               className="px-6 py-3 rounded-xl border border-white/30 text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
             >

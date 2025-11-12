@@ -1,0 +1,9 @@
+type ConsultantProfile @loadModel(id: "$CONSULTANT_ID") {
+    id: ID!
+}
+
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    consultant: [ConsultantProfile] @relationFrom(model: "ConsultantProfile", property: "profileId")
+}
+
+
