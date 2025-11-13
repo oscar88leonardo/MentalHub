@@ -7,12 +7,14 @@ import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
 import { abi } from "@/abicontracts/whitelist";
 import { useActiveWallet, useReadContract } from "thirdweb/react";
+import Header from "./Header";
 
-// interface WhitelistWidgetProps {
-//   // onLogout?: () => void;
-// }
+interface WhitelistWidgetProps {
+  onLogout?: () => Promise<void> | void;
+}
 
-export default function WhitelistWidget() {
+
+export default function WhitelistWidget({ onLogout }: WhitelistWidgetProps) {
   const activeWallet = useActiveWallet();
   const account = activeWallet ? activeWallet.getAccount() : null;
   
@@ -168,6 +170,12 @@ export default function WhitelistWidget() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Header fijo */}
+      <Header
+        title="Whitelist"
+        subtitle="Whitelist de la comunidad"
+        onLogout={(onLogout as any) || (() => {})}
+      />
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           {/* Header */}
