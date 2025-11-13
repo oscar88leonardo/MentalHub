@@ -42,6 +42,7 @@ const SessionsTherapist: React.FC = () => {
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
   const onChainSigRef = useRef<string>("");
   const lastOnchainCheckRef = useRef<number>(0);
+  const resolvedPendingRef = useRef<Set<string>>(new Set());
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Active: true, Finished: true });
 
    // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
@@ -131,8 +132,6 @@ const SessionsTherapist: React.FC = () => {
   // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
   useEffect(() => {
     if (!events.length || !contract) return;
-    // Evitar lecturas on-chain demasiado frecuentes (cooldown 10s)
-    if (Date.now() - lastOnchainCheckRef.current < 10000) return;
     
     // Calcular rango visible según la vista
     const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -148,8 +147,11 @@ const SessionsTherapist: React.FC = () => {
     }
     
     const visible = events.filter(
-      (e) => typeof e.tokenId === 'number' && e.tokenId > 0 && e.start < rangeEnd && e.end > rangeStart
-    );
+      (e) => typeof e.tokenId === 'number' && 
+                    e.tokenId > 0 && 
+                    e.start < rangeEnd && 
+                    e.end > rangeStart  // no leer estados pendientes
+      );
     if (!visible.length) return;
     
     const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
@@ -161,6 +163,9 @@ const SessionsTherapist: React.FC = () => {
     (async () => {
       try {
         const updates = await Promise.all(visible.map(async (e) => {
+          if (resolvedPendingRef.current.has(e.id)) {
+            return { id: e.id, state: e.state };
+          }
           try {
             const stateNum = await readContract({
               contract,
@@ -170,7 +175,11 @@ const SessionsTherapist: React.FC = () => {
             const n = Number(stateNum as any);
             return { id: e.id, state: mapState(n) };
           } catch (err: any) {
-            console.warn(`Failed to read state for event ${e.id}:`, err?.message ?? err);
+            const msg = String(err?.message ?? err);
+            //console.warn(`Failed to read state for event ${e.id}:`, msg);
+            if (msg.includes('Session not found')) {
+              resolvedPendingRef.current.add(e.id);
+            }
             return { id: e.id, state: e.state }; // Mantener estado actual si falla
           }
         }));
@@ -208,6 +217,7 @@ const SessionsTherapist: React.FC = () => {
   // watchContractEvents para estados de la consulta
  useEffect(() => {
   const unwatch = watchSessionState(contract,(scheduleId, newState) => {
+    resolvedPendingRef.current.delete(scheduleId);
     setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
   });
   return () => { try { unwatch?.(); } catch {} };  
@@ -315,8 +325,8 @@ const SessionsTherapist: React.FC = () => {
           components={{ agenda: { event: AgendaEvent } } as any}
           eventPropGetter={eventPropGetter as any}
           onSelectEvent={onSelectEvent}
-          onNavigate={(d) => setCurrentDate(d)}
-          onView={(v) => setCurrentView(v)}
+          onNavigate={(d) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setCurrentDate(d); }}
+          onView={(v) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setCurrentView(v); }}
           backgroundEvents={availEvents}
           scrollToTime={scrollToTime}
         />

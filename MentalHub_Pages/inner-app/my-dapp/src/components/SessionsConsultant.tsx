@@ -47,6 +47,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string } | null>(null);
   const onChainSigRef = useRef<string>("");
   const lastOnchainCheckRef = useRef<number>(0);
+  const resolvedPendingRef = useRef<Set<string>>(new Set());
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
@@ -107,6 +108,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   // watchContractEvents para estados de la consulta
   useEffect(() => {
     const unwatch = watchSessionState(contract,(scheduleId, newState) => {
+      resolvedPendingRef.current.delete(scheduleId);
       setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
     });
     return () => { try { unwatch?.(); } catch {} };  
@@ -246,7 +248,10 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     }
     
     const visible = mySchedEvents.filter(
-      (e) => typeof e.tokenId === 'number' && e.tokenId > 0 && e.start < rangeEnd && e.end > rangeStart
+      (e) => typeof e.tokenId === 'number' && 
+                    e.tokenId > 0 && 
+                    e.start < rangeEnd && 
+                    e.end > rangeStart
     );
     if (!visible.length) return;
     
@@ -254,13 +259,14 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     if (onChainSigRef.current === key) return;
     
     onChainSigRef.current = key;
-    // Evitar lecturas on-chain demasiado frecuentes (cooldown 10s)
-    if (Date.now() - lastOnchainCheckRef.current < 10000) return;
     
     (async () => {
       try {
         const updates = await Promise.all(visible.map(async (e) => {
           if (!e.tokenId) return { id: e.id, state: e.state };
+          if (resolvedPendingRef.current.has(e.id)) {
+            return { id: e.id, state: e.state };
+          }
           try {
             const n = await readContract({
               contract,
@@ -269,7 +275,11 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             });
             return { id: e.id, state: mapState(Number(n)) };
           } catch (err: any) {
-            console.warn(`\nFailed to read state for event ${e.id}:`, err?.message ?? err);
+            const msg = String(err?.message ?? err);
+            //console.warn(`\nFailed to read state for event ${e.id}:`, msg);
+            if (msg.includes('Session not found')) {
+              resolvedPendingRef.current.add(e.id);
+            }
             return { id: e.id, state: e.state };
           }
         }));
@@ -390,6 +400,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       therapistId: e.node.therapistId || undefined,
     }));
     // Forzar relectura on-chain al abrir el modal
+    resolvedPendingRef.current.clear();
     onChainSigRef.current = '';
     setMySchedEvents(prev => {
       const byId = new Map(prev.map(e => [e.id, e.state]));
@@ -553,8 +564,8 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                   onSelectEvent={(e: any) => {
                     setSelectedSched({ id: e.id, start: e.start, end: e.end, roomId: e.roomId, tokenId: e.tokenId, therapistName: e.therapistName, nftContract: e.nftContract, therapistId: e.therapistId, state: e.state });
                   }}
-                  onNavigate={(d) => setMySchedDate(d)}
-                  onView={(v) => setMySchedView(v)}
+                  onNavigate={(d) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setMySchedDate(d); }}
+                  onView={(v) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setMySchedView(v); }}
                   scrollToTime={scrollToTime}
                 />
               </div>

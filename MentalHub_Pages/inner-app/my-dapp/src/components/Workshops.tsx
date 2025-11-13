@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import WorkshopCreation from "@/components/WorkshopCreation";
 import { resolveIpfsUrl } from "@/lib/ipfs";
@@ -39,8 +39,13 @@ const Workshops: React.FC<WorkshopsProps> = ({ onLogout }) => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const initialProfileLoadRef = useRef(false);
+  const initialWorkshopsLoadRef = useRef(false);
    
-   useEffect(() => {
+   useEffect(() => {    
+    if (initialProfileLoadRef.current) return;
+    initialProfileLoadRef.current = true;
+
     let cancelled = false;
     (async () => {
         setIsLoadingProfile(true);
@@ -55,7 +60,7 @@ const Workshops: React.FC<WorkshopsProps> = ({ onLogout }) => {
         }
     })();
     return () => { cancelled = true; };
-   }, [refreshProfile]);
+   }, []);
    
   const fetchWorkshops = useCallback(async () => {
     try {
@@ -93,10 +98,12 @@ const Workshops: React.FC<WorkshopsProps> = ({ onLogout }) => {
   }, [executeQuery]);
 
   useEffect(() => {
+    if (initialWorkshopsLoadRef.current) return;
+    initialWorkshopsLoadRef.current = true;
     (async () => {
       try { await fetchWorkshops(); } catch {}
     })();
-  }, [fetchWorkshops]);
+  }, []);
 
   // Aplicar filtros y paginación en cliente
   const normalizedTags = tagsFilter

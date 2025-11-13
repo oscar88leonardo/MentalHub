@@ -171,9 +171,9 @@ export default function DashboardPage() {
       case 'dao':
         return <DaoWidget onLogout={handleLogout} />;
       case 'whitelist':
-        return <WhitelistWidget />;
+        return <WhitelistWidget  />;
       case 'workshops':
-        return <Workshops />;
+        return <Workshops onLogout={handleLogout} />;
       case 'dashboard':
       default:
         return <DashboardContent onLogout={handleLogout} />;
