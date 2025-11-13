@@ -18,6 +18,8 @@ interface EventItem {
   displayName: string;
   tokenId?: number;
   nftContract?: string;
+  profileId?: string;
+  profileRole?: string;
 }
 
 interface Props {
@@ -28,7 +30,7 @@ interface Props {
 }
 
 const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, event }) => {
-  const [busy, setBusy] = useState<'none' | 'open' | 'finalize'>('none');
+  const [busy, setBusy] = useState<'none' | 'open' | 'finalize' | 'confirm'>('none');
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [availableSessions, setAvailableSessions] = useState<number | null>(null);
   const { profile, executeQuery } = useCeramic();
@@ -81,6 +83,27 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
             ? 'La sala seleccionada no pertenece al terapeuta.'
             : 'Error al abrir la sala';
       showToast(msg, 'error');
+    } finally {
+      setBusy('none');
+    }
+  };
+
+  const confirmSession = async () => {
+    try {
+      if (event.tokenId == null) {
+        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
+        return;
+      }
+      setBusy('confirm');
+      await fetch('/api/callsetsession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 1 })
+      });
+      showToast('Consulta confirmada', 'success');
+      onUpdated?.();
+    } catch {
+      showToast('Error al confirmar la consulta.', 'error');
     } finally {
       setBusy('none');
     }
@@ -150,6 +173,16 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           {/* Sin selección de sala */}
         </div>
         <div className="p-4 flex justify-end gap-3">
+          {event.state === 'Pending' && event.tokenId != null && event.profileId && event.profileRole === 'Consultante' && (
+            <button
+              disabled={busy!=='none'}
+              onClick={confirmSession}
+              className="px-4 py-2 rounded text-white disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)', border: '1px solid rgba(255,255,255,0.25)' }}
+            >
+              {busy==='confirm' ? 'Confirmando...' : 'Confirmar'}
+            </button>
+          )}
           {event.state === 'Active' && (
             <button
               disabled={busy!=='none'}
@@ -160,7 +193,15 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
               {busy==='finalize' ? 'Finalizando...' : 'Finalizar'}
             </button>
           )}
-          <button disabled={busy!=='none'} onClick={openRoom} className="px-4 py-2 rounded text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>{busy==='open'?'Abriendo...':'Abrir Sala'}</button>
+          { (event.state === 'Confirmed' || event.state === 'Active') && (
+          <button 
+          disabled={busy!=='none'} 
+          onClick={openRoom} 
+          className="px-4 py-2 rounded text-white disabled:opacity-50" 
+          style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
+            {busy==='open'?'Abriendo...':'Abrir Sala'}
+          </button>
+          )}
         </div>
       </div>
     </div>

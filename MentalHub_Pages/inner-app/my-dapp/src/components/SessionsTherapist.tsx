@@ -21,13 +21,18 @@ interface EventItem {
   state: string;
   roomId: string;
   displayName: string;
+  profileRole?: string;
   tokenId?: number;
   nftContract?: string;
   profileId?: string;
 }
 
 // mapstate para estados de la consulta
-const mapState = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+const mapState = (x: number) =>
+  x === 0 ? 'Pending' :
+  x === 1 ? 'Confirmed' :
+  x === 2 ? 'Active' :
+  x === 3 ? 'Finished' : 'Pending';
 
 const SessionsTherapist: React.FC = () => {
   const { profile, executeQuery } = useCeramic();
@@ -43,7 +48,7 @@ const SessionsTherapist: React.FC = () => {
   const onChainSigRef = useRef<string>("");
   const lastOnchainCheckRef = useRef<number>(0);
   const resolvedPendingRef = useRef<Set<string>>(new Set());
-  const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Active: true, Finished: true });
+  const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Confirmed: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Confirmed: true, Active: true, Finished: true });
 
    // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
   const contract = useMemo(() => getContract(
@@ -67,10 +72,10 @@ const SessionsTherapist: React.FC = () => {
             node(id: "${profile.id}") {
               ... on InnerverProfile {
                 id
-                sched_therap(last: 200, filters: { where: { state: { in: [Active] } } }) {
+                sched_therap(last: 200) {
                   edges { node { id date_init date_finish state } }
                 }
-                therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active, Finished] } } }) {
+                therapist_sched(last: 200) {
                   edges {
                     node {
                       id
@@ -79,7 +84,7 @@ const SessionsTherapist: React.FC = () => {
                       state
                       roomId
                       profileId
-                      profile { displayName }
+                      profile { displayName rol }
                       NFTContract
                       TokenID
                     }
@@ -103,6 +108,7 @@ const SessionsTherapist: React.FC = () => {
             state: (sn?.state as any) ?? 'Pending',
             roomId: sn.roomId,
             displayName: sn.profile?.displayName || "",
+            profileRole: sn.profile?.rol || undefined,
             tokenId: typeof sn.TokenID === 'number' ? sn.TokenID : (sn.TokenID ? Number(sn.TokenID) : undefined),
             nftContract: sn.NFTContract || undefined,
             profileId: sn.profileId || undefined,
@@ -244,12 +250,15 @@ const SessionsTherapist: React.FC = () => {
     }
     const isActive = event.state === 'Active';
     const isPending = event.state === 'Pending';
+    const isConfirmed = event.state === 'Confirmed';
     const style: React.CSSProperties = {
       background: isActive
         ? 'linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.9) 100%)'
-        : isPending
-          ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
-          : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
+        : isConfirmed
+          ? 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.9) 100%)'
+          : isPending
+            ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
+            : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
       color: '#ffffff',
       border: '1px solid rgba(255,255,255,0.22)',
       boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
@@ -287,6 +296,12 @@ const SessionsTherapist: React.FC = () => {
             <span className="inline-block w-4 h-4 rounded"
                   style={{ background: 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)', border: '1px solid rgba(255,255,255,0.22)' }} />
             <span className="text-white/90">Pendiente</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" className="w-4 h-4" checked={stateFilters.Confirmed} onChange={(e) => setStateFilters(prev => ({ ...prev, Confirmed: e.target.checked }))} />
+            <span className="inline-block w-4 h-4 rounded"
+                  style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.9) 100%)', border: '1px solid rgba(255,255,255,0.22)' }} />
+            <span className="text-white/90">Confirmada</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" className="w-4 h-4" checked={stateFilters.Active} onChange={(e) => setStateFilters(prev => ({ ...prev, Active: e.target.checked }))} />

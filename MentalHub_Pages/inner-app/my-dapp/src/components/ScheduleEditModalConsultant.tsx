@@ -87,7 +87,11 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         if (schedule?.tokenId == null) return;
         const stateNum = await readContract({ contract, method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)", params: [BigInt(schedule.tokenId), schedule.id] });
         const n = Number(stateNum as any);
-        const map = (x: number) => x === 0 ? 'Pending' : x === 1 ? 'Active' : x === 2 ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+        const map = (x: number) =>
+          x === 0 ? 'Pending' :
+          x === 1 ? 'Confirmed' :
+          x === 2 ? 'Active' :
+          x === 3 ? 'Finished' : 'Pending';
         if (!cancelled) setStatus(map(n));
       } catch {}
     })();
@@ -234,11 +238,21 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={handleSave} disabled={isSaving || !isEditable} className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">{isSaving ? 'Guardando…' : 'Guardar'}</button>
-            <button onClick={openRoom} disabled={busy !== 'none'} className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
-              {busy === 'open' ? 'Abriendo…' : 'Abrir Sala'}
+            <button 
+            onClick={handleSave} 
+            disabled={isSaving || !isEditable} 
+            className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">
+            {isSaving ? 'Guardando…' : 'Guardar'}</button>
+            // renderizado condicional del boton de abrir sala para estados Confo
+            { (status === 'Confirmed' || status === 'Active') && (
+            <button 
+            onClick={openRoom} 
+            disabled={busy !== 'none'} 
+            className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
+            {busy === 'open' ? 'Abriendo…' : 'Abrir Sala'}
             </button>
+            )}
           </div>
         </div>
       </div>

@@ -20,7 +20,11 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 interface SessionsConsultantProps { onLoadingKeysChange?: (loading: boolean) => void }
 
 // mapState para estados de la consulta
-const mapState = (x: number) => x === 0 ? 'Pending' : (x === 1 || x === 2) ? 'Active' : x === 3 ? 'Finished' : 'Pending';
+const mapState = (x: number) =>
+  x === 0 ? 'Pending' :
+  x === 1 ? 'Confirmed' :
+  x === 2 ? 'Active' :
+  x === 3 ? 'Finished' : 'Pending';
 
 const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysChange }) => {
   const { profile, account, executeQuery, refreshProfile } = useCeramic();
@@ -142,11 +146,11 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
           ... on InnerverProfile {
             id
             name
-            sched_therap(last: 200, filters: { where: { state: { in: [Active] } } }) {
+            sched_therap(last: 200) {
               edges { node { id date_init date_finish state } }
             }
             therapist(last: 1) { edges { node { roomId } } }
-            therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active] } } }) {
+            therapist_sched(last: 200) {
               edges { node { id date_init date_finish state roomId } }
             }
           }
@@ -193,7 +197,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       query {
         node(id: "${therapist}") {
           ... on InnerverProfile {
-            therapist_sched(last: 200, filters: { where: { state: { in: [Pending, Active] } } }) {
+            therapist_sched(last: 200) {
               edges { node { id date_init date_finish state } }
             }
           }
@@ -307,12 +311,15 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const eventPropGetter = useCallback((event: any) => {
     const isActive = event.state === 'Active';
     const isPending = event.state === 'Pending';
+    const isConfirmed = event.state === 'Confirmed';
     const style: React.CSSProperties = {
       background: isActive
         ? 'linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.9) 100%)'
-        : isPending
-          ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
-          : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
+        : isConfirmed
+          ? 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.9) 100%)'
+          : isPending
+            ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
+            : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
       color: '#ffffff',
       border: '1px solid rgba(255,255,255,0.22)',
       boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
@@ -364,7 +371,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     const qViewer = `
       query {
         viewer { innerverProfile {
-          schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
+          schedules(last: 200) {
             edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
           }
         } }
@@ -378,7 +385,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         query {
           node(id: "${pid}") {
             ... on InnerverProfile {
-              schedules(filters: { where: { state: { in: [Pending, Active, Finished] } } }, last: 200) {
+              schedules(last: 200) {
                 edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
               }
             }
