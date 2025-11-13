@@ -193,6 +193,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
               {busy==='finalize' ? 'Finalizando...' : 'Finalizar'}
             </button>
           )}
+          {/* renderizado condicional del boton de abrir sala para estados Confirmed y active*/}
           { (event.state === 'Confirmed' || event.state === 'Active') && (
           <button 
           disabled={busy!=='none'} 

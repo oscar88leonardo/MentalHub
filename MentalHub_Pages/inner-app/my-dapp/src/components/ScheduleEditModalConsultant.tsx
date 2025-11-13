@@ -243,7 +243,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
             disabled={isSaving || !isEditable} 
             className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">
             {isSaving ? 'Guardando…' : 'Guardar'}</button>
-            // renderizado condicional del boton de abrir sala para estados Confo
+            {/* renderizado condicional del boton de abrir sala para estados Confirmed y active*/}
             { (status === 'Confirmed' || status === 'Active') && (
             <button 
             onClick={openRoom} 
