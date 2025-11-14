@@ -6,9 +6,7 @@ type InnerverProfile @loadModel(id: "$PROFILE_ID") {
 
 type Schedule
     @createModel(accountRelation: LIST, description: "Schedule Therapist") 
-    @createIndex(fields: [{path: "state"}])
     {
-    state: State!
     date_init: DateTime!
     date_finish: DateTime!
     edited: DateTime
@@ -20,13 +18,4 @@ type Schedule
     roomId: String! @string(minLength: 3, maxLength: 40)
     NFTContract: String! @string(maxLength: 50)
     TokenID: Int!
-}
-
-
-
-enum State {
-  Pending
-  Active
-  Finished
-  Archived
 }

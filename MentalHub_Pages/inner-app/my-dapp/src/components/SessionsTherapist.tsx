@@ -73,7 +73,7 @@ const SessionsTherapist: React.FC = () => {
               ... on InnerverProfile {
                 id
                 sched_therap(last: 200) {
-                  edges { node { id date_init date_finish state } }
+                  edges { node { id date_init date_finish } }
                 }
                 therapist_sched(last: 200) {
                   edges {
@@ -81,7 +81,6 @@ const SessionsTherapist: React.FC = () => {
                       id
                       date_init
                       date_finish
-                      state
                       roomId
                       profileId
                       profile { displayName rol }
@@ -104,8 +103,8 @@ const SessionsTherapist: React.FC = () => {
             id: sn.id,
             start: new Date(sn.date_init),
             end: new Date(sn.date_finish),
-            // Usar el estado del Schedule en ComposeDB como base
-            state: (sn?.state as any) ?? 'Pending',
+            // Estado base por defecto; on-chain lo actualizará
+            state: 'Pending',
             roomId: sn.roomId,
             displayName: sn.profile?.displayName || "",
             profileRole: sn.profile?.rol || undefined,
@@ -124,7 +123,12 @@ const SessionsTherapist: React.FC = () => {
             return m;
           });
         });
-        const avail = schedTherap.map((e: any) => ({ id: e?.node?.id, start: new Date(e?.node?.date_init), end: new Date(e?.node?.date_finish), state: e?.node?.state }));
+        const avail = schedTherap.map((e: any) => ({
+          id: e?.node?.id,
+          start: new Date(e?.node?.date_init),
+          end: new Date(e?.node?.date_finish),
+          state: 'Pending'
+        }));
         setAvailEvents(avail);
       } catch (e) {
         console.error(e);
@@ -220,14 +224,33 @@ const SessionsTherapist: React.FC = () => {
       }
     })();
   }, [events, contract, currentDate, currentView]); 
-  // watchContractEvents para estados de la consulta
- useEffect(() => {
-  const unwatch = watchSessionState(contract,(scheduleId, newState) => {
-    resolvedPendingRef.current.delete(scheduleId);
-    setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
-  });
-  return () => { try { unwatch?.(); } catch {} };  
-}, [contract]);
+  // watchContractEvents opcional para estados de la consulta (controlado por ENV + delay + visibilidad)
+  useEffect(() => {
+    const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
+    const WATCHERS_DELAY_MS = Number(process.env.NEXT_PUBLIC_WATCHERS_DELAY_MS || '12000');
+    if (!ENABLE_WATCHERS || !contract) return;
+    let unwatch: any | undefined;
+    let timeout: any;
+    const start = () => {
+      if (unwatch) return;
+      unwatch = watchSessionState(contract, (scheduleId, newState) => {
+        resolvedPendingRef.current.delete(scheduleId);
+        setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
+      });
+    };
+    const stop = () => { try { unwatch?.(); } catch {} ; unwatch = undefined; };
+    const onVis = () => {
+      stop(); clearTimeout(timeout);
+      if (typeof document !== 'undefined' && document.hidden) return;
+      timeout = setTimeout(start, WATCHERS_DELAY_MS);
+    };
+    onVis();
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
+    return () => {
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
+      stop(); clearTimeout(timeout);
+    };
+  }, [contract]);
 
   const messages = useMemo(() => ({
     date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día',

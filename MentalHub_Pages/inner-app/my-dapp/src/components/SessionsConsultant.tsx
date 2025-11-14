@@ -109,13 +109,32 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     refreshKeyAvailability();
   }, [refreshKeyAvailability]);
 
-  // watchContractEvents para estados de la consulta
+  // watchContractEvents opcional (controlado por ENV + delay + visibilidad)
   useEffect(() => {
-    const unwatch = watchSessionState(contract,(scheduleId, newState) => {
-      resolvedPendingRef.current.delete(scheduleId);
-      setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
-    });
-    return () => { try { unwatch?.(); } catch {} };  
+    const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
+    const WATCHERS_DELAY_MS = Number(process.env.NEXT_PUBLIC_WATCHERS_DELAY_MS || '12000');
+    if (!ENABLE_WATCHERS || !contract) return;
+    let unwatch: any | undefined;
+    let timeout: any;
+    const start = () => {
+      if (unwatch) return;
+      unwatch = watchSessionState(contract,(scheduleId, newState) => {
+        resolvedPendingRef.current.delete(scheduleId);
+        setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
+      });
+    };
+    const stop = () => { try { unwatch?.(); } catch {} ; unwatch = undefined; };
+    const onVis = () => {
+      stop(); clearTimeout(timeout);
+      if (typeof document !== 'undefined' && document.hidden) return;
+      timeout = setTimeout(start, WATCHERS_DELAY_MS);
+    };
+    onVis();
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
+    return () => {
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
+      stop(); clearTimeout(timeout);
+    };
   }, [contract]);
 
   // Cargar lista de terapeutas (una vez; evita re-ejecución por cambios de referencia)
@@ -147,11 +166,11 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             id
             name
             sched_therap(last: 200) {
-              edges { node { id date_init date_finish state } }
+              edges { node { id date_init date_finish } }
             }
             therapist(last: 1) { edges { node { roomId } } }
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish state roomId } }
+              edges { node { id date_init date_finish roomId } }
             }
           }
         }
@@ -163,7 +182,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       const node = res?.data?.node;
       setTherapistName(node?.name || "");
       const availEdges = node?.sched_therap?.edges || [];
-      const mappedAvail = availEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish), state: e.node.state }));
+      const mappedAvail = availEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish), state: 'Pending' }));
       setEvents(mappedAvail);
       const roomId = node?.therapist?.edges?.[0]?.node?.roomId || "";
       setTherapistRoomId(roomId);
@@ -198,7 +217,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         node(id: "${therapist}") {
           ... on InnerverProfile {
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish state } }
+              edges { node { id date_init date_finish } }
             }
           }
         }
@@ -372,7 +391,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       query {
         viewer { innerverProfile {
           schedules(last: 200) {
-            edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
+            edges { node { id date_init date_finish roomId therapist { id name displayName } NFTContract TokenID therapistId } }
           }
         } }
       }
@@ -386,7 +405,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
           node(id: "${pid}") {
             ... on InnerverProfile {
               schedules(last: 200) {
-                edges { node { id date_init date_finish state roomId therapist { id name displayName } NFTContract TokenID therapistId } }
+                edges { node { id date_init date_finish roomId therapist { id name displayName } NFTContract TokenID therapistId } }
               }
             }
           }
@@ -399,7 +418,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       id: e.node.id,
       start: new Date(e.node.date_init),
       end: new Date(e.node.date_finish),
-      state: e.node.state,
+      state: 'Pending',
       roomId: e.node.roomId,
       tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
       therapistName: e.node.therapist?.displayName || e.node.therapist?.name || undefined,

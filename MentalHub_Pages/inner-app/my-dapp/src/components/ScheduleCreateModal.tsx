@@ -84,7 +84,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       const mutation = `
         mutation {
           createSchedule(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}", state: Pending, NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
+            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
           ) {
             document { id }
           }
