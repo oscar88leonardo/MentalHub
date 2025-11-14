@@ -21,7 +21,7 @@ function resolveRoomId(defaultRoomId: string, selectedRoomId?: string, rooms?: R
   return defaultRoomId;
 }
 
-export async function openRoomFlowNoCheck(p: OpenRoomParams): Promise<{ roomId: string }> {
+export async function openRoomFlowNoCheck(p: OpenRoomParams): Promise<{ roomId: string; txPromise?: Promise<Response> }> {
   const { tokenId, scheduleId, start, end, defaultRoomId, selectedRoomId, rooms, openMeet, optimistic = true } = p;
 
   const now = new Date();
@@ -39,8 +39,9 @@ export async function openRoomFlowNoCheck(p: OpenRoomParams): Promise<{ roomId: 
 
   if (optimistic) {
     openMeet(roomId);
-    doCall().catch(() => {});
-    return { roomId };
+    const txPromise = doCall().catch(() => {});
+    // @ts-expect-error: txPromise puede ser undefined si se suprime por catch
+    return { roomId, txPromise };
   } else {
     const res = await doCall();
     if (!res.ok) throw new Error("API_ERROR");

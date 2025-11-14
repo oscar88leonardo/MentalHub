@@ -27,7 +27,7 @@ interface Props {
   onClose: () => void;
   schedule: ScheduleItem;
   onSaved?: () => void;
-  onUpdated?: () => void;
+  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished') => void;
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
@@ -149,7 +149,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
     if (!schedule) return;
     try {
       setBusy("open");
-      await openRoomFlowNoCheck({
+      const { txPromise } = await openRoomFlowNoCheck({
         tokenId,
         scheduleId: schedule.id,
         start,
@@ -158,7 +158,15 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
         openMeet,
         optimistic: true,
       });
-      try { onUpdated?.(); } catch {}
+      try {
+        const r = await txPromise;
+        const j = await r?.json();
+        const newStateNum = j?.data?.newState ?? j?.newState;
+        if (newStateNum === 2) {
+          setStatus('Active');
+          try { onUpdated?.('Active'); } catch {}
+        }
+      } catch {}
     } catch (e: any) {
       const msg = e?.message === 'TIME_WINDOW'
         ? 'La sala solo está disponible en la franja horaria programada.'

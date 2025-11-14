@@ -375,7 +375,7 @@ const SessionsTherapist: React.FC = () => {
           isOpen={detailOpen}
           onClose={() => setDetailOpen(false)}
           event={selected}
-          onUpdated={() => {
+          onUpdated={(expected) => {
             setDetailOpen(false);
             // 1) Actualización inmediata del evento seleccionado vía on-chain (sin esperar GraphQL)
             (async () => {
@@ -389,6 +389,21 @@ const SessionsTherapist: React.FC = () => {
                   const n = Number(stateNum as any);
                   const newState = mapState(n);
                   setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState } : ev));
+                  // 2) Relectura diferida solo si no coincide con el esperado
+                  if (expected && newState !== expected) {
+                    setTimeout(async () => {
+                      try {
+                        const stateNum2 = await readContract({
+                          contract,
+                          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+                          params: [BigInt(selected.tokenId!), selected.id]
+                        });
+                        const n2 = Number(stateNum2 as any);
+                        const newState2 = mapState(n2);
+                        setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState2 } : ev));
+                      } catch {}
+                    }, 1200);
+                  }
                 }
               } catch {}
             })();

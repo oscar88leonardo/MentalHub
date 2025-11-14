@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 // import { revalidatePath } from "next/cache";
-import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract } from "thirdweb";
+import { getContract, prepareContractCall, toWei, resolveMethod, sendTransaction, readContract, waitForReceipt } from "thirdweb";
 import { privateKeyToAccount } from "thirdweb/wallets";
 import { abi } from "@/abicontracts/MembersAirdrop";
 import { client } from "@/lib/client";
@@ -83,7 +83,29 @@ export async function POST(req: Request) {
       }));
       console.log("transactionHash setSession:");
       console.log(transactionHash);
-
+      // Esperar receipt para garantizar minado
+      try {
+        await waitForReceipt({
+          client: client!,
+          chain: myChain,
+          transactionHash,
+          // maxBlocksWaitTime opcional para evitar esperas excesivas
+          maxBlocksWaitTime: 24,
+        });
+      } catch (e) {
+        console.warn("waitForReceipt error (continuando):", e);
+      }
+      // Leer estado final después del minado
+      let newState: number | null = null;
+      try {
+        const cur = await readContract({
+          contract,
+          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+          params: [BigInt(body.tokenId), body.scheduleId],
+        });
+        newState = Number(cur);
+      } catch {}
+      return NextResponse.json({ status: "success", msg: "executed setsession", transactionHash, newState }, { status: 200 });
     } else {
       console.log("No hay una billetera activa.");
     }

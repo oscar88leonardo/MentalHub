@@ -25,7 +25,7 @@ interface EventItem {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onUpdated?: () => void;
+  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished') => void;
   event: EventItem;
 }
 
@@ -64,7 +64,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const openRoom = async () => {
     try {
       setBusy('open');
-      await openRoomFlowNoCheck({
+      const { txPromise } = await openRoomFlowNoCheck({
         tokenId: event.tokenId,
         scheduleId: event.id,
         start: event.start,
@@ -73,7 +73,13 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         openMeet,
         optimistic: true,
       });
-      onUpdated?.();
+      // Encadenar actualización tras receipt (la API espera receipt y retorna newState)
+      try {
+        const r = await txPromise;
+        const j = await r?.json();
+        const newStateNum = j?.data?.newState ?? j?.newState;
+        if (newStateNum === 2) onUpdated?.('Active');
+      } catch {}
     } catch (e: any) {
       const msg = e?.message === 'TIME_WINDOW'
         ? 'La sala solo está disponible en la franja horaria programada.'
@@ -95,13 +101,17 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         return;
       }
       setBusy('confirm');
-      await fetch('/api/callsetsession', {
+      const res = await fetch('/api/callsetsession', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 1 })
       });
+      try {
+        const data = await res.json();
+        const newStateNum = data?.data?.newState ?? data?.newState;
+        if (newStateNum === 1) onUpdated?.('Confirmed');
+      } catch {}
       showToast('Consulta confirmada', 'success');
-      onUpdated?.();
     } catch {
       showToast('Error al confirmar la consulta.', 'error');
     } finally {
@@ -125,13 +135,17 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         return;
       }
       try {
-        await fetch('/api/callsetsession', {
+        const res = await fetch('/api/callsetsession', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 3 })
         });
+        try {
+          const data = await res.json();
+          const newStateNum = data?.data?.newState ?? data?.newState;
+          if (newStateNum === 3) onUpdated?.('Finished');
+        } catch {}
         showToast('Consulta finalizada', 'success');
-        onUpdated?.();
       } catch {
         showToast('Error al finalizar la consulta.', 'error');
       }

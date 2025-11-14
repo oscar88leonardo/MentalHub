@@ -600,7 +600,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                   isOpen={!!selectedSched}
                   onClose={() => setSelectedSched(null)}
                   schedule={selectedSched}
-                  onUpdated={async () => {
+                  onUpdated={async (expected) => {
                     const cur = selectedSched;
                     if (!cur) return;
                     // Actualización inmediata optimista a Active
@@ -614,7 +614,23 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                           params: [BigInt(cur.tokenId), cur.id]
                         });
                         const n = Number(stateNum as any);
-                        setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: mapState(n) } : ev));
+                        const newMapped = mapState(n);
+                        setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: newMapped } : ev));
+                        // Relectura diferida solo si no coincide con lo esperado
+                        if (expected && newMapped !== expected) {
+                          setTimeout(async () => {
+                            try {
+                              const stateNum2 = await readContract({
+                                contract,
+                                method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+                                params: [BigInt(cur.tokenId!), cur.id]
+                              });
+                              const n2 = Number(stateNum2 as any);
+                              const newMapped2 = mapState(n2);
+                              setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: newMapped2 } : ev));
+                            } catch {}
+                          }, 1200);
+                        }
                       }
                     } catch {}
                   }}
