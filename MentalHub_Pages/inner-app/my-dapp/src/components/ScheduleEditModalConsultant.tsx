@@ -27,7 +27,7 @@ interface Props {
   onClose: () => void;
   schedule: ScheduleItem;
   onSaved?: () => void;
-  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished') => void;
+  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished' | 'Cancelled') => void;
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
@@ -181,6 +181,49 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
     }
   };
 
+  const cancelSession = async () => {
+    if (!schedule?.id || !schedule?.tokenId) return;
+    try {
+      setBusy("open"); // reutilizamos busy para deshabilitar botones
+      const res = await fetch('/api/callsetsession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId: String(schedule.tokenId), scheduleId: schedule.id, state: 4 })
+      });
+      // Confirmar cancelación con lectura on-chain esperando "Session not found"
+      try {
+        await readContract({
+          contract,
+          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+          params: [BigInt(schedule.tokenId), schedule.id]
+        });
+        setTimeout(async () => {
+          try {
+            await readContract({
+              contract,
+              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+              params: [BigInt(schedule.tokenId!), schedule.id]
+            });
+          } catch (e: any) {
+            if (String(e?.message || "").includes("Session not found")) {
+              setStatus('Cancelled');
+              try { onUpdated?.('Cancelled'); } catch {}
+            }
+          }
+        }, 1200);
+      } catch (e: any) {
+        if (String(e?.message || "").includes("Session not found")) {
+          setStatus('Cancelled');
+          try { onUpdated?.('Cancelled'); } catch {}
+        }
+      }
+    } catch {
+      showToast('Error al cancelar la consulta.', 'error');
+    } finally {
+      setBusy("none");
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -251,6 +294,15 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
             disabled={isSaving || !isEditable} 
             className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">
             {isSaving ? 'Guardando…' : 'Guardar'}</button>
+            {status === 'Pending' && (
+              <button 
+              onClick={cancelSession}
+              disabled={busy !== 'none'} 
+              className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
+              {busy === 'open' ? 'Cancelando…' : 'Cancelar'}
+              </button>
+            )}
             {/* renderizado condicional del boton de abrir sala para estados Confirmed y active*/}
             { (status === 'Confirmed' || status === 'Active') && (
             <button 

@@ -92,6 +92,21 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       `;
       const res: any = await executeQuery(mutation);
       if (!res?.errors) {
+        const newId = res?.data?.createSchedule?.document?.id as string;
+        // Escribir estado Pending on-chain para ocupar la franja y consumir disponibilidad
+        try {
+          await fetch('/api/callsetsession', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tokenId,                 // string seleccionado en el dropdown
+              scheduleId: newId,       // id del Schedule recién creado
+              state: 0                 // Pending
+            })
+          });
+        } catch (e) {
+          console.error('setsession Pending failed:', e);
+        }
         await refreshProfile();
         try { await onSaved?.(); } catch {}
         onClose();

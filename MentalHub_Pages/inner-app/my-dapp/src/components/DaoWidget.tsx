@@ -48,7 +48,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   
   
   
-  const [currentBlock, setCurrentBlock] = useState<number | null>(null);
+  //const [currentBlock, setCurrentBlock] = useState<number | null>(null);
   const [isCreatingProposal, setIsCreatingProposal] = useState<boolean>(false);
   const [proposalCreatedSuccess, setProposalCreatedSuccess] = useState<boolean>(false);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -92,7 +92,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
   };
 
 
-  // Función para verificar si la cuenta actual es owner
+  /*/ Función para verificar si la cuenta actual es owner
   const checkIfOwner = async () => {
     if (!governor || !adminAccount) return;
     
@@ -108,7 +108,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
       console.error("Error verificando owner:", error);
       setIsOwner(false);
     }
-  };
+  };*/
 
   // Función para cargar el período de votación actual
   const loadCurrentVotingPeriod = async () => {
@@ -252,32 +252,32 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     if (!governor) return;
     
     try {
-      const provider = new ethers.JsonRpcProvider((myChain as any).rpc as string);
+      //const provider = new ethers.JsonRpcProvider((myChain as any).rpc as string);
       
       // Escuchar eventos ProposalCreatedWithTimestamps (nuevo evento personalizado)
-      const proposalCreatedWithTimestampsFilter = {
+      /*const proposalCreatedWithTimestampsFilter = {
         address: governor.address,
         topics: [
           ethers.id("ProposalCreatedWithTimestamps(uint256,uint256,uint256,string)")
         ]
-      };
+      };*/
       
       // Escuchar eventos ProposalCreated estándar (fallback)
-      const proposalCreatedFilter = {
+      /*const proposalCreatedFilter = {
         address: governor.address,
         topics: [
           ethers.id("ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)")
         ]
-      };
+      };*/
       
       // Función para manejar nuevos eventos
-      const handleNewProposal = async (event: any) => {
+      /*const handleNewProposal = async (event: any) => {
         console.log('🎉 Nueva propuesta detectada:', event);
         // Refrescar propuestas después de un breve delay
         setTimeout(() => {
           manualRefreshProposals();
         }, 2000);
-      };
+      };*/
       
       // Suscribirse a eventos (esto es para demostración, en producción usarías WebSocket)
       console.log('👂 Escuchando eventos del contrato...');
@@ -295,7 +295,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     if (governor) {
       listenToContractEvents();
     }
-  }, [governor]);
+  }, [governor, listenToContractEvents]);
 
   useEffect(() => {
     if (!governor || !governanceToken || !account) return;
@@ -341,7 +341,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
         const provider = new ethers.JsonRpcProvider((myChain as any).rpc as string);
         const latest = await provider.getBlockNumber();
         if (cancelled) return;
-        setCurrentBlock(latest);
+        //setCurrentBlock(latest);
         
         // Buscar en un rango más amplio para encontrar propuestas existentes
         const span = 100000; // Aumentado a 100,000 bloques para encontrar propuestas más antiguas
@@ -446,7 +446,7 @@ export default function DaoWidget({ onLogout }: DaoWidgetProps) {
     })();
     
     return () => { cancelled = true; };
-  }, [governor, governanceToken, account, refreshTrigger, manualRefresh]);
+  }, [governor, governanceToken, account, refreshTrigger, manualRefresh, getProposalTimestamps, lastLoadTime, proposals.length]);
 
   // useEffect para votos - ELIMINADO para evitar re-renders automáticos
   // Los votos se actualizarán solo cuando se haga refresh manual

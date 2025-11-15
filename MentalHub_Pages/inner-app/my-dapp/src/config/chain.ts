@@ -1,6 +1,6 @@
 import { defineChain } from "thirdweb";
 
-export type ChainKey = 'arbitrum-sepolia' | 'metis-sepolia' | 'lisk-sepolia' | 'shibuya' | 'polygon-mumbai';
+export type ChainKey = 'arbitrum-sepolia' | 'metis-sepolia' | 'lisk-sepolia' | 'shibuya' | 'polygon-mumbai' | 'polkadotHubTestnet';
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_THIRDWEB_CLIENTID || "";
 
@@ -10,6 +10,7 @@ export const CHAINS: Record<ChainKey, { id: number; rpc: string }> = {
   'lisk-sepolia': { id: 4202, rpc: 'https://rpc.sepolia-api.lisk.com' },
   'shibuya': { id: 81, rpc: 'https://evm.shibuya.astar.network' },
   'polygon-mumbai': { id: 80001, rpc: 'https://rpc-mumbai.maticvigil.com' },
+  'polkadotHubTestnet': { id: 420420422, rpc: 'https://testnet-passet-hub-eth-rpc.polkadot.io' },
 };
 
 export const CHAIN: ChainKey = (process.env.NEXT_PUBLIC_CHAIN as ChainKey) /*|| 'metis-sepolia'*/;
@@ -20,9 +21,10 @@ const isBrowser = typeof window !== 'undefined';
 
 export const myChain = defineChain({
   id: CHAINS[CHAIN].id,
-  rpc: isBrowser
+  rpc: CHAINS[CHAIN].rpc || THIRDWEB_FALLBACK_RPC,
+  /*rpc: isBrowser
     ?  THIRDWEB_FALLBACK_RPC //cliente para evitar CORS/429
-    : CHAINS[CHAIN].rpc || THIRDWEB_FALLBACK_RPC, 
+    : CHAINS[CHAIN].rpc || THIRDWEB_FALLBACK_RPC, */
 });
 
 

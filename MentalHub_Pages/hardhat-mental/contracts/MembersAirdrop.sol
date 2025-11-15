@@ -39,7 +39,7 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
     // timestamp for when presale would end
     uint256 public airdropEnded;
 
-    enum SessionState { Pending, Confirmed, Active, Finished }
+    enum SessionState { Pending, Confirmed, Active, Finished, Cancelled }
 
     struct Session {
         SessionState state;
@@ -168,30 +168,57 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
     }
 
     function setSession(uint256 tokenId, string memory scheduleId, SessionState newState) public onlyOwner {
-        //require(sessionIndex < tokenSessions[tokenId].length, "Indice de sesion invalido");
+        require(_ownerOf(tokenId) != address(0), "Token ID does not exist");
         bool sessionExists = false;
         uint256 sessionIndex;
-        int256 availableSession=-1;
-        
-        for (sessionIndex=0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
+        int256 availableSession = -1;
+
+        for (sessionIndex = 0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
             if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(scheduleId))) {
-                //require(tokenSessions[tokenId][sessionIndex].state == SessionState.Pending, "Session already confirmed or active");
-                //tokenSessions[tokenId][sessionIndex].state = newState;
                 sessionExists = true;
                 break;
-            } else if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(""))){
+            } else if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked("")) && availableSession == -1){
                 availableSession = int256(sessionIndex);
             }
         }
-        
-        require(sessionExists || availableSession>-1, "No Session found ");
-        if (sessionExists){    
-        tokenSessions[tokenId][sessionIndex].state = newState;
-        } else {
-            // Si no existe la sesión, se crea una nueva en el índice disponible
-            tokenSessions[tokenId][uint256(availableSession)] = Session(newState, scheduleId);
+
+        require(sessionExists || availableSession > -1, "No Session found ");
+
+        // Cancelación: solo si existe y está en Pending; libera el slot
+        if (newState == SessionState.Cancelled) {
+            require(bytes(scheduleId).length > 0, "scheduleId required");
+            require(sessionExists, "Cannot cancel non-existing");
+            require(tokenSessions[tokenId][sessionIndex].state == SessionState.Pending, "Only Pending can be cancelled");
+            // liberar slot: vaciar scheduleId y retornar al estado base Pending (hueco libre)
+            tokenSessions[tokenId][sessionIndex].scheduleId = "";
+            tokenSessions[tokenId][sessionIndex].state = SessionState.Pending;
+            emit SessionStateChanged(tokenId, scheduleId, uint8(SessionState.Cancelled));
+            return;
         }
-        emit SessionStateChanged(tokenId, scheduleId, uint8(newState));
+
+        if (sessionExists) {
+            Session storage s = tokenSessions[tokenId][sessionIndex];
+            if (newState == SessionState.Confirmed) {
+                require(s.state == SessionState.Pending, "Only Pending -> Confirmed");
+            } else if (newState == SessionState.Active) {
+                require(s.state == SessionState.Confirmed, "Only Confirmed -> Active");
+            } else if (newState == SessionState.Finished) {
+                require(s.state == SessionState.Active, "Only Active -> Finished");
+            } else if (newState == SessionState.Pending) {
+                revert("Cannot set Pending on existing session");
+            } else if (newState == SessionState.Cancelled) {
+                // handled above
+                revert("Invalid state");
+            }
+            s.state = newState;
+            emit SessionStateChanged(tokenId, scheduleId, uint8(newState));
+        } else {
+            // Crear en Pending (consume un slot libre)
+            require(newState == SessionState.Pending, "Only create as Pending");
+            require(bytes(scheduleId).length > 0, "scheduleId required");
+            tokenSessions[tokenId][uint256(availableSession)] = Session(newState, scheduleId);
+            emit SessionStateChanged(tokenId, scheduleId, uint8(newState));
+        }
     }
 
     function getSessionState(uint256 tokenId, string memory scheduleId) public view returns (SessionState) {

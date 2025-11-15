@@ -25,7 +25,7 @@ interface EventItem {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished') => void;
+  onUpdated?: (expected?: 'Pending' | 'Confirmed' | 'Active' | 'Finished' | 'Cancelled') => void;
   event: EventItem;
 }
 
@@ -155,6 +155,54 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
       setBusy('none');
     }
   };
+
+  const cancelSession = async () => {
+    try {
+      if (event.tokenId == null) {
+        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
+        return;
+      }
+      setBusy('confirm'); // reutilizamos estado de busy para deshabilitar
+      const res = await fetch('/api/callsetsession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 4 })
+      });
+      // Confirmar cancelación con lectura on-chain esperando "Session not found"
+      try {
+        await readContract({
+          contract,
+          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+          params: [BigInt(event.tokenId), event.id]
+        });
+        // Aún existe: reintento único tras pequeña espera
+        setTimeout(async () => {
+          try {
+            await readContract({
+              contract,
+              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+              params: [BigInt(event.tokenId!), event.id]
+            });
+            // sigue existiendo; no marcamos como cancelado
+          } catch (e: any) {
+            if (String(e?.message || "").includes("Session not found")) {
+              onUpdated?.('Cancelled');
+              showToast('Consulta cancelada', 'success');
+            }
+          }
+        }, 1200);
+      } catch (e: any) {
+        if (String(e?.message || "").includes("Session not found")) {
+          onUpdated?.('Cancelled');
+          showToast('Consulta cancelada', 'success');
+        }
+      }
+    } catch {
+      showToast('Error al cancelar la consulta.', 'error');
+    } finally {
+      setBusy('none');
+    }
+  };
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(5px)' }}>
@@ -187,6 +235,16 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           {/* Sin selección de sala */}
         </div>
         <div className="p-4 flex justify-end gap-3">
+          {event.state === 'Pending' && (
+            <button
+              disabled={busy!=='none'}
+              onClick={cancelSession}
+              className="px-4 py-2 rounded text-white disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: '1px solid rgba(255,255,255,0.25)' }}
+            >
+              {busy==='confirm' ? 'Cancelando...' : 'Cancelar'}
+            </button>
+          )}
           {event.state === 'Pending' && event.tokenId != null && event.profileId && event.profileRole === 'Consultante' && (
             <button
               disabled={busy!=='none'}

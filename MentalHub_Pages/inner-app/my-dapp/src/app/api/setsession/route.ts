@@ -104,7 +104,14 @@ export async function POST(req: Request) {
           params: [BigInt(body.tokenId), body.scheduleId],
         });
         newState = Number(cur);
-      } catch {}
+      } catch (e: any) {
+        // Si se solicitó cancelación (state=4) y la lectura falla con "Session not found",
+        // interpretamos como cancelación confirmada (slot liberado)
+        const msg = String(e?.message || "");
+        if (Number(body.state) === 4 && msg.includes("Session not found")) {
+          newState = 4;
+        }
+      }
       return NextResponse.json({ status: "success", msg: "executed setsession", transactionHash, newState }, { status: 200 });
     } else {
       console.log("No hay una billetera activa.");

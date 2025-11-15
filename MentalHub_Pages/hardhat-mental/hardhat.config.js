@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config({ path: ".env" });
+require("@parity/hardhat-polkadot");
 
 // wallet para deploys
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -51,7 +52,15 @@ module.exports = {
       url: "https://4202.rpc.thirdweb.com",
       accounts: PRIVATE_KEY ? [sanitizePk(PRIVATE_KEY)] : [],
       chainId: 4202
-    }
+    },
+    polkadotHubTestnet: {
+      polkadot: {
+          target: "evm",
+      },
+      url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
+      accounts: [PRIVATE_KEY],
+      chainId: 420420422
+  },
   },
   
 };

@@ -32,13 +32,15 @@ const mapState = (x: number) =>
   x === 0 ? 'Pending' :
   x === 1 ? 'Confirmed' :
   x === 2 ? 'Active' :
-  x === 3 ? 'Finished' : 'Pending';
+  x === 3 ? 'Finished' :
+  x === 4 ? 'Cancelled' : 'Pending';
 
 const SessionsTherapist: React.FC = () => {
   const { profile, executeQuery } = useCeramic();
   const executeQueryRef = useRef(executeQuery);
   useEffect(() => { executeQueryRef.current = executeQuery; }, [executeQuery]);
   const [events, setEvents] = useState<EventItem[]>([]);
+  const allCandidatesRef = useRef<EventItem[]>([]);
   const [availEvents, setAvailEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -47,7 +49,6 @@ const SessionsTherapist: React.FC = () => {
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
   const onChainSigRef = useRef<string>("");
   const lastOnchainCheckRef = useRef<number>(0);
-  const resolvedPendingRef = useRef<Set<string>>(new Set());
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Confirmed: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Confirmed: true, Active: true, Finished: true });
 
    // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
@@ -103,7 +104,6 @@ const SessionsTherapist: React.FC = () => {
             id: sn.id,
             start: new Date(sn.date_init),
             end: new Date(sn.date_finish),
-            // Estado base por defecto; on-chain lo actualizará
             state: 'Pending',
             roomId: sn.roomId,
             displayName: sn.profile?.displayName || "",
@@ -113,16 +113,7 @@ const SessionsTherapist: React.FC = () => {
             profileId: sn.profileId || undefined,
           };
         });
-        setEvents(prev => {
-          const prevById = new Map(prev.map(e => [e.id, e.state]));
-          return mapped.map(m => {
-            const prevState = prevById.get(m.id);
-            if (prevState && (prevState === 'Active' || prevState === 'Finished') && m.state === 'Pending') {
-              return { ...m, state: prevState };
-            }
-            return m;
-          });
-        });
+        allCandidatesRef.current = mapped;
         const avail = schedTherap.map((e: any) => ({
           id: e?.node?.id,
           start: new Date(e?.node?.date_init),
@@ -130,6 +121,8 @@ const SessionsTherapist: React.FC = () => {
           state: 'Pending'
         }));
         setAvailEvents(avail);
+        // Validar on-chain y pintar inmediatamente
+        try { await validateAndSetVisible(); } catch {}
       } catch (e) {
         console.error(e);
       } finally {
@@ -137,13 +130,10 @@ const SessionsTherapist: React.FC = () => {
       }
     };
     run();
-  }, [profile?.id]);
+  }, [profile?.id, validateAndSetVisible]);
 
-  // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
-  useEffect(() => {
-    if (!events.length || !contract) return;
-    
-    // Calcular rango visible según la vista
+  const validateAndSetVisible = useCallback(async () => {
+    if (!contract) return;
     const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
     const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
     let rangeStart = startWeek;
@@ -155,75 +145,44 @@ const SessionsTherapist: React.FC = () => {
       rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
-    
-    const visible = events.filter(
-      (e) => typeof e.tokenId === 'number' && 
-                    e.tokenId > 0 && 
-                    e.start < rangeEnd && 
-                    e.end > rangeStart  // no leer estados pendientes
-      );
-    if (!visible.length) return;
-    
-    const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
-    if (onChainSigRef.current === key) return;
-    
-    // Marcar como "en progreso" inmediatamente para evitar ejecuciones duplicadas
-    onChainSigRef.current = key;
-    
-    (async () => {
-      try {
-        const updates = await Promise.all(visible.map(async (e) => {
-          if (resolvedPendingRef.current.has(e.id)) {
-            return { id: e.id, state: e.state };
-          }
-          try {
-            const stateNum = await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(e.tokenId as number), e.id]
-            });
-            const n = Number(stateNum as any);
-            return { id: e.id, state: mapState(n) };
-          } catch (err: any) {
-            const msg = String(err?.message ?? err);
-            //console.warn(`Failed to read state for event ${e.id}:`, msg);
-            if (msg.includes('Session not found')) {
-              resolvedPendingRef.current.add(e.id);
-            }
-            return { id: e.id, state: e.state }; // Mantener estado actual si falla
-          }
-        }));
-        
-        // Verificar que la key no haya cambiado mientras leíamos
-        if (onChainSigRef.current !== key) {
-          console.log('Skipping update: key changed during read');
-          lastOnchainCheckRef.current = Date.now();
-          return;
-        }
-        
-        const byId = new Map<string, string>();
-        for (const u of updates) {
-          byId.set(u.id, u.state);
-        }
-        
-        // Actualizar todos los eventos que tienen actualizaciones
-        setEvents(prev => {
-          const updated = prev.map(ev => {
-            if (byId.has(ev.id)) {
-              return { ...ev, state: byId.get(ev.id)! };
-            }
-            return ev;
+    const visible = allCandidatesRef.current.filter(
+      (e) => typeof e.tokenId === 'number' &&
+        (e.tokenId as number) > 0 &&
+        e.start < rangeEnd &&
+        e.end > rangeStart
+    );
+    if (!visible.length) {
+      setEvents([]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const validated = await Promise.all(visible.map(async (e) => {
+        try {
+          const n = await readContract({
+            contract,
+            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+            params: [BigInt(e.tokenId as number), e.id]
           });
-          return updated;
-        });
-      } catch (err: any) {
-        console.error('Error reading on-chain states:', err?.message ?? err);
-        // Aplicar cooldown sin reiniciar la firma para evitar bucles
-      } finally {
-        lastOnchainCheckRef.current = Date.now();
-      }
-    })();
-  }, [events, contract, currentDate, currentView]); 
+          const mapped = mapState(Number(n));
+          if (mapped === 'Cancelled') return null;
+          return { ...e, state: mapped };
+        } catch (err: any) {
+          const msg = String(err?.message ?? err);
+          if (msg.includes('Session not found')) {
+            return null; // no pintar cancelados/liberados
+          }
+          return null;
+        }
+      }));
+      setEvents(validated.filter(Boolean) as EventItem[]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [contract, currentDate, currentView]);
+
+  // Validar y pintar sólo tras confirmar on-chain
+  useEffect(() => { validateAndSetVisible(); }, [validateAndSetVisible]);
   // watchContractEvents opcional para estados de la consulta (controlado por ENV + delay + visibilidad)
   useEffect(() => {
     const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
@@ -234,7 +193,6 @@ const SessionsTherapist: React.FC = () => {
     const start = () => {
       if (unwatch) return;
       unwatch = watchSessionState(contract, (scheduleId, newState) => {
-        resolvedPendingRef.current.delete(scheduleId);
         setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
       });
     };
@@ -363,8 +321,8 @@ const SessionsTherapist: React.FC = () => {
           components={{ agenda: { event: AgendaEvent } } as any}
           eventPropGetter={eventPropGetter as any}
           onSelectEvent={onSelectEvent}
-          onNavigate={(d) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setCurrentDate(d); }}
-          onView={(v) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setCurrentView(v); }}
+          onNavigate={(d) => { setCurrentDate(d); }}
+          onView={(v) => { setCurrentView(v); }}
           backgroundEvents={availEvents}
           scrollToTime={scrollToTime}
         />
@@ -377,6 +335,10 @@ const SessionsTherapist: React.FC = () => {
           event={selected}
           onUpdated={(expected) => {
             setDetailOpen(false);
+            if (expected === 'Cancelled' && selected?.id) {
+              setEvents(prev => prev.filter(ev => ev.id !== selected.id));
+              return;
+            }
             // 1) Actualización inmediata del evento seleccionado vía on-chain (sin esperar GraphQL)
             (async () => {
               try {

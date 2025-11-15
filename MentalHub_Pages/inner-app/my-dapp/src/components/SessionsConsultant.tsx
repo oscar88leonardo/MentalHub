@@ -24,7 +24,8 @@ const mapState = (x: number) =>
   x === 0 ? 'Pending' :
   x === 1 ? 'Confirmed' :
   x === 2 ? 'Active' :
-  x === 3 ? 'Finished' : 'Pending';
+  x === 3 ? 'Finished' :
+  x === 4 ? 'Cancelled' : 'Pending';
 
 const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysChange }) => {
   const { profile, account, executeQuery, refreshProfile } = useCeramic();
@@ -51,7 +52,6 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string } | null>(null);
   const onChainSigRef = useRef<string>("");
   const lastOnchainCheckRef = useRef<number>(0);
-  const resolvedPendingRef = useRef<Set<string>>(new Set());
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
@@ -119,7 +119,6 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     const start = () => {
       if (unwatch) return;
       unwatch = watchSessionState(contract,(scheduleId, newState) => {
-        resolvedPendingRef.current.delete(scheduleId);
         setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
       });
     };
@@ -170,7 +169,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             }
             therapist(last: 1) { edges { node { roomId } } }
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish roomId } }
+              edges { node { id date_init date_finish roomId NFTContract TokenID } }
             }
           }
         }
@@ -187,21 +186,41 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       const roomId = node?.therapist?.edges?.[0]?.node?.roomId || "";
       setTherapistRoomId(roomId);
       const sEdges = node?.therapist_sched?.edges || [];
-      const mappedBusy: Array<{ id: string; start: Date; end: Date }> =
-        sEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish) }));
-      const validBusy = (() => {
-        const byKey = new Set<string>();
-        return mappedBusy
-          .filter(b => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
-          .filter(b => b.end > b.start)
-          .filter(b => mappedAvail.some((av: { start: Date; end: Date }) => b.end > av.start && b.start < av.end))
-          .filter(b => {
-            const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
-            if (byKey.has(k)) return false;
-            byKey.add(k);
-            return true;
+      // Validar busy contra on-chain: eliminar cancelados (Session not found)
+      const rawBusy = sEdges.map((e: any) => ({
+        id: e.node.id,
+        start: new Date(e.node.date_init),
+        end: new Date(e.node.date_finish),
+        tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
+      }));
+      const validatedBusy = await Promise.all(rawBusy.map(async (b) => {
+        try {
+          if (!b.tokenId) return null;
+          await readContract({
+            contract,
+            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+            params: [BigInt(b.tokenId), b.id]
           });
-      })();
+          return b;
+        } catch (err: any) {
+          const msg = String(err?.message ?? err);
+          if (msg.includes('Session not found')) return null;
+          return null;
+        }
+      }));
+      const cleaned = (validatedBusy.filter(Boolean) as any[]).map((b) => ({ id: b.id, start: b.start, end: b.end }));
+      // Deduplicar y filtrar por solapamiento con disponibilidad
+      const byKey = new Set<string>();
+      const validBusy = cleaned
+        .filter((b) => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
+        .filter((b) => b.end > b.start)
+        .filter((b) => mappedAvail.some((av: { start: Date; end: Date }) => b.end > av.start && b.start < av.end))
+        .filter((b) => {
+          const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
+          if (byKey.has(k)) return false;
+          byKey.add(k);
+          return true;
+        });
       setBusyTherapEvents(validBusy);
     } finally {
       if (!cancelled) setIsLoadingAvail(false);
@@ -217,7 +236,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         node(id: "${therapist}") {
           ... on InnerverProfile {
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish } }
+              edges { node { id date_init date_finish NFTContract TokenID } }
             }
           }
         }
@@ -225,21 +244,39 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     `;
     const res: any = await executeQueryRef.current(q);
     const sEdges = res?.data?.node?.therapist_sched?.edges || [];
-    const mappedBusy: Array<{ id: string; start: Date; end: Date }> =
-      sEdges.map((e: any) => ({ id: e.node.id, start: new Date(e.node.date_init), end: new Date(e.node.date_finish) }));
-    const validBusy = (() => {
-      const byKey = new Set<string>();
-      return mappedBusy
-        .filter(b => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
-        .filter(b => b.end > b.start)
-        .filter(b => events.some((av: any) => b.end > av.start && b.start < av.end))
-        .filter(b => {
-          const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
-          if (byKey.has(k)) return false;
-          byKey.add(k);
-          return true;
+    const rawBusy = sEdges.map((e: any) => ({
+      id: e.node.id,
+      start: new Date(e.node.date_init),
+      end: new Date(e.node.date_finish),
+      tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
+    }));
+    const validatedBusy = await Promise.all(rawBusy.map(async (b) => {
+      try {
+        if (!b.tokenId) return null;
+        await readContract({
+          contract,
+          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+          params: [BigInt(b.tokenId), b.id]
         });
-    })();
+        return b;
+      } catch (err: any) {
+        const msg = String(err?.message ?? err);
+        if (msg.includes('Session not found')) return null;
+        return null;
+      }
+    }));
+    const cleaned = (validatedBusy.filter(Boolean) as any[]).map((b) => ({ id: b.id, start: b.start, end: b.end }));
+    const byKey = new Set<string>();
+    const validBusy = cleaned
+      .filter((b) => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
+      .filter((b) => b.end > b.start)
+      .filter((b) => events.some((av: any) => b.end > av.start && b.start < av.end))
+      .filter((b) => {
+        const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
+        if (byKey.has(k)) return false;
+        byKey.add(k);
+        return true;
+      });
     setBusyTherapEvents(validBusy);
   }, [therapist, events]);
 
@@ -287,9 +324,6 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       try {
         const updates = await Promise.all(visible.map(async (e) => {
           if (!e.tokenId) return { id: e.id, state: e.state };
-          if (resolvedPendingRef.current.has(e.id)) {
-            return { id: e.id, state: e.state };
-          }
           try {
             const n = await readContract({
               contract,
@@ -299,9 +333,8 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             return { id: e.id, state: mapState(Number(n)) };
           } catch (err: any) {
             const msg = String(err?.message ?? err);
-            //console.warn(`\nFailed to read state for event ${e.id}:`, msg);
             if (msg.includes('Session not found')) {
-              resolvedPendingRef.current.add(e.id);
+              return { id: e.id, remove: true } as any;
             }
             return { id: e.id, state: e.state };
           }
@@ -315,9 +348,14 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         }
         
         const byId = new Map<string, string>();
-        for (const u of updates) byId.set(u.id, u.state);
-        
-        setMySchedEvents(prev => prev.map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
+        const removeIds = new Set<string>();
+        for (const u of updates) {
+          if ((u as any)?.remove) removeIds.add(u.id);
+          else if ((u as any)?.state) byId.set(u.id, (u as any).state);
+        }
+        setMySchedEvents(prev => prev
+          .filter(ev => !removeIds.has(ev.id))
+          .map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
       } catch (err) {
         console.error('Error reading on-chain states:', (err as any)?.message ?? err);
         // Aplicar cooldown sin reiniciar firma para evitar bucles
@@ -425,19 +463,29 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       nftContract: e.node.NFTContract || undefined,
       therapistId: e.node.therapistId || undefined,
     }));
-    // Forzar relectura on-chain al abrir el modal
-    resolvedPendingRef.current.clear();
-    onChainSigRef.current = '';
-    setMySchedEvents(prev => {
-      const byId = new Map(prev.map(e => [e.id, e.state]));
-      return mapped.map((m: { id: string; state: string }) => {
-        const prevState = byId.get(m.id);
-        if (prevState && (prevState === 'Active' || prevState === 'Finished') && m.state === 'Pending') {
-          return { ...m, state: prevState };
+    // Validar on-chain antes de pintar (ocultar cancelados)
+    try {
+      const validated = await Promise.all(mapped.map(async (e) => {
+        try {
+          if (!e.tokenId) return null;
+          const n = await readContract({
+            contract,
+            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+            params: [BigInt(e.tokenId), e.id]
+          });
+          const mappedState = mapState(Number(n));
+          if (mappedState === 'Cancelled') return null;
+          return { ...e, state: mappedState };
+        } catch (err: any) {
+          const msg = String(err?.message ?? err);
+          if (msg.includes('Session not found')) return null;
+          return null;
         }
-        return m;
-      });
-    });
+      }));
+      setMySchedEvents(validated.filter(Boolean) as any[]);
+    } catch {
+      setMySchedEvents([]);
+    }
     // Siempre navegar a la semana de la fecha actual al abrir el modal
     setMySchedDate(new Date());
     setMySchedView(Views.WEEK);
@@ -590,8 +638,8 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
                   onSelectEvent={(e: any) => {
                     setSelectedSched({ id: e.id, start: e.start, end: e.end, roomId: e.roomId, tokenId: e.tokenId, therapistName: e.therapistName, nftContract: e.nftContract, therapistId: e.therapistId, state: e.state });
                   }}
-                  onNavigate={(d) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setMySchedDate(d); }}
-                  onView={(v) => { onChainSigRef.current = ''; resolvedPendingRef.current.clear(); setMySchedView(v); }}
+                  onNavigate={(d) => { onChainSigRef.current = ''; setMySchedDate(d); }}
+                  onView={(v) => { onChainSigRef.current = ''; setMySchedView(v); }}
                   scrollToTime={scrollToTime}
                 />
               </div>

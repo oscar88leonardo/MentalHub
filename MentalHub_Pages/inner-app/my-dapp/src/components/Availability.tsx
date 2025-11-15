@@ -216,7 +216,7 @@ const Availability: React.FC<AvailabilityProps> = ({ onLogout }) => {
       console.error(e);
       alert("Error al actualizar disponibilidad");
     }
-  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability, hasOverlap]);
+  }, [profile?.id, authenticateForWrite, executeQuery, refreshProfile, fetchAvailability]);
 
   const renderWelcomeCard = () => {
     if (!account) return null;

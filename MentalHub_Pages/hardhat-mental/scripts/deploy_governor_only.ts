@@ -20,7 +20,7 @@ async function main() {
   console.log("   - Quorum: 5%");
 
   // Usar la dirección del NFT ya desplegado
-  const EXISTING_NFT_ADDRESS = "0x609ee5AC3154Aa8501Ccfd0D4521469Eb747E0B7";
+  const EXISTING_NFT_ADDRESS = "0xE49AcfF5b7e0C0cc8252F9420a553c61BE02eAf3";
   
   console.log(`\n1️⃣ Usando NFT existente: ${EXISTING_NFT_ADDRESS}`);
 
