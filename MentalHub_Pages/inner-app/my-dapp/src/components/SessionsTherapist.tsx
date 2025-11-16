@@ -47,8 +47,6 @@ const SessionsTherapist: React.FC = () => {
   const [selected, setSelected] = useState<EventItem | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
-  const onChainSigRef = useRef<string>("");
-  const lastOnchainCheckRef = useRef<number>(0);
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Confirmed: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Confirmed: true, Active: true, Finished: true });
 
    // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
@@ -62,6 +60,55 @@ const SessionsTherapist: React.FC = () => {
     defaultDate: new Date(),
     scrollToTime: new Date(1970, 1, 1, 6),
   }), []);
+
+  const validateAndSetVisible = useCallback(async () => {
+    if (!contract) return;
+    const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
+    let rangeStart = startWeek;
+    let rangeEnd = addDays(startWeek, 7);
+    if (currentView === Views.DAY) {
+      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59, 999);
+    } else if (currentView === Views.MONTH) {
+      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
+    const visible = allCandidatesRef.current.filter(
+      (e) => typeof e.tokenId === 'number' &&
+        (e.tokenId as number) > 0 &&
+        e.start < rangeEnd &&
+        e.end > rangeStart
+    );
+    if (!visible.length) {
+      setEvents([]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const validated = await Promise.all(visible.map(async (e) => {
+        try {
+          const n = await readContract({
+            contract,
+            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+            params: [BigInt(e.tokenId as number), e.id]
+          });
+          const mapped = mapState(Number(n));
+          if (mapped === 'Cancelled') return null;
+          return { ...e, state: mapped };
+        } catch (err: any) {
+          const msg = String(err?.message ?? err);
+          if (msg.includes('Session not found')) {
+            return null; // no pintar cancelados/liberados
+          }
+          return null;
+        }
+      }));
+      setEvents(validated.filter(Boolean) as EventItem[]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [contract, currentDate, currentView]);
 
   useEffect(() => {
     const run = async () => {
@@ -131,55 +178,6 @@ const SessionsTherapist: React.FC = () => {
     };
     run();
   }, [profile?.id, validateAndSetVisible]);
-
-  const validateAndSetVisible = useCallback(async () => {
-    if (!contract) return;
-    const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
-    let rangeStart = startWeek;
-    let rangeEnd = addDays(startWeek, 7);
-    if (currentView === Views.DAY) {
-      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59, 999);
-    } else if (currentView === Views.MONTH) {
-      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
-    }
-    const visible = allCandidatesRef.current.filter(
-      (e) => typeof e.tokenId === 'number' &&
-        (e.tokenId as number) > 0 &&
-        e.start < rangeEnd &&
-        e.end > rangeStart
-    );
-    if (!visible.length) {
-      setEvents([]);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const validated = await Promise.all(visible.map(async (e) => {
-        try {
-          const n = await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(e.tokenId as number), e.id]
-          });
-          const mapped = mapState(Number(n));
-          if (mapped === 'Cancelled') return null;
-          return { ...e, state: mapped };
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) {
-            return null; // no pintar cancelados/liberados
-          }
-          return null;
-        }
-      }));
-      setEvents(validated.filter(Boolean) as EventItem[]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [contract, currentDate, currentView]);
 
   // Validar y pintar sólo tras confirmar on-chain
   useEffect(() => { validateAndSetVisible(); }, [validateAndSetVisible]);

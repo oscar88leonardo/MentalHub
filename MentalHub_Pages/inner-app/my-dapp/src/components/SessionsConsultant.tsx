@@ -187,28 +187,32 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       setTherapistRoomId(roomId);
       const sEdges = node?.therapist_sched?.edges || [];
       // Validar busy contra on-chain: eliminar cancelados (Session not found)
-      const rawBusy = sEdges.map((e: any) => ({
-        id: e.node.id,
+      type BusyItem = { id: string; start: Date; end: Date; tokenId?: number };
+      const rawBusy: BusyItem[] = sEdges.map((e: any) => ({
+        id: e.node.id as string,
         start: new Date(e.node.date_init),
         end: new Date(e.node.date_finish),
         tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
       }));
-      const validatedBusy = await Promise.all(rawBusy.map(async (b) => {
-        try {
-          if (!b.tokenId) return null;
-          await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(b.tokenId), b.id]
-          });
-          return b;
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) return null;
-          return null;
-        }
-      }));
-      const cleaned = (validatedBusy.filter(Boolean) as any[]).map((b) => ({ id: b.id, start: b.start, end: b.end }));
+      const validatedBusy = await Promise.all(
+        rawBusy.map(async (b: BusyItem): Promise<BusyItem | null> => {
+          try {
+            if (!b.tokenId) return null;
+            await readContract({
+              contract,
+              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+              params: [BigInt(b.tokenId), b.id]
+            });
+            return b;
+          } catch (err: any) {
+            const msg = String(err?.message ?? err);
+            if (msg.includes('Session not found')) return null;
+            return null;
+          }
+        })
+      );
+      const cleaned: Array<{ id: string; start: Date; end: Date }> =
+        validatedBusy.filter((x): x is BusyItem => x !== null).map((b) => ({ id: b.id, start: b.start, end: b.end }));
       // Deduplicar y filtrar por solapamiento con disponibilidad
       const byKey = new Set<string>();
       const validBusy = cleaned
@@ -244,28 +248,32 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     `;
     const res: any = await executeQueryRef.current(q);
     const sEdges = res?.data?.node?.therapist_sched?.edges || [];
-    const rawBusy = sEdges.map((e: any) => ({
-      id: e.node.id,
+    type BusyItem = { id: string; start: Date; end: Date; tokenId?: number };
+    const rawBusy: BusyItem[] = sEdges.map((e: any) => ({
+      id: e.node.id as string,
       start: new Date(e.node.date_init),
       end: new Date(e.node.date_finish),
       tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
     }));
-    const validatedBusy = await Promise.all(rawBusy.map(async (b) => {
-      try {
-        if (!b.tokenId) return null;
-        await readContract({
-          contract,
-          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-          params: [BigInt(b.tokenId), b.id]
-        });
-        return b;
-      } catch (err: any) {
-        const msg = String(err?.message ?? err);
-        if (msg.includes('Session not found')) return null;
-        return null;
-      }
-    }));
-    const cleaned = (validatedBusy.filter(Boolean) as any[]).map((b) => ({ id: b.id, start: b.start, end: b.end }));
+    const validatedBusy = await Promise.all(
+      rawBusy.map(async (b: BusyItem): Promise<BusyItem | null> => {
+        try {
+          if (!b.tokenId) return null;
+          await readContract({
+            contract,
+            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
+            params: [BigInt(b.tokenId), b.id]
+          });
+          return b;
+        } catch (err: any) {
+          const msg = String(err?.message ?? err);
+          if (msg.includes('Session not found')) return null;
+          return null;
+        }
+      })
+    );
+    const cleaned: Array<{ id: string; start: Date; end: Date }> =
+      validatedBusy.filter((x): x is BusyItem => x !== null).map((b) => ({ id: b.id, start: b.start, end: b.end }));
     const byKey = new Set<string>();
     const validBusy = cleaned
       .filter((b) => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))

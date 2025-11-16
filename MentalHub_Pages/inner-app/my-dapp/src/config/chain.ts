@@ -17,7 +17,7 @@ export const CHAIN: ChainKey = (process.env.NEXT_PUBLIC_CHAIN as ChainKey) /*|| 
 
 // Fallback RPC de thirdweb en caso de necesitarlo
 export const THIRDWEB_FALLBACK_RPC = CLIENT_ID ? `https://${CHAINS[CHAIN].id}.rpc.thirdweb.com/${CLIENT_ID}` : "";
-const isBrowser = typeof window !== 'undefined';
+//const isBrowser = typeof window !== 'undefined';
 
 export const myChain = defineChain({
   id: CHAINS[CHAIN].id,

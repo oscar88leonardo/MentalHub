@@ -16,13 +16,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeItem, 
   onItemClick, 
   profile, 
-  therapist, 
-  consultant, 
   isProfileComplete = false 
 }) => {
   const userRole = profile?.rol;
-  const isTherapist = userRole === 'Terapeuta';
-  const isConsultant = userRole === 'Consultante';
 
   const menuItems = [
     {
