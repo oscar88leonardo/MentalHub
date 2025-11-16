@@ -330,7 +330,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     
     (async () => {
       try {
-        const updates = await Promise.all(visible.map(async (e) => {
+        const updates = await Promise.all(visible.map(async (e: { id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }) => {
           if (!e.tokenId) return { id: e.id, state: e.state };
           try {
             const n = await readContract({
@@ -473,7 +473,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     }));
     // Validar on-chain antes de pintar (ocultar cancelados)
     try {
-      const validated = await Promise.all(mapped.map(async (e) => {
+      const validated = await Promise.all(mapped.map(async (e: { id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }) => {
         try {
           if (!e.tokenId) return null;
           const n = await readContract({

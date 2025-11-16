@@ -86,7 +86,7 @@ const SessionsTherapist: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const validated = await Promise.all(visible.map(async (e) => {
+      const validated = await Promise.all(visible.map(async (e: EventItem) => {
         try {
           const n = await readContract({
             contract,
