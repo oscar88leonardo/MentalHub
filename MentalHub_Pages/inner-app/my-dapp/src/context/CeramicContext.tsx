@@ -30,6 +30,10 @@ export interface InnerverProfile {
   pfp?: string;
   currencies?: string[];
   ratesByCurrency?: string[];
+  socialInstagram?: string;
+  socialLinkedin?: string;
+  socialFacebook?: string;
+  socialX?: string;
   hudds?: {
     edges: Array<{
       node: {
@@ -538,6 +542,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
               primaryLanguage
               currencies
               ratesByCurrency
+              socialInstagram
+              socialLinkedin
+              socialFacebook
+              socialX
               created
             }
           }
@@ -737,6 +745,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
                 primaryLanguage
                 currencies
                 ratesByCurrency
+                socialInstagram
+                socialLinkedin
+                socialFacebook
+                socialX
                 created
               }
             }
@@ -796,6 +808,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
                 timezone
                 languages
                 primaryLanguage
+                socialInstagram
+                socialLinkedin
+                socialFacebook
+                socialX
                 created
               }
             }

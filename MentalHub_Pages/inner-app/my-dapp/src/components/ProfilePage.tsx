@@ -70,9 +70,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
   const [isConsultantModalOpen, setIsConsultantModalOpen] = useState(false);
   const [isBasicModalOpen, setIsBasicModalOpen] = useState(false);
 
-  // Abrir modal requerido automáticamente y cerrar otros modales (solo si hay conexión)
+  // Abrir modal requerido automáticamente y cerrar otros modales (solo si hay wallet activa)
   useEffect(() => {
-    if (!isConnected) {
+    const hasWallet = !!(aaAccountHook?.address || eoaAccount?.address || account?.address);
+    if (!hasWallet) {
       setIsBasicModalOpen(false);
       setIsTherapistModalOpen(false);
       setIsConsultantModalOpen(false);
@@ -99,7 +100,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
       setIsTherapistModalOpen(false);
       setIsConsultantModalOpen(false);
     }
-  }, [requiredModal, isConnected]);
+  }, [requiredModal, aaAccountHook?.address, eoaAccount?.address, account?.address]);
 
   // Helper: chips renderer
   const Chips = ({ items }: { items?: Array<string | number> }) => {
@@ -567,6 +568,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, requiredModal, onMo
                     <label className="text-white/80 text-sm font-medium block mb-2">Años de experiencia</label>
                     <div className="p-4 rounded-xl text-white font-medium" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
                       {typeof therapist.yearsExperience === "number" ? therapist.yearsExperience : '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-white/80 text-sm font-medium block mb-2">Titulaciones</label>
+                    <div className="p-4 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(5px)' }}>
+                      <Chips items={therapist.degrees} />
                     </div>
                   </div>
                   <div>

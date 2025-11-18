@@ -2,7 +2,8 @@
 import React from "react";
 import { useCeramic } from "@/context/CeramicContext";
 import Header from "./Header";
-import DebugWallet from "./DebugWallet";
+import TherapistCarousel from "./TherapistCarousel";
+import NextAppointment from "./NextAppointment";
 
 interface DashboardContentProps {
   onLogout: () => void;
@@ -101,47 +102,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onLogout }) => {
       {/* Contenido scrolleable */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
-          <DebugWallet />
-
-          {/* Welcome Card */}
-          {account && (
-            <div 
-              className="rounded-2xl p-8 text-white mb-8 shadow-2xl"
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-              }}
-            >
-              <div className="flex items-center space-x-6">
-                <div 
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  {account.address.slice(2, 3).toUpperCase()}
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold mb-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                    ¡Hola de nuevo! 👋
-                  </h2>
-                  <p className="text-white/90 text-lg mb-3" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                    Tu bienestar mental es nuestra prioridad. Continúa tu viaje hacia una vida más equilibrada.
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    <span className="text-sm font-medium">
-                      Conectado como: {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* Carrusel de Terapeutas */}
+          <TherapistCarousel />
+          {/* Next Appointment */}
+          <NextAppointment />
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {stats.map((stat, index) => (

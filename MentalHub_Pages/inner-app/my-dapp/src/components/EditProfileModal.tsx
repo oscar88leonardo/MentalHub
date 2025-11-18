@@ -37,6 +37,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
   const [primaryLanguage, setPrimaryLanguage] = useState("");
   const [selectedCurrencies, setSelectedCurrencies] = useState<string[]>([]);
   const [currencyPrices, setCurrencyPrices] = useState<Record<string, { min?: number; max?: number }>>({});
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [socialX, setSocialX] = useState("");
   const [imageProfile, setImageProfile] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +60,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       setTimezone(profile.timezone || "");
       setLanguages((profile.languages || []).join(", "));
       setPrimaryLanguage(profile.primaryLanguage || "");
+      setSocialInstagram((profile as any)?.socialInstagram || "");
+      setSocialLinkedin((profile as any)?.socialLinkedin || "");
+      setSocialFacebook((profile as any)?.socialFacebook || "");
+      setSocialX((profile as any)?.socialX || "");
       setSelectedCurrencies((profile as any)?.currencies || []);
       const map: Record<string, { min?: number; max?: number }> = {};
       ((profile as any)?.ratesByCurrency || []).forEach((s: string) => {
@@ -81,6 +89,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       setTimezone("");
       setLanguages("");
       setPrimaryLanguage("");
+      setSocialInstagram("");
+      setSocialLinkedin("");
+      setSocialFacebook("");
+      setSocialX("");
       setSelectedCurrencies([]);
       setCurrencyPrices({});
     }
@@ -143,6 +155,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     if (selectedCurrencies.length) {
       contentParts.push(`currencies: [${selectedCurrencies.map(c => `"${c}"`).join(", ")}]`);
     }
+    if (socialInstagram) contentParts.push(`socialInstagram: "${esc(socialInstagram)}"`);
+    if (socialLinkedin) contentParts.push(`socialLinkedin: "${esc(socialLinkedin)}"`);
+    if (socialFacebook) contentParts.push(`socialFacebook: "${esc(socialFacebook)}"`);
+    if (socialX) contentParts.push(`socialX: "${esc(socialX)}"`);
     const ratesByCurrency = selectedCurrencies
       .map(cur => {
         const v = currencyPrices[cur] || {};
@@ -721,6 +737,62 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
                     textShadow: '0 1px 2px rgba(0,0,0,0.1)'
                   }}
                 />
+              </div>
+
+              {/* Redes sociales */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    Instagram
+                  </label>
+                  <input
+                    type="text"
+                    value={socialInstagram}
+                    onChange={(e) => setSocialInstagram(e.target.value)}
+                    placeholder="https://instagram.com/tu_usuario"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    LinkedIn
+                  </label>
+                  <input
+                    type="text"
+                    value={socialLinkedin}
+                    onChange={(e) => setSocialLinkedin(e.target.value)}
+                    placeholder="https://www.linkedin.com/in/tu_usuario"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    Facebook
+                  </label>
+                  <input
+                    type="text"
+                    value={socialFacebook}
+                    onChange={(e) => setSocialFacebook(e.target.value)}
+                    placeholder="https://facebook.com/tu_usuario"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white font-medium mb-2" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                    X (Twitter)
+                  </label>
+                  <input
+                    type="text"
+                    value={socialX}
+                    onChange={(e) => setSocialX(e.target.value)}
+                    placeholder="https://x.com/tu_usuario"
+                    className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                </div>
               </div>
 
               {/* Género */}

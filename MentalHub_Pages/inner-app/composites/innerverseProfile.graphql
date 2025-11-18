@@ -22,6 +22,13 @@ type InnerverProfile @createModel(accountRelation: SINGLE, description: "Innerve
   currencies: [String!] @list(maxLength: 4) @string(maxLength: 8)
   # Formato recomendado por ítem: "USD:50-100" o "USD:50"
   ratesByCurrency: [String!] @list(maxLength: 8) @string(maxLength: 24)
+  
+  # Redes sociales (URLs completas o handles normalizados)
+  socialInstagram: String @string(maxLength: 300)
+  socialLinkedin: String @string(maxLength: 300)
+  socialFacebook: String @string(maxLength: 300)
+  socialX: String @string(maxLength: 300)
+  
   created: DateTime!
 }
 

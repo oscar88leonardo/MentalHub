@@ -3,7 +3,7 @@ export const languages = [
   { code: "es", name: "Español" },
   { code: "en", name: "English" },
   { code: "pt", name: "Português" },
-  { code: "fr", name: "Français" },
+  /*{ code: "fr", name: "Français" },
   { code: "de", name: "Deutsch" },
   { code: "it", name: "Italiano" },
   { code: "ca", name: "Català" },
@@ -13,7 +13,7 @@ export const languages = [
   { code: "ja", name: "日本語" },
   { code: "ko", name: "한국어" },
   { code: "ar", name: "العربية" },
-  { code: "ru", name: "Русский" },
+  { code: "ru", name: "Русский" },*/
 ];
 
 export const getLanguageName = (code: string): string => {

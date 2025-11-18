@@ -28,7 +28,8 @@ export default function DashboardPage() {
     consultant, 
     isConnected, 
     isLoading,
-    refreshProfile
+    refreshProfile,
+    account
   } = useCeramic();
   const [activeItem, setActiveItem] = useState('dashboard');
   const [requiredModal, setRequiredModal] = useState<'basic' | 'therapist' | 'consultant' | null>(null);
@@ -68,12 +69,12 @@ export default function DashboardPage() {
   useEffect(() => {
     // Solo validar si ya se intentó cargar al menos una vez
     if (!dataLoaded) return;
-    // No forzar modales si no hay conexión (logout/desconectado)
-    if (!isConnected) {
+    // Guard: si no hay wallet activa (logout/desconectado), no forzar modales
+    const hasWallet = !!(account?.address);
+    if (!hasWallet) {
       setRequiredModal(null);
       return;
     }
-    
     const modal = getRequiredModal(profile, therapist, consultant);
     if (modal) {
       setRequiredModal(modal);
@@ -84,7 +85,7 @@ export default function DashboardPage() {
     } else {
       setRequiredModal(null);
     }
-  }, [dataLoaded, isConnected, profile, therapist, consultant, activeItem]); // Incluir dataLoaded para que se ejecute cuando los datos estén listos
+  }, [dataLoaded, account, profile, therapist, consultant, activeItem]); // Incluir dataLoaded para que se ejecute cuando los datos estén listos
 
   const handleLogout = async () => {
     try {

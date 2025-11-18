@@ -4,6 +4,9 @@ import { useCeramic, TherapistProfile } from "@/context/CeramicContext";
 import { countries } from "@/lib/countries";
 import { mentalHealthDegrees } from "@/lib/mentalHealthDegrees";
 import { isTherapistProfileComplete } from "@/lib/profileValidation";
+import { therapeuticApproaches } from "@/lib/therapeuticApproaches";
+import { therapistSpecialties } from "@/lib/therapistSpecialties";
+import { therapistPopulations } from "@/lib/therapistPopulations";
 
 interface EditTherapistProfileModalProps {
   isOpen: boolean;
@@ -14,6 +17,11 @@ interface EditTherapistProfileModalProps {
 
 const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ isOpen, onClose, isForced = false, onSave }) => {
   const { profile, therapist, upsertTherapistProfile, authenticateForWrite } = useCeramic();
+
+  const MAX_DEGREES = 6;
+  const MAX_APPROACHES = 9;
+  const MAX_SPECIALTIES = 8;
+  const MAX_POPULATIONS = 9;
 
   const [degrees, setDegrees] = useState<string[]>([]);
   const [customDegree, setCustomDegree] = useState("");
@@ -37,6 +45,10 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
   const [roomToast, setRoomToast] = useState<string | null>(null);
+  // Inputs para chips
+  const [approachInput, setApproachInput] = useState("");
+  const [specialtyInput, setSpecialtyInput] = useState("");
+  const [populationInput, setPopulationInput] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,20 +72,54 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
 
   const parseList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
   const toInt = (v: number | "" | undefined | null) => (v === "" || v === undefined || v === null ? undefined : Number(v));
+  const sanitize = (s: string) => s.trim().replace(/\s+/g, " ");
+  const addChip = (
+    value: string,
+    current: string,
+    setFn: (s: string) => void,
+    limit: number
+  ) => {
+    const token = sanitize(value);
+    if (!token) return;
+    const list = parseList(current);
+    if (list.length >= limit) return;
+    if (list.includes(token)) return;
+    if (token.length > 32) return; // respeta @string(maxLength: 32)
+    setFn([...list, token].join(", "));
+  };
+  const removeChip = (value: string, current: string, setFn: (s: string) => void) => {
+    const next = parseList(current).filter(x => x !== value);
+    setFn(next.join(", "));
+  };
+  const toggleChip = (
+    token: string,
+    current: string,
+    setFn: (s: string) => void,
+    limit: number
+  ) => {
+    const list = parseList(current);
+    if (list.includes(token)) {
+      setFn(list.filter(x => x !== token).join(", "));
+    } else if (list.length < limit) {
+      setFn([...list, token].join(", "));
+    }
+  };
 
   const handleDegreeToggle = (degree: string) => {
-    setDegrees(prev => 
-      prev.includes(degree) 
-        ? prev.filter(d => d !== degree)
-        : [...prev, degree]
-    );
+    setDegrees(prev => {
+      if (prev.includes(degree)) return prev.filter(d => d !== degree);
+      if (prev.length >= MAX_DEGREES) return prev;
+      return [...prev, degree];
+    });
   };
 
   const handleAddCustomDegree = () => {
-    if (customDegree.trim() && !degrees.includes(customDegree.trim())) {
-      setDegrees(prev => [...prev, customDegree.trim()]);
-      setCustomDegree("");
-    }
+    const token = customDegree.trim();
+    if (!token) return;
+    if (degrees.includes(token)) return;
+    if (degrees.length >= MAX_DEGREES) return;
+    setDegrees(prev => [...prev, token]);
+    setCustomDegree("");
   };
 
   const handleRemoveDegree = (degree: string) => {
@@ -297,6 +343,7 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleDegreeToggle(degree)}
+                          disabled={!isSelected && degrees.length >= MAX_DEGREES}
                           className="w-4 h-4 rounded"
                         />
                         <span className="text-sm">{degree}</span>
@@ -322,7 +369,7 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
                   <button
                     type="button"
                     onClick={handleAddCustomDegree}
-                    disabled={!customDegree.trim() || degrees.includes(customDegree.trim())}
+                    disabled={!customDegree.trim() || degrees.includes(customDegree.trim()) || degrees.length >= MAX_DEGREES}
                     className="px-4 py-2 rounded-xl text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}
                   >
@@ -349,6 +396,7 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
                     ))}
                   </div>
                 )}
+                <p className="text-white/60 text-xs">Máximo {MAX_DEGREES}</p>
               </div>
             </div>
             <div>
@@ -378,6 +426,204 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
             <div>
               <label className="block text-white/90 mb-2">Años de experiencia</label>
               <input type="number" className="w-full px-4 py-3 rounded-xl border-0 text-white placeholder-white/60" value={yearsExperience} onChange={e=>setYearsExperience(e.target.value === "" ? "" : Number(e.target.value))} style={{ background:'rgba(255,255,255,0.1)' }} />
+            </div>
+            {/* Enfoques (sugerencias + chips, máx 9) */}
+            <div className="md:col-span-2">
+              <label className="block text-white/90 mb-2">Enfoques</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                {therapeuticApproaches.map((opt) => {
+                  const list = parseList(approaches);
+                  const isSelected = list.includes(opt);
+                  const atCap = list.length >= MAX_APPROACHES;
+                  return (
+                    <label key={opt} className="flex items-center space-x-2 text-white/90 cursor-pointer p-2 rounded-lg hover:bg-white/5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={!isSelected && atCap}
+                        onChange={() => toggleChip(opt, approaches, setApproaches, MAX_APPROACHES)}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span className="text-sm">{opt}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {parseList(approaches).map((item) => (
+                  <span key={item} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm text-white" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => removeChip(item, approaches, setApproaches)}
+                      className="ml-1 hover:text-red-300"
+                      aria-label={`Quitar ${item}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={approachInput}
+                  onChange={(e) => setApproachInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === ",") && approachInput.trim()) {
+                      e.preventDefault();
+                      addChip(approachInput, approaches, setApproaches, MAX_APPROACHES);
+                      setApproachInput("");
+                    }
+                  }}
+                  maxLength={32}
+                  placeholder="Agregar enfoque y presiona Enter"
+                  className="flex-1 px-4 py-2 rounded-xl border-0 text-white placeholder-white/60 text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { addChip(approachInput, approaches, setApproaches, MAX_APPROACHES); setApproachInput(""); }}
+                  disabled={!approachInput.trim() || parseList(approaches).length >= MAX_APPROACHES}
+                  className="px-4 py-2 rounded-xl text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}
+                >
+                  Agregar
+                </button>
+              </div>
+              <p className="text-white/60 text-xs mt-1">Máximo {MAX_APPROACHES}</p>
+            </div>
+            {/* Especialidades (sugerencias + chips, máx 8 por el modelo) */}
+            <div className="md:col-span-2">
+              <label className="block text-white/90 mb-2">Especialidades</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                {therapistSpecialties.map((opt) => {
+                  const list = parseList(specialties);
+                  const isSelected = list.includes(opt);
+                  const atCap = list.length >= MAX_SPECIALTIES;
+                  return (
+                    <label key={opt} className="flex items-center space-x-2 text-white/90 cursor-pointer p-2 rounded-lg hover:bg-white/5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={!isSelected && atCap}
+                        onChange={() => toggleChip(opt, specialties, setSpecialties, MAX_SPECIALTIES)}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span className="text-sm">{opt}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {parseList(specialties).map((item) => (
+                  <span key={item} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm text-white" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => removeChip(item, specialties, setSpecialties)}
+                      className="ml-1 hover:text-red-300"
+                      aria-label={`Quitar ${item}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={specialtyInput}
+                  onChange={(e) => setSpecialtyInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === ",") && specialtyInput.trim()) {
+                      e.preventDefault();
+                      addChip(specialtyInput, specialties, setSpecialties, MAX_SPECIALTIES);
+                      setSpecialtyInput("");
+                    }
+                  }}
+                  maxLength={32}
+                  placeholder="Agregar especialidad y presiona Enter"
+                  className="flex-1 px-4 py-2 rounded-xl border-0 text-white placeholder-white/60 text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { addChip(specialtyInput, specialties, setSpecialties, MAX_SPECIALTIES); setSpecialtyInput(""); }}
+                  disabled={!specialtyInput.trim() || parseList(specialties).length >= MAX_SPECIALTIES}
+                  className="px-4 py-2 rounded-xl text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}
+                >
+                  Agregar
+                </button>
+              </div>
+              <p className="text-white/60 text-xs mt-1">Máximo {MAX_SPECIALTIES}</p>
+            </div>
+            {/* Poblaciones (sugerencias + chips, máx 9) */}
+            <div className="md:col-span-2">
+              <label className="block text-white/90 mb-2">Poblaciones</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                {therapistPopulations.map((opt) => {
+                  const list = parseList(populations);
+                  const isSelected = list.includes(opt);
+                  const atCap = list.length >= MAX_POPULATIONS;
+                  return (
+                    <label key={opt} className="flex items-center space-x-2 text-white/90 cursor-pointer p-2 rounded-lg hover:bg-white/5">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={!isSelected && atCap}
+                        onChange={() => toggleChip(opt, populations, setPopulations, MAX_POPULATIONS)}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span className="text-sm">{opt}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {parseList(populations).map((item) => (
+                  <span key={item} className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm text-white" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => removeChip(item, populations, setPopulations)}
+                      className="ml-1 hover:text-red-300"
+                      aria-label={`Quitar ${item}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={populationInput}
+                  onChange={(e) => setPopulationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === ",") && populationInput.trim()) {
+                      e.preventDefault();
+                      addChip(populationInput, populations, setPopulations, MAX_POPULATIONS);
+                      setPopulationInput("");
+                    }
+                  }}
+                  maxLength={32}
+                  placeholder="Agregar población y presiona Enter"
+                  className="flex-1 px-4 py-2 rounded-xl border-0 text-white placeholder-white/60 text-sm"
+                  style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { addChip(populationInput, populations, setPopulations, MAX_POPULATIONS); setPopulationInput(""); }}
+                  disabled={!populationInput.trim() || parseList(populations).length >= MAX_POPULATIONS}
+                  className="px-4 py-2 rounded-xl text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}
+                >
+                  Agregar
+                </button>
+              </div>
+              <p className="text-white/60 text-xs mt-1">Máximo {MAX_POPULATIONS}</p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-white/90 mb-2">Bio corta (≤280) *</label>
