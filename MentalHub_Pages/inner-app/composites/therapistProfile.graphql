@@ -4,10 +4,13 @@ type TherapistProfile
   @createModel(accountRelation: SINGLE, description: "Perfil profesional del terapeuta")
   @createIndex(fields: [
     { path: "yearsExperience" },
-    { path: "acceptingNewClients" }
+    { path: "acceptingNewClients" },
+    { path: "adminAddress" }
   ]) {
   profileId: StreamID! @documentReference(model: "InnerverProfile")
   profile: InnerverProfile! @relationDocument(property: "profileId")
+
+  adminAddress: String! @string(minLength: 42, maxLength: 42)
 
   degrees: [String!] @list(maxLength: 6) @string(maxLength: 48)
 
@@ -31,5 +34,4 @@ type TherapistProfile
   # Sala Huddle asociada al terapeuta
   roomId: String @string(maxLength: 64)
 }
-
 

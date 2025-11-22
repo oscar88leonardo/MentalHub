@@ -5,12 +5,6 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { useCeramic } from "@/context/CeramicContext";
 import ScheduleDetailsModal from "./ScheduleDetailsModal";
-import { getContract, readContract} from "thirdweb";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
-import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
-import { watchSessionState } from "@/lib/sessionEvents";
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
@@ -27,14 +21,6 @@ interface EventItem {
   profileId?: string;
 }
 
-// mapstate para estados de la consulta
-const mapState = (x: number) =>
-  x === 0 ? 'Pending' :
-  x === 1 ? 'Confirmed' :
-  x === 2 ? 'Active' :
-  x === 3 ? 'Finished' :
-  x === 4 ? 'Cancelled' : 'Pending';
-
 const SessionsTherapist: React.FC = () => {
   const { profile, executeQuery } = useCeramic();
   const executeQueryRef = useRef(executeQuery);
@@ -49,20 +35,12 @@ const SessionsTherapist: React.FC = () => {
   const [currentView, setCurrentView] = useState<typeof Views[keyof typeof Views]>(Views.WEEK);
   const [stateFilters, setStateFilters] = useState<{ Pending: boolean; Confirmed: boolean; Active: boolean; Finished: boolean }>({ Pending: true, Confirmed: true, Active: true, Finished: true });
 
-   // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
-  const contract = useMemo(() => getContract(
-    { client: client!, 
-      chain: myChain, 
-      address: contracts.membersAirdrop, 
-      abi: abi as [] }), []);
-
   const { defaultDate, scrollToTime } = useMemo(() => ({
     defaultDate: new Date(),
     scrollToTime: new Date(1970, 1, 1, 6),
   }), []);
 
-  const validateAndSetVisible = useCallback(async () => {
-    if (!contract) return;
+  const computeAndSetVisible = useCallback(() => {
     const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
     const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
     let rangeStart = startWeek;
@@ -75,40 +53,10 @@ const SessionsTherapist: React.FC = () => {
       rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
     const visible = allCandidatesRef.current.filter(
-      (e) => typeof e.tokenId === 'number' &&
-        (e.tokenId as number) > 0 &&
-        e.start < rangeEnd &&
-        e.end > rangeStart
+      (e) => e.start < rangeEnd && e.end > rangeStart && e.state !== 'Cancelled'
     );
-    if (!visible.length) {
-      setEvents([]);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const validated = await Promise.all(visible.map(async (e: EventItem) => {
-        try {
-          const n = await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(e.tokenId as number), e.id]
-          });
-          const mapped = mapState(Number(n));
-          if (mapped === 'Cancelled') return null;
-          return { ...e, state: mapped };
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) {
-            return null; // no pintar cancelados/liberados
-          }
-          return null;
-        }
-      }));
-      setEvents(validated.filter(Boolean) as EventItem[]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [contract, currentDate, currentView]);
+    setEvents(visible);
+  }, [currentDate, currentView]);
 
   useEffect(() => {
     const run = async () => {
@@ -132,8 +80,7 @@ const SessionsTherapist: React.FC = () => {
                       roomId
                       profileId
                       profile { displayName rol }
-                      NFTContract
-                      TokenID
+                            state
                     }
                   }
                 }
@@ -148,18 +95,16 @@ const SessionsTherapist: React.FC = () => {
         const mapped: EventItem[] = sEdges.map((e: any) => {
           const sn = e?.node;
           return {
-            id: sn.id,
-            start: new Date(sn.date_init),
-            end: new Date(sn.date_finish),
-            state: 'Pending',
+              id: sn.id,
+              start: new Date(sn.date_init),
+              end: new Date(sn.date_finish),
+            state: sn.state || 'Pending',
             roomId: sn.roomId,
-            displayName: sn.profile?.displayName || "",
+              displayName: sn.profile?.displayName || "",
             profileRole: sn.profile?.rol || undefined,
-            tokenId: typeof sn.TokenID === 'number' ? sn.TokenID : (sn.TokenID ? Number(sn.TokenID) : undefined),
-            nftContract: sn.NFTContract || undefined,
-            profileId: sn.profileId || undefined,
+              profileId: sn.profileId || undefined,
           };
-        });
+            });
         allCandidatesRef.current = mapped;
         const avail = schedTherap.map((e: any) => ({
           id: e?.node?.id,
@@ -168,8 +113,8 @@ const SessionsTherapist: React.FC = () => {
           state: 'Pending'
         }));
         setAvailEvents(avail);
-        // Validar on-chain y pintar inmediatamente
-        try { await validateAndSetVisible(); } catch {}
+        // Pintar inmediatamente desde Ceramic
+        computeAndSetVisible();
       } catch (e) {
         console.error(e);
       } finally {
@@ -177,36 +122,10 @@ const SessionsTherapist: React.FC = () => {
       }
     };
     run();
-  }, [profile?.id, validateAndSetVisible]);
-
-  // Validar y pintar sólo tras confirmar on-chain
-  useEffect(() => { validateAndSetVisible(); }, [validateAndSetVisible]);
-  // watchContractEvents opcional para estados de la consulta (controlado por ENV + delay + visibilidad)
-  useEffect(() => {
-    const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
-    const WATCHERS_DELAY_MS = Number(process.env.NEXT_PUBLIC_WATCHERS_DELAY_MS || '12000');
-    if (!ENABLE_WATCHERS || !contract) return;
-    let unwatch: any | undefined;
-    let timeout: any;
-    const start = () => {
-      if (unwatch) return;
-      unwatch = watchSessionState(contract, (scheduleId, newState) => {
-        setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
-      });
-    };
-    const stop = () => { try { unwatch?.(); } catch {} ; unwatch = undefined; };
-    const onVis = () => {
-      stop(); clearTimeout(timeout);
-      if (typeof document !== 'undefined' && document.hidden) return;
-      timeout = setTimeout(start, WATCHERS_DELAY_MS);
-    };
-    onVis();
-    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
-    return () => {
-      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
-      stop(); clearTimeout(timeout);
-    };
-  }, [contract]);
+  }, [profile?.id, computeAndSetVisible]);
+    
+  // Recalcular visibilidad al cambiar rango/vista
+  useEffect(() => { computeAndSetVisible(); }, [computeAndSetVisible]);
 
   const messages = useMemo(() => ({
     date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día',
@@ -235,9 +154,9 @@ const SessionsTherapist: React.FC = () => {
         ? 'linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.9) 100%)'
         : isConfirmed
           ? 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.9) 100%)'
-          : isPending
-            ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
-            : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
+        : isPending
+          ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
+          : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
       color: '#ffffff',
       border: '1px solid rgba(255,255,255,0.22)',
       boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
@@ -337,36 +256,10 @@ const SessionsTherapist: React.FC = () => {
               setEvents(prev => prev.filter(ev => ev.id !== selected.id));
               return;
             }
-            // 1) Actualización inmediata del evento seleccionado vía on-chain (sin esperar GraphQL)
-            (async () => {
-              try {
-                if (selected?.tokenId != null) {
-                  const stateNum = await readContract({
-                    contract,
-                    method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-                    params: [BigInt(selected.tokenId), selected.id]
-                  });
-                  const n = Number(stateNum as any);
-                  const newState = mapState(n);
-                  setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState } : ev));
-                  // 2) Relectura diferida solo si no coincide con el esperado
-                  if (expected && newState !== expected) {
-                    setTimeout(async () => {
-                      try {
-                        const stateNum2 = await readContract({
-                          contract,
-                          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-                          params: [BigInt(selected.tokenId!), selected.id]
-                        });
-                        const n2 = Number(stateNum2 as any);
-                        const newState2 = mapState(n2);
-                        setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState2 } : ev));
-                      } catch {}
-                    }, 1200);
-                  }
+            // Actualización inmediata optimista a lo esperado
+            if (expected && selected?.id) {
+              setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: expected } : ev));
                 }
-              } catch {}
-            })();
           }}
         />
       )}

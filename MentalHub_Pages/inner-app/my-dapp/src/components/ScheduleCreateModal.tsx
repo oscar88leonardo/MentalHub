@@ -1,11 +1,9 @@
 "use client"
 import React, { useEffect, useMemo, useState } from "react";
 import { useCeramic } from "@/context/CeramicContext";
-import { getContract, readContract } from "thirdweb";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
 import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
+import { delegateScheduleToTherapist } from "@/lib/capabilities";
+import { didPkhFromAddress } from "@/lib/did";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -21,41 +19,10 @@ interface Props {
 }
 
 const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therapistName, therapistId, roomIdString, dateInit, dateFinish }) => {
-  const { profile, account, executeQuery, refreshProfile, authenticateForWrite } = useCeramic();
-  const [tokenId, setTokenId] = useState<string>("");
+  const { profile, executeQuery, refreshProfile, authenticateForWrite, createSchedule, adminAccount } = useCeramic() as any;
   const [isSaving, setIsSaving] = useState(false);
-  const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
   const [start, setStart] = useState<Date>(dateInit);
   const [end, setEnd] = useState<Date>(dateFinish);
-
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-
-  useEffect(() => {
-    // Cargar NFTs y sus sesiones disponibles (on-chain)
-    const run = async () => {
-      try {
-        const addr = account?.address;
-        if (!addr) { setUserNFTs([]); return; }
-        const tokenIds = await readContract({
-          contract,
-          method: "function walletOfOwner(address _owner) view returns (uint256[])",
-          params: [addr],
-        });
-        const list: Array<{ tokenId: number; availableSessions: number }> = [];
-        if (Array.isArray(tokenIds)) {
-          for (const t of tokenIds) {
-            const idNum = Number(t);
-            try {
-              const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(idNum)] });
-              list.push({ tokenId: idNum, availableSessions: Number(avail as any) });
-            } catch {}
-          }
-        }
-        setUserNFTs(list);
-      } catch {}
-    };
-    run();
-  }, [account?.address, contract]);
 
   // Sincronizar fechas si vienen nuevas del slot seleccionado
   useEffect(() => {
@@ -63,13 +30,60 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
     setEnd(dateFinish);
   }, [dateInit, dateFinish]);
 
-  const canSave = useMemo(() => !!roomIdString && !!tokenId && !isSaving && end > start, [roomIdString, tokenId, isSaving, start, end]);
+  const canSave = useMemo(() => !!roomIdString && !isSaving && end > start, [roomIdString, isSaving, start, end]);
 
   const handleSave = async () => {
     if (!profile?.id) return;
-    if (!therapistId || !roomIdString || !tokenId) return;
+    if (!therapistId || !roomIdString) return;
     setIsSaving(true);
     try {
+      // helper: esperar a que el índice vea el grant
+      const waitForGrantIndexed = async (sid: string, aud: string, retries = 5, waitMs = 800) => {
+        const run = async () => {
+          const q = `
+            query($sid: StreamID!) {
+              scheduleGrantIndex(
+                filters: { where: { scheduleId: { equalTo: $sid } } },
+                last: 20
+              ) { edges { node { id scheduleId audDid created expires } } }
+            }
+          `;
+          const r: any = await executeQuery(q, { sid });
+          const nodes = (r?.data?.scheduleGrantIndex?.edges || []).map((e: any) => e.node);
+          nodes.sort((a: any, b: any) => new Date(b?.created || 0).getTime() - new Date(a?.created || 0).getTime());
+          const now = Date.now();
+          const selected = nodes.find((n: any) => n?.audDid === aud && new Date(n?.expires || 0).getTime() > now) || null;
+          return { nodes, selected };
+        };
+        for (let i = 0; i < retries; i++) {
+          const { nodes, selected } = await run();
+          console.log("[CACAO][Warmup][GrantIndex]", { sid, aud, attempt: i + 1, total: nodes.length, selected: !!selected });
+          if (selected) return true;
+          await new Promise((r) => setTimeout(r, Math.round(waitMs * Math.pow(1.5, i))));
+        }
+        // Fallback: por audDid
+        try {
+          const q2 = `
+            query($aud: String!) {
+              scheduleGrantIndex(
+                filters: { where: { audDid: { equalTo: $aud } } },
+                last: 20
+              ) { edges { node { id scheduleId audDid created expires } } }
+            }
+          `;
+          const r2: any = await executeQuery(q2, { aud });
+          const nodes2 = (r2?.data?.scheduleGrantIndex?.edges || []).map((e: any) => e.node);
+          nodes2.sort((a: any, b: any) => new Date(b?.created || 0).getTime() - new Date(a?.created || 0).getTime());
+          const now2 = Date.now();
+          const picked = nodes2.find((n: any) => n?.scheduleId === sid && n?.audDid === aud && new Date(n?.expires || 0).getTime() > now2) || null;
+          console.log("[CACAO][Warmup][FallbackByAud]", { sid, aud, total: nodes2.length, picked: !!picked });
+          return !!picked;
+        } catch (e) {
+          console.warn("[CACAO][Warmup][FallbackByAud] failed:", e);
+          return false;
+        }
+      };
+
       // Asegurar autenticación de escritura en Ceramic
       try {
         await authenticateForWrite();
@@ -80,40 +94,72 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
         return;
       }
 
-      const now = new Date();
-      const mutation = `
-        mutation {
-          createSchedule(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
-          ) {
-            document { id }
+      // Crear Schedule 100% en Ceramic con estado Pending (sin NFT)
+      const newId = await (createSchedule as Function)({
+        profileId: profile.id,
+        therapistId,
+        roomId: roomIdString,
+        date_init: start.toISOString(),
+        date_finish: end.toISOString(),
+        NFTContract: "",
+        TokenID: 0,
+      });
+      console.log("[CREATE][ScheduleID]", newId);
+
+      // Delegar capability al terapeuta si existe adminAddress
+      try {
+        const q = `
+          query {
+            node(id: "${therapistId}") {
+              ... on InnerverProfile {
+                therapist(first:1) { edges { node { adminAddress } } }
+              }
+            }
+          }
+        `;
+        const r: any = await executeQuery(q);
+        const therapistEOA = (r?.data?.node?.therapist?.edges?.[0]?.node?.adminAddress || "").toLowerCase();
+        const delegatorEOA = (adminAccount?.address || "").toLowerCase();
+        const therapistAudDid = therapistEOA ? didPkhFromAddress(therapistEOA) : null;
+        const delegatorDid = adminAccount?.address ? didPkhFromAddress(adminAccount.address) : null;
+        console.log("[CACAO][Delegate] scheduleId:", newId, {
+          therapistEOA,
+          therapistAudDid,
+          delegatorEOA,
+          delegatorDid,
+        });
+        if (!therapistEOA) {
+          alert("El terapeuta no tiene adminAddress configurado. No se puede delegar permiso.");
+          return;
+        }
+        if (!adminAccount?.address) {
+          alert("No hay AdminAccount disponible para delegar permisos.");
+          return;
+        }
+        const { docId } = await delegateScheduleToTherapist({
+          scheduleId: newId,
+          therapistEOA,
+          adminAccount,
+          executeQuery,
+        });
+        console.log("[CACAO][CreateGrant] success", { docId, scheduleId: newId });
+        // Warm-up: esperar a que el índice refleje el grant (mejora UX para confirmar enseguida)
+        if (therapistAudDid) {
+          const ok = await waitForGrantIndexed(newId, therapistAudDid);
+          if (!ok) {
+            console.warn("Grant aún no indexado; es normal por latencia. Podrá estar disponible en segundos.");
           }
         }
-      `;
-      const res: any = await executeQuery(mutation);
-      if (!res?.errors) {
-        const newId = res?.data?.createSchedule?.document?.id as string;
-        // Escribir estado Pending on-chain para ocupar la franja y consumir disponibilidad
-        try {
-          await fetch('/api/callsetsession', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              tokenId,                 // string seleccionado en el dropdown
-              scheduleId: newId,       // id del Schedule recién creado
-              state: 0                 // Pending
-            })
-          });
-        } catch (e) {
-          console.error('setsession Pending failed:', e);
-        }
+      } catch (e) {
+        console.error("Delegación CACAO fallida:", e);
+        alert("La delegación de permisos al terapeuta falló. Intenta nuevamente.");
+        return;
+      }
+
         await refreshProfile();
         try { await onSaved?.(); } catch {}
         onClose();
-      } else {
-        console.error(res.errors);
-        alert("No se pudo crear la sesión");
-      }
+      
     } catch (e) {
       console.error(e);
       alert("Error al crear la sesión");
@@ -166,24 +212,12 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
             <label className="block text-white font-medium mb-2">Sala del terapeuta</label>
             <div className="w-full px-3 py-2 rounded border bg-white text-black">
               {roomIdString || '—'}
-            </div>
+          </div>
             {!roomIdString && (
               <p className="text-red-200 text-xs mt-1">
                 No se encontró la sala del terapeuta. Pídele que configure su sala en su perfil.
               </p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-white font-medium mb-2">Inner Key</label>
-            <select value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full px-3 py-2 rounded border bg-white text-black">
-              <option value="">Selecciona Inner Key</option>
-              {userNFTs.map((n) => (
-                <option key={n.tokenId} value={n.tokenId} disabled={n.availableSessions === 0}>
-                  Id: {n.tokenId} - # sesiones: {n.availableSessions}{n.availableSessions === 0 ? " (No disponible)" : ""}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="flex justify-end space-x-3 pt-2">

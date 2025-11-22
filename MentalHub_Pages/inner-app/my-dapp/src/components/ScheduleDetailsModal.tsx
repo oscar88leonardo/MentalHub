@@ -1,13 +1,10 @@
 "use client"
-import React, { useEffect, useMemo, useState } from "react";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
+import React, { useState } from "react";
 import { openMeet } from "@/lib/meet";
 import { useCeramic } from "@/context/CeramicContext";
-import { openRoomFlowNoCheck } from "@/lib/openRoom";
-import { getContract, readContract } from "thirdweb";
-import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
+import { didPkhFromAddress } from "@/lib/did";
+import { updateScheduleStateWithSession } from "@/lib/therapistSession";
+import { Cacao } from "@didtools/cacao";
 
 interface EventItem {
   id: string;
@@ -32,27 +29,9 @@ interface Props {
 const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, event }) => {
   const [busy, setBusy] = useState<'none' | 'open' | 'finalize' | 'confirm'>('none');
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const [availableSessions, setAvailableSessions] = useState<number | null>(null);
-  const { profile, executeQuery } = useCeramic();
+  const { executeQuery, composeClient, adminWallet, adminAccount, providerThirdweb } = useCeramic() as any;
   // Sin gestión de múltiples salas
-
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-
-  // (sin edición): no se cargan salas ni se manejan estados locales de sala/fechas
-
-  // Sesiones disponibles del NFT asociado (Inner Key)
-  useEffect(() => {
-    const run = async () => {
-      try {
-        if (event.tokenId == null) { setAvailableSessions(null); return; }
-        const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(event.tokenId)] });
-        setAvailableSessions(Number(avail as any));
-      } catch {
-        setAvailableSessions(null);
-      }
-    };
-    run();
-  }, [event.tokenId, contract]);
+  // (sin edición): no se carga disponibilidad on-chain
 
   // Se elimina la carga de salas
 
@@ -61,34 +40,110 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
     setTimeout(() => setToast(null), 3000);
   };
 
+  const resolveAdminAddress = () => (adminAccount?.address || adminWallet?.getAccount?.()?.address || "").toLowerCase();
+
+  // Helper: obtener el grant por scheduleId y validar en cliente audDid y expiración (con reintentos y fallback por audDid)
+  async function fetchGrantForSchedule(sid: string, aud: string, retries = 5, waitMs = 800) {
+    const runOnce = async () => {
+      const q = `
+        query($sid: StreamID!) {
+          scheduleGrantIndex(
+            filters: { where: { scheduleId: { equalTo: $sid } } },
+            last: 20
+          ) { edges { node { id scheduleId audDid cacao created expires } } }
+        }
+      `;
+      const r: any = await executeQuery(q, { sid });
+      const nodes = (r?.data?.scheduleGrantIndex?.edges || []).map((e: any) => e.node);
+      nodes.sort((a: any, b: any) => new Date(b?.created || 0).getTime() - new Date(a?.created || 0).getTime());
+      const now = Date.now();
+      const selected = nodes.find((n: any) => n?.audDid === aud && new Date(n?.expires || 0).getTime() > now) || null;
+      return { nodes, selected };
+    };
+    for (let i = 0; i < retries; i++) {
+      const { nodes, selected } = await runOnce();
+      console.log("[CACAO][FetchGrant][ByScheduleOnly]", { sid, aud, attempt: i + 1, total: nodes.length, selected });
+      if (selected) return selected;
+      await new Promise((r) => setTimeout(r, Math.round(waitMs * Math.pow(1.5, i))));
+    }
+    // Fallback: buscar por audDid y filtrar por scheduleId en cliente
+    try {
+      const q2 = `
+        query($aud: String!) {
+          scheduleGrantIndex(
+            filters: { where: { audDid: { equalTo: $aud } } },
+            last: 20
+          ) { edges { node { id scheduleId audDid cacao created expires } } }
+        }
+      `;
+      const r2: any = await executeQuery(q2, { aud });
+      const nodes2 = (r2?.data?.scheduleGrantIndex?.edges || []).map((e: any) => e.node);
+      nodes2.sort((a: any, b: any) => new Date(b?.created || 0).getTime() - new Date(a?.created || 0).getTime());
+      const now2 = Date.now();
+      const picked = nodes2.find((n: any) => n?.scheduleId === sid && n?.audDid === aud && new Date(n?.expires || 0).getTime() > now2) || null;
+      console.log("[CACAO][FetchGrant][FallbackByAud]", { sid, aud, total: nodes2.length, picked });
+      return picked;
+    } catch (e) {
+      console.warn("[CACAO][FetchGrant][FallbackByAud] failed:", e);
+      return null;
+    }
+  }
+
   const openRoom = async () => {
     try {
       setBusy('open');
-      const { txPromise } = await openRoomFlowNoCheck({
-        tokenId: event.tokenId,
-        scheduleId: event.id,
-        start: event.start,
-        end: event.end,
-        defaultRoomId: event.roomId,
-        openMeet,
-        optimistic: true,
-      });
-      // Encadenar actualización tras receipt (la API espera receipt y retorna newState)
+      // Validar ventana de tiempo
+      const now = new Date();
+      if (!(now >= event.start && now <= event.end)) {
+        showToast('La sala solo está disponible en la franja horaria programada.', 'error');
+        setBusy('none');
+        return;
+      }
+      // Lectura previa: si ya está Active, solo abrir sala
       try {
-        const r = await txPromise;
-        const j = await r?.json();
-        const newStateNum = j?.data?.newState ?? j?.newState;
-        if (newStateNum === 2) onUpdated?.('Active');
+        const rState: any = await executeQuery(`query($id: ID!){ node(id:$id){ ... on Schedule { state } } }`, { id: event.id });
+        const curState = rState?.data?.node?.state as string | undefined;
+        if (curState === 'Active') {
+          openMeet(event.roomId);
+          setBusy('none');
+          return;
+        }
       } catch {}
+      // Buscar CACAO de delegación para este terapeuta (aud = did:pkh de su AdminAccount)
+      const adminAddr = resolveAdminAddress();
+      const aud = adminAddr ? didPkhFromAddress(adminAddr) : "";
+      if (!aud || !providerThirdweb) {
+        showToast('No hay AdminAccount o provider disponible para firmar.', 'error');
+        setBusy('none');
+        return;
+      }
+      const node = await fetchGrantForSchedule(event.id, aud);
+      console.log("[CACAO][GrantNode][OpenRoom]", { sid: event.id, adminAddr, aud, node });
+      const cacaoStr = node?.cacao;
+      const audDidGrant = node?.audDid;
+      if (!cacaoStr) {
+        showToast('No tienes delegación vigente para activar esta sesión.', 'error');
+        setBusy('none');
+        return;
+      }
+      if (audDidGrant && audDidGrant !== aud) {
+        console.warn("[CACAO][Mismatch][OpenRoom] audDid in grant != aud from wallet", { audDidGrant, aud });
+      }
+      const cacao = JSON.parse(cacaoStr) as unknown as Cacao;
+      const newState = await updateScheduleStateWithSession({
+        compose: composeClient!,
+        cacao,
+        scheduleId: event.id,
+        newState: 'Active',
+        provider: providerThirdweb,
+        adminAddress: adminAddr,
+      });
+      if (newState === 'Active') {
+        onUpdated?.('Active');
+        openMeet(event.roomId);
+      }
     } catch (e: any) {
-      const msg = e?.message === 'TIME_WINDOW'
-        ? 'La sala solo está disponible en la franja horaria programada.'
-        : e?.message === 'NO_TOKEN'
-          ? 'No se encontró una Inner Key asociada a esta consulta.'
-          : e?.message === 'INVALID_ROOM'
-            ? 'La sala seleccionada no pertenece al terapeuta.'
-            : 'Error al abrir la sala';
-      showToast(msg, 'error');
+      showToast(e?.message || 'Error al abrir la sala', 'error');
     } finally {
       setBusy('none');
     }
@@ -96,24 +151,34 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
 
   const confirmSession = async () => {
     try {
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
-        return;
-      }
       setBusy('confirm');
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 1 })
+      // Buscar CACAO para este terapeuta (AdminAccount)
+      const adminAddr = resolveAdminAddress();
+      const aud = adminAddr ? didPkhFromAddress(adminAddr) : "";
+      if (!aud || !providerThirdweb) throw new Error('No hay AdminAccount o provider disponible para firmar.');
+      const node = await fetchGrantForSchedule(event.id, aud);
+      console.log("[CACAO][GrantNode][Confirm]", { sid: event.id, adminAddr, aud, node });
+      const cacaoStr = node?.cacao;
+      const audDidGrant = node?.audDid;
+      if (!cacaoStr) throw new Error('No tienes delegación vigente para confirmar esta sesión.');
+      if (audDidGrant && audDidGrant !== aud) {
+        console.warn("[CACAO][Mismatch][Confirm] audDid in grant != aud from wallet", { audDidGrant, aud });
+      }
+      const cacao = JSON.parse(cacaoStr) as unknown as Cacao;
+      const s = await updateScheduleStateWithSession({
+        compose: composeClient!,
+        cacao,
+        scheduleId: event.id,
+        newState: 'Confirmed',
+        provider: providerThirdweb,
+        adminAddress: adminAddr,
       });
-      try {
-        const data = await res.json();
-        const newStateNum = data?.data?.newState ?? data?.newState;
-        if (newStateNum === 1) onUpdated?.('Confirmed');
-      } catch {}
-      showToast('Consulta confirmada', 'success');
-    } catch {
-      showToast('Error al confirmar la consulta.', 'error');
+      if (s === 'Confirmed') {
+        onUpdated?.('Confirmed');
+        showToast('Consulta confirmada', 'success');
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Error al confirmar la consulta.', 'error');
     } finally {
       setBusy('none');
     }
@@ -129,28 +194,33 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         setBusy('none');
         return;
       }
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
-        setBusy('none');
-        return;
+      // CACAO para finalizar (terapeuta)
+      const adminAddr = resolveAdminAddress();
+      const aud = adminAddr ? didPkhFromAddress(adminAddr) : "";
+      if (!aud || !providerThirdweb) throw new Error('No hay AdminAccount o provider disponible para firmar.');
+      const node = await fetchGrantForSchedule(event.id, aud);
+      console.log("[CACAO][GrantNode][Finish]", { sid: event.id, adminAddr, aud, node });
+      const cacaoStr = node?.cacao;
+      const audDidGrant = node?.audDid;
+      if (!cacaoStr) throw new Error('No tienes delegación vigente para finalizar esta sesión.');
+      if (audDidGrant && audDidGrant !== aud) {
+        console.warn("[CACAO][Mismatch][Finish] audDid in grant != aud from wallet", { audDidGrant, aud });
       }
-      try {
-        const res = await fetch('/api/callsetsession', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 3 })
-        });
-        try {
-          const data = await res.json();
-          const newStateNum = data?.data?.newState ?? data?.newState;
-          if (newStateNum === 3) onUpdated?.('Finished');
-        } catch {}
+      const cacao = JSON.parse(cacaoStr) as unknown as Cacao;
+      const s = await updateScheduleStateWithSession({
+        compose: composeClient!,
+        cacao,
+        scheduleId: event.id,
+        newState: 'Finished',
+        provider: providerThirdweb,
+        adminAddress: adminAddr,
+      });
+      if (s === 'Finished') {
+        onUpdated?.('Finished');
         showToast('Consulta finalizada', 'success');
-      } catch {
-        showToast('Error al finalizar la consulta.', 'error');
       }
-    } catch {
-      showToast('Error al finalizar la consulta.', 'error');
+    } catch (e: any) {
+      showToast(e?.message || 'Error al finalizar la consulta.', 'error');
     } finally {
       setBusy('none');
     }
@@ -158,47 +228,34 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
 
   const cancelSession = async () => {
     try {
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
-        return;
+      setBusy('confirm');
+      // CACAO obligatorio (terapeuta) - sin fallback
+      const adminAddr = resolveAdminAddress();
+      const aud = adminAddr ? didPkhFromAddress(adminAddr) : "";
+      if (!aud || !providerThirdweb) throw new Error('No hay AdminAccount o provider disponible para firmar.');
+      const node = await fetchGrantForSchedule(event.id, aud);
+      console.log("[CACAO][GrantNode][Cancel]", { sid: event.id, adminAddr, aud, node });
+      const cacaoStr = node?.cacao;
+      const audDidGrant = node?.audDid;
+      if (!cacaoStr) throw new Error('No tienes delegación vigente para cancelar esta sesión.');
+      if (audDidGrant && audDidGrant !== aud) {
+        console.warn("[CACAO][Mismatch][Cancel] audDid in grant != aud from wallet", { audDidGrant, aud });
       }
-      setBusy('confirm'); // reutilizamos estado de busy para deshabilitar
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 4 })
+      const cacao = JSON.parse(cacaoStr) as unknown as Cacao;
+      const s = await updateScheduleStateWithSession({
+        compose: composeClient!,
+        cacao,
+        scheduleId: event.id,
+        newState: 'Cancelled',
+        provider: providerThirdweb,
+        adminAddress: adminAddr,
       });
-      // Confirmar cancelación con lectura on-chain esperando "Session not found"
-      try {
-        await readContract({
-          contract,
-          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-          params: [BigInt(event.tokenId), event.id]
-        });
-        // Aún existe: reintento único tras pequeña espera
-        setTimeout(async () => {
-          try {
-            await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(event.tokenId!), event.id]
-            });
-            // sigue existiendo; no marcamos como cancelado
-          } catch (e: any) {
-            if (String(e?.message || "").includes("Session not found")) {
-              onUpdated?.('Cancelled');
-              showToast('Consulta cancelada', 'success');
-            }
-          }
-        }, 1200);
-      } catch (e: any) {
-        if (String(e?.message || "").includes("Session not found")) {
-          onUpdated?.('Cancelled');
-          showToast('Consulta cancelada', 'success');
-        }
+      if (s === 'Cancelled') {
+        onUpdated?.('Cancelled');
+        showToast('Consulta cancelada', 'success');
       }
-    } catch {
-      showToast('Error al cancelar la consulta.', 'error');
+    } catch (e: any) {
+      showToast(e?.message || 'Error al cancelar la consulta.', 'error');
     } finally {
       setBusy('none');
     }
@@ -231,7 +288,6 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           <p><span className="font-semibold">Inicio:</span> {event.start.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Fin:</span> {event.end.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Estado:</span> {event.state}</p>
-          <p><span className="font-semibold">Inner Key:</span> Id: {event.tokenId ?? '—'} {availableSessions != null && (<span className="text-white/80">- # sesiones: {availableSessions}</span>)}</p>
           {/* Sin selección de sala */}
         </div>
         <div className="p-4 flex justify-end gap-3">
@@ -245,7 +301,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
               {busy==='confirm' ? 'Cancelando...' : 'Cancelar'}
             </button>
           )}
-          {event.state === 'Pending' && event.tokenId != null && event.profileId && event.profileRole === 'Consultante' && (
+          {event.state === 'Pending' && event.profileId && event.profileRole === 'Consultante' && (
             <button
               disabled={busy!=='none'}
               onClick={confirmSession}

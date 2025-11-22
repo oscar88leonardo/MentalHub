@@ -172,7 +172,7 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
         bool sessionExists = false;
         uint256 sessionIndex;
         int256 availableSession = -1;
-
+        
         for (sessionIndex = 0; sessionIndex < tokenSessions[tokenId].length; sessionIndex++) {
             if (keccak256(abi.encodePacked(tokenSessions[tokenId][sessionIndex].scheduleId)) == keccak256(abi.encodePacked(scheduleId))) {
                 sessionExists = true;
@@ -181,7 +181,7 @@ contract MembersAirdrop is ERC721, ERC721Enumerable, EIP712, ERC721Votes, Ownabl
                 availableSession = int256(sessionIndex);
             }
         }
-
+        
         require(sessionExists || availableSession > -1, "No Session found ");
 
         // Cancelación: solo si existe y está en Pending; libera el slot

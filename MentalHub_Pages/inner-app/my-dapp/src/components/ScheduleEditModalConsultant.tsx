@@ -1,15 +1,9 @@
 "use client"
-import React, { useEffect, useMemo, useState } from "react";
-import { openMeet } from "@/lib/meet";
-import { openRoomFlowNoCheck } from "@/lib/openRoom";
+import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useCeramic } from "@/context/CeramicContext";
-import { getContract, readContract } from "thirdweb";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
-import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
+import { openMeet } from "@/lib/meet";
 
 interface ScheduleItem {
   id: string;
@@ -31,72 +25,38 @@ interface Props {
 }
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
-  const { account, authenticateForWrite, executeQuery } = useCeramic();
+  const { authenticateForWrite, executeQuery, updateScheduleState } = useCeramic() as any;
   const [busy, setBusy] = useState<"none" | "open">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
 
   // Editable fields
   const [start, setStart] = useState<Date>(schedule.start);
   const [end, setEnd] = useState<Date>(schedule.end);
-  const [tokenId, setTokenId] = useState<string>(schedule.tokenId != null ? String(schedule.tokenId) : "");
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<string>('Pending');
   const isEditable = status === 'Pending';
 
-  // NFTs del usuario y sesiones disponibles
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-  const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
-  const [isLoadingNFTs, setIsLoadingNFTs] = useState(false);
-
-  useEffect(() => {
-    const run = async () => {
-      setIsLoadingNFTs(true);
-      try {
-        const addr = account?.address;
-        if (!addr) { setUserNFTs([]); return; }
-        const tokenIds = await readContract({
-          contract,
-          method: "function walletOfOwner(address _owner) view returns (uint256[])",
-          params: [addr],
-        });
-        const list: Array<{ tokenId: number; availableSessions: number }> = [];
-        if (Array.isArray(tokenIds)) {
-          for (const t of tokenIds) {
-            const idNum = Number(t);
-            try {
-              const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(idNum)] });
-              list.push({ tokenId: idNum, availableSessions: Number(avail as any) });
-            } catch {}
-          }
-        }
-        setUserNFTs(list);
-      } catch {
-        setUserNFTs([]);
-      } finally {
-        setIsLoadingNFTs(false);
-      }
-    };
-    run();
-  }, [account?.address, contract]);
-
-  // Leer estado on-chain de la consulta para controlar editabilidad y mostrar estado
+  // Leer estado en Ceramic para controlar editabilidad y mostrar estado
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        if (schedule?.tokenId == null) return;
-        const stateNum = await readContract({ contract, method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)", params: [BigInt(schedule.tokenId), schedule.id] });
-        const n = Number(stateNum as any);
-        const map = (x: number) =>
-          x === 0 ? 'Pending' :
-          x === 1 ? 'Confirmed' :
-          x === 2 ? 'Active' :
-          x === 3 ? 'Finished' : 'Pending';
-        if (!cancelled) setStatus(map(n));
+      const q = `
+        query {
+            node(id: "${schedule.id}") {
+              ... on Schedule {
+                state
+            }
+          }
+        }
+      `;
+        const res: any = await executeQuery(q);
+        const st = res?.data?.node?.state as string | undefined;
+        if (!cancelled && st) setStatus(st);
       } catch {}
     })();
     return () => { cancelled = true; };
-  }, [schedule?.id, schedule?.tokenId, contract]);
+  }, [schedule?.id, executeQuery]);
 
 // (Se elimina carga de salas; se usa roomId fijo en la cita)
 
@@ -124,7 +84,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
       const mutation = `
         mutation {
           updateSchedule(
-            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId || 0} } }
+            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}" } }
           ) {
             document { id }
           }
@@ -145,80 +105,54 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
     }
   };
 
-  const openRoom = async () => {
-    if (!schedule) return;
+  const cancelSession = async () => {
+    if (!schedule?.id) return;
     try {
       setBusy("open");
-      const { txPromise } = await openRoomFlowNoCheck({
-        tokenId,
-        scheduleId: schedule.id,
-        start,
-        end,
-        defaultRoomId: schedule.roomId,
-        openMeet,
-        optimistic: true,
-      });
-      try {
-        const r = await txPromise;
-        const j = await r?.json();
-        const newStateNum = j?.data?.newState ?? j?.newState;
-        if (newStateNum === 2) {
-          setStatus('Active');
-          try { onUpdated?.('Active'); } catch {}
-        }
-      } catch {}
-    } catch (e: any) {
-      const msg = e?.message === 'TIME_WINDOW'
-        ? 'La sala solo está disponible en la franja horaria programada.'
-        : e?.message === 'NO_TOKEN'
-          ? 'No se encontró una Inner Key asociada a esta consulta.'
-          : e?.message === 'INVALID_ROOM'
-            ? 'La sala seleccionada no pertenece al terapeuta de esta consulta.'
-            : 'Error al abrir la sala';
-      showToast(msg, 'error');
+      const s = await (updateScheduleState as Function)(schedule.id, 'Cancelled');
+      if (s === 'Cancelled') {
+        setStatus('Cancelled');
+        try { onUpdated?.('Cancelled'); } catch {}
+      }
+    } catch {
+      showToast('Error al cancelar la consulta.', 'error');
     } finally {
       setBusy("none");
     }
   };
 
-  const cancelSession = async () => {
-    if (!schedule?.id || !schedule?.tokenId) return;
+  const openRoom = async () => {
+    if (!schedule) return;
     try {
-      setBusy("open"); // reutilizamos busy para deshabilitar botones
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(schedule.tokenId), scheduleId: schedule.id, state: 4 })
-      });
-      // Confirmar cancelación con lectura on-chain esperando "Session not found"
-      try {
-        await readContract({
-          contract,
-          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-          params: [BigInt(schedule.tokenId), schedule.id]
-        });
-        setTimeout(async () => {
-          try {
-            await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(schedule.tokenId!), schedule.id]
-            });
-          } catch (e: any) {
-            if (String(e?.message || "").includes("Session not found")) {
-              setStatus('Cancelled');
-              try { onUpdated?.('Cancelled'); } catch {}
-            }
-          }
-        }, 1200);
-      } catch (e: any) {
-        if (String(e?.message || "").includes("Session not found")) {
-          setStatus('Cancelled');
-          try { onUpdated?.('Cancelled'); } catch {}
-        }
+      setBusy("open");
+      // Validar ventana de tiempo
+      const now = new Date();
+      if (!(now >= schedule.start && now <= schedule.end)) {
+        showToast('La sala solo está disponible en la franja horaria programada.', 'error');
+        setBusy("none");
+        return;
       }
-    } catch {
-      showToast('Error al cancelar la consulta.', 'error');
+      // Lectura previa: si ya está Active, solo abrir sala
+      try {
+        const rState: any = await executeQuery(`query($id: ID!){ node(id:$id){ ... on Schedule { state } } }`, { id: schedule.id });
+        const curState = rState?.data?.node?.state as string | undefined;
+        if (curState === 'Active') {
+          openMeet(schedule.roomId);
+          setStatus('Active');
+          try { onUpdated?.('Active'); } catch {}
+          setBusy("none");
+          return;
+        }
+      } catch {}
+      // Intentar poner en Active y abrir sala
+      const s = await (updateScheduleState as Function)(schedule.id, 'Active');
+      if (s === 'Active') {
+        setStatus('Active');
+        try { onUpdated?.('Active'); } catch {}
+        openMeet(schedule.roomId);
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Error al abrir la sala', 'error');
     } finally {
       setBusy("none");
     }
@@ -268,24 +202,6 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
                 />
               </div>
             </div>
-            <div>
-              <p className="text-white/80 text-sm">Inner Key</p>
-              {isLoadingNFTs ? (
-                <div className="flex items-center gap-3 p-2 rounded bg-white/10 border border-white/20">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span className="text-white/80 text-sm">Cargando Inner Key…</span>
-                </div>
-              ) : (
-                <select value={tokenId} onChange={(e) => setTokenId(e.target.value)} disabled={!isEditable} className="w-full px-3 py-2 rounded border bg-white text-black disabled:opacity-60">
-                  <option value="">Selecciona Inner Key</option>
-                  {userNFTs.map((n) => (
-                    <option key={n.tokenId} value={n.tokenId}>
-                      Id: {n.tokenId} - # sesiones: {n.availableSessions}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -303,14 +219,13 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
               {busy === 'open' ? 'Cancelando…' : 'Cancelar'}
               </button>
             )}
-            {/* renderizado condicional del boton de abrir sala para estados Confirmed y active*/}
-            { (status === 'Confirmed' || status === 'Active') && (
-            <button 
-            onClick={openRoom} 
-            disabled={busy !== 'none'} 
-            className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
-            {busy === 'open' ? 'Abriendo…' : 'Abrir Sala'}
+            {(status === 'Confirmed' || status === 'Active') && (
+              <button 
+              onClick={openRoom} 
+              disabled={busy !== 'none'} 
+              className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #6666ff 0%, #4d4dcc 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
+              {busy === 'open' ? 'Abriendo…' : 'Abrir Sala'}
             </button>
             )}
           </div>

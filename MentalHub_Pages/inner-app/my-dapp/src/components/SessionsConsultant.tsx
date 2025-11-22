@@ -7,28 +7,14 @@ import { es } from "date-fns/locale";
 import { useCeramic } from "@/context/CeramicContext";
 import ScheduleCreateModal from "./ScheduleCreateModal";
 import ScheduleEditModalConsultant from "./ScheduleEditModalConsultant";
-import { getContract, readContract } from "thirdweb";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
-import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
-import { watchSessionState } from "@/lib/sessionEvents";
 
 const locales: Record<string, any> = { es };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 interface SessionsConsultantProps { onLoadingKeysChange?: (loading: boolean) => void }
 
-// mapState para estados de la consulta
-const mapState = (x: number) =>
-  x === 0 ? 'Pending' :
-  x === 1 ? 'Confirmed' :
-  x === 2 ? 'Active' :
-  x === 3 ? 'Finished' :
-  x === 4 ? 'Cancelled' : 'Pending';
-
 const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysChange }) => {
-  const { profile, account, executeQuery, refreshProfile } = useCeramic();
+  const { profile, executeQuery, refreshProfile } = useCeramic();
   const executeQueryRef = useRef(executeQuery);
   useEffect(() => { executeQueryRef.current = executeQuery; }, [executeQuery]);
   const [therapist, setTherapist] = useState<string>("");
@@ -45,96 +31,21 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const [mySchedLoading, setMySchedLoading] = useState(false);
   const [selStart, setSelStart] = useState(new Date());
   const [selEnd, setSelEnd] = useState(new Date());
-  const [hasAvailableKey, setHasAvailableKey] = useState(false);
-  const [isLoadingKeys, setIsLoadingKeys] = useState(false);
   const [isLoadingAvail, setIsLoadingAvail] = useState(false);
-  const [mySchedEvents, setMySchedEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }>>([]);
-  const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string } | null>(null);
-  const onChainSigRef = useRef<string>("");
-  const lastOnchainCheckRef = useRef<number>(0);
+  const [mySchedEvents, setMySchedEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string; roomId: string; therapistName?: string; therapistId?: string }>>([]);
+  const [selectedSched, setSelectedSched] = useState<{ id: string; start: Date; end: Date; state?: string; roomId: string; therapistName?: string; therapistId?: string } | null>(null);
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
-
-  // instancia del contrato con useMemo para evitar re-ejecución por cambios de referencia
-  const contract = useMemo(() => getContract(
-    { client: client!, 
-      chain: myChain, 
-      address: contracts.membersAirdrop, 
-      abi: abi as [] }), []);
   
   const { defaultDate, scrollToTime } = useMemo(() => ({
     defaultDate: new Date(),
     scrollToTime: new Date(1970, 1, 1, 6),
   }), []);
 
-  // Leer Inner Keys del usuario y verificar sesiones disponibles (solo cuando la wallet esté lista)
-  const refreshKeyAvailability = useCallback(async () => {
-    try {
-      const addr = account?.address;
-      if (!addr) {
-        setHasAvailableKey(false);
-        return;
-      }
-      setIsLoadingKeys(true);
-      try { onLoadingKeysChange?.(true); } catch {}
-      const tokenIds = await readContract({
-        contract,
-        method: "function walletOfOwner(address _owner) view returns (uint256[])",
-        params: [addr],
-      });
-      let ok = false;
-      if (Array.isArray(tokenIds) && tokenIds.length > 0) {
-        for (const t of tokenIds) {
-          try {
-            const idNum = BigInt(t as any);
-            const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [idNum] });
-            const n = Number(avail as any);
-            if (n > 0) { ok = true; break; }
-          } catch {}
-        }
-      }
-      setHasAvailableKey(ok);
-    } catch {
-      setHasAvailableKey(false);
-    } finally {
-      setIsLoadingKeys(false);
-      try { onLoadingKeysChange?.(false); } catch {}
-    }
-  }, [account?.address, contract, onLoadingKeysChange]);
-
-  useEffect(() => {
-    refreshKeyAvailability();
-  }, [refreshKeyAvailability]);
-
-  // watchContractEvents opcional (controlado por ENV + delay + visibilidad)
-  useEffect(() => {
-    const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
-    const WATCHERS_DELAY_MS = Number(process.env.NEXT_PUBLIC_WATCHERS_DELAY_MS || '12000');
-    if (!ENABLE_WATCHERS || !contract) return;
-    let unwatch: any | undefined;
-    let timeout: any;
-    const start = () => {
-      if (unwatch) return;
-      unwatch = watchSessionState(contract,(scheduleId, newState) => {
-        setMySchedEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
-      });
-    };
-    const stop = () => { try { unwatch?.(); } catch {} ; unwatch = undefined; };
-    const onVis = () => {
-      stop(); clearTimeout(timeout);
-      if (typeof document !== 'undefined' && document.hidden) return;
-      timeout = setTimeout(start, WATCHERS_DELAY_MS);
-    };
-    onVis();
-    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
-    return () => {
-      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
-      stop(); clearTimeout(timeout);
-    };
-  }, [contract]);
+  // (sin validaciones on-chain; todo desde Ceramic)
 
   // Cargar lista de terapeutas (una vez; evita re-ejecución por cambios de referencia)
   useEffect(() => {
@@ -169,7 +80,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
             }
             therapist(last: 1) { edges { node { roomId } } }
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish roomId NFTContract TokenID } }
+              edges { node { id date_init date_finish roomId state } }
             }
           }
         }
@@ -185,46 +96,24 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       setEvents(mappedAvail);
       const roomId = node?.therapist?.edges?.[0]?.node?.roomId || "";
       setTherapistRoomId(roomId);
-      const sEdges = node?.therapist_sched?.edges || [];
-      // Validar busy contra on-chain: eliminar cancelados (Session not found)
-      type BusyItem = { id: string; start: Date; end: Date; tokenId?: number };
-      const rawBusy: BusyItem[] = sEdges.map((e: any) => ({
-        id: e.node.id as string,
-        start: new Date(e.node.date_init),
-        end: new Date(e.node.date_finish),
-        tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
-      }));
-      const validatedBusy = await Promise.all(
-        rawBusy.map(async (b: BusyItem): Promise<BusyItem | null> => {
-          try {
-            if (!b.tokenId) return null;
-            await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(b.tokenId), b.id]
-            });
-            return b;
-          } catch (err: any) {
-            const msg = String(err?.message ?? err);
-            if (msg.includes('Session not found')) return null;
-            return null;
-          }
-        })
-      );
-      const cleaned: Array<{ id: string; start: Date; end: Date }> =
-        validatedBusy.filter((x): x is BusyItem => x !== null).map((b) => ({ id: b.id, start: b.start, end: b.end }));
+    const sEdges = node?.therapist_sched?.edges || [];
+    const cleaned: Array<{ id: string; start: Date; end: Date }> =
+      sEdges
+        .map((e: any) => ({ id: e.node.id as string, start: new Date(e.node.date_init), end: new Date(e.node.date_finish), state: e.node.state as string }))
+        .filter(b => b.state !== 'Cancelled')
+        .map(b => ({ id: b.id, start: b.start, end: b.end }));
       // Deduplicar y filtrar por solapamiento con disponibilidad
-      const byKey = new Set<string>();
+        const byKey = new Set<string>();
       const validBusy = cleaned
         .filter((b) => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
         .filter((b) => b.end > b.start)
         .filter((b) => mappedAvail.some((av: { start: Date; end: Date }) => b.end > av.start && b.start < av.end))
         .filter((b) => {
-          const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
-          if (byKey.has(k)) return false;
-          byKey.add(k);
-          return true;
-        });
+            const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
+            if (byKey.has(k)) return false;
+            byKey.add(k);
+            return true;
+          });
       setBusyTherapEvents(validBusy);
     } finally {
       if (!cancelled) setIsLoadingAvail(false);
@@ -240,7 +129,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         node(id: "${therapist}") {
           ... on InnerverProfile {
             therapist_sched(last: 200) {
-              edges { node { id date_init date_finish NFTContract TokenID } }
+                    edges { node { id date_init date_finish state } }
             }
           }
         }
@@ -248,43 +137,22 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     `;
     const res: any = await executeQueryRef.current(q);
     const sEdges = res?.data?.node?.therapist_sched?.edges || [];
-    type BusyItem = { id: string; start: Date; end: Date; tokenId?: number };
-    const rawBusy: BusyItem[] = sEdges.map((e: any) => ({
-      id: e.node.id as string,
-      start: new Date(e.node.date_init),
-      end: new Date(e.node.date_finish),
-      tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
-    }));
-    const validatedBusy = await Promise.all(
-      rawBusy.map(async (b: BusyItem): Promise<BusyItem | null> => {
-        try {
-          if (!b.tokenId) return null;
-          await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(b.tokenId), b.id]
-          });
-          return b;
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) return null;
-          return null;
-        }
-      })
-    );
     const cleaned: Array<{ id: string; start: Date; end: Date }> =
-      validatedBusy.filter((x): x is BusyItem => x !== null).map((b) => ({ id: b.id, start: b.start, end: b.end }));
-    const byKey = new Set<string>();
+      sEdges
+        .map((e: any) => ({ id: e.node.id as string, start: new Date(e.node.date_init), end: new Date(e.node.date_finish), state: e.node.state as string }))
+        .filter(b => b.state !== 'Cancelled')
+        .map(b => ({ id: b.id, start: b.start, end: b.end }));
+      const byKey = new Set<string>();
     const validBusy = cleaned
       .filter((b) => b.start instanceof Date && !isNaN(b.start.getTime()) && b.end instanceof Date && !isNaN(b.end.getTime()))
       .filter((b) => b.end > b.start)
       .filter((b) => events.some((av: any) => b.end > av.start && b.start < av.end))
       .filter((b) => {
-        const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
-        if (byKey.has(k)) return false;
-        byKey.add(k);
-        return true;
-      });
+          const k = `${b.id}:${b.start.toISOString()}:${b.end.toISOString()}`;
+          if (byKey.has(k)) return false;
+          byKey.add(k);
+          return true;
+        });
     setBusyTherapEvents(validBusy);
   }, [therapist, events]);
 
@@ -293,85 +161,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     loadPlannerData();
   }, [therapist, loadPlannerData]);
 
-  // Leer estado on-chain y reflejarlo en UI (sólo para eventos visibles)
-  useEffect(() => {
-    if (!mySchedEvents.length || !contract) return;
-    
-    // Calcular rango visible según la vista
-    const startWeek = startOfWeek(mySchedDate, { weekStartsOn: 1 });
-    const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
-    let rangeStart = startWeek;
-    let rangeEnd = addDays(startWeek, 7);
-    
-    if (mySchedView === Views.DAY) {
-      rangeStart = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), mySchedDate.getDate());
-      rangeEnd = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), mySchedDate.getDate(), 23, 59, 59, 999);
-    } else if (mySchedView === Views.MONTH) {
-      rangeStart = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth(), 1);
-      rangeEnd = new Date(mySchedDate.getFullYear(), mySchedDate.getMonth() + 1, 0, 23, 59, 59, 999);
-    } else {
-      // Para WEEK: asegurar que incluya toda la semana hasta el final del domingo
-      rangeStart = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate(), 0, 0, 0, 0);
-      rangeEnd = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate() + 7, 23, 59, 59, 999);
-    }
-    
-    const visible = mySchedEvents.filter(
-      (e) => typeof e.tokenId === 'number' && 
-                    e.tokenId > 0 && 
-                    e.start < rangeEnd && 
-                    e.end > rangeStart
-    );
-    if (!visible.length) return;
-    
-    const key = `${rangeStart.toISOString()}|${rangeEnd.toISOString()}|${visible.map(e => `${e.id}:${e.tokenId}`).join(',')}`;
-    if (onChainSigRef.current === key) return;
-    
-    onChainSigRef.current = key;
-    
-    (async () => {
-      try {
-        const updates = await Promise.all(visible.map(async (e: { id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }) => {
-          if (!e.tokenId) return { id: e.id, state: e.state };
-          try {
-            const n = await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(e.tokenId), e.id]
-            });
-            return { id: e.id, state: mapState(Number(n)) };
-          } catch (err: any) {
-            const msg = String(err?.message ?? err);
-            if (msg.includes('Session not found')) {
-              return { id: e.id, remove: true } as any;
-            }
-            return { id: e.id, state: e.state };
-          }
-        }));
-        
-        // Verificar que la key no haya cambiado mientras leíamos
-        if (onChainSigRef.current !== key) {
-          console.log('Skipping update: key changed during read');
-          lastOnchainCheckRef.current = Date.now();
-          return;
-        }
-        
-        const byId = new Map<string, string>();
-        const removeIds = new Set<string>();
-        for (const u of updates) {
-          if ((u as any)?.remove) removeIds.add(u.id);
-          else if ((u as any)?.state) byId.set(u.id, (u as any).state);
-        }
-        setMySchedEvents(prev => prev
-          .filter(ev => !removeIds.has(ev.id))
-          .map(ev => byId.has(ev.id) ? { ...ev, state: byId.get(ev.id)! } : ev));
-      } catch (err) {
-        console.error('Error reading on-chain states:', (err as any)?.message ?? err);
-        // Aplicar cooldown sin reiniciar firma para evitar bucles
-      } finally {
-        lastOnchainCheckRef.current = Date.now();
-      }
-    })();
-  }, [mySchedEvents, contract, mySchedDate, mySchedView]);
+  // (sin validaciones on-chain)
 
   const eventPropGetter = useCallback((event: any) => {
     const isActive = event.state === 'Active';
@@ -382,9 +172,9 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         ? 'linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.9) 100%)'
         : isConfirmed
           ? 'linear-gradient(135deg, rgba(96,165,250,0.9) 0%, rgba(59,130,246,0.9) 100%)'
-          : isPending
-            ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
-            : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
+        : isPending
+          ? 'linear-gradient(135deg, rgba(255,165,0,0.9) 0%, rgba(255,140,0,0.9) 100%)'
+          : 'linear-gradient(135deg, rgba(107,114,128,0.85) 0%, rgba(55,65,81,0.85) 100%)',
       color: '#ffffff',
       border: '1px solid rgba(255,255,255,0.22)',
       boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
@@ -437,7 +227,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       query {
         viewer { innerverProfile {
           schedules(last: 200) {
-            edges { node { id date_init date_finish roomId therapist { id name displayName } NFTContract TokenID therapistId } }
+            edges { node { id date_init date_finish roomId therapist { id name displayName } therapistId state } }
           }
         } }
       }
@@ -451,7 +241,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
           node(id: "${pid}") {
             ... on InnerverProfile {
               schedules(last: 200) {
-                edges { node { id date_init date_finish roomId therapist { id name displayName } NFTContract TokenID therapistId } }
+                edges { node { id date_init date_finish roomId therapist { id name displayName } therapistId state } }
               }
             }
           }
@@ -464,36 +254,12 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
       id: e.node.id,
       start: new Date(e.node.date_init),
       end: new Date(e.node.date_finish),
-      state: 'Pending',
+      state: e.node.state || 'Pending',
       roomId: e.node.roomId,
-      tokenId: typeof e.node.TokenID === 'number' ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
       therapistName: e.node.therapist?.displayName || e.node.therapist?.name || undefined,
-      nftContract: e.node.NFTContract || undefined,
       therapistId: e.node.therapistId || undefined,
     }));
-    // Validar on-chain antes de pintar (ocultar cancelados)
-    try {
-      const validated = await Promise.all(mapped.map(async (e: { id: string; start: Date; end: Date; state: string; roomId: string; tokenId?: number; therapistName?: string; nftContract?: string; therapistId?: string }) => {
-        try {
-          if (!e.tokenId) return null;
-          const n = await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(e.tokenId), e.id]
-          });
-          const mappedState = mapState(Number(n));
-          if (mappedState === 'Cancelled') return null;
-          return { ...e, state: mappedState };
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) return null;
-          return null;
-        }
-      }));
-      setMySchedEvents(validated.filter(Boolean) as any[]);
-    } catch {
-      setMySchedEvents([]);
-    }
+    setMySchedEvents(mapped.filter((e: any) => e.state !== 'Cancelled') as any[]);
     // Siempre navegar a la semana de la fecha actual al abrir el modal
     setMySchedDate(new Date());
     setMySchedView(Views.WEEK);
@@ -509,14 +275,10 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         <div className="mt-3 flex items-center gap-3">
           <button
             onClick={() => setPlannerOpen(true)}
-            disabled={!hasAvailableKey || isLoadingKeys}
-            className="px-4 py-2 rounded-xl text-white font-medium shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 rounded-xl text-white font-medium shadow-lg flex items-center gap-2"
             style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
           >
-            {isLoadingKeys && (
-              <span className="animate-spin inline-block h-4 w-4 border-b-2 border-white rounded-full"></span>
-            )}
-            <span>{isLoadingKeys ? 'Verificando...' : 'Agendar'}</span>
+            <span>Agendar</span>
           </button>
           <button
             onClick={openMyConsults}
