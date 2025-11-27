@@ -35,8 +35,20 @@ export const writeComposite = async () => {
   });
   /*console.log('scheduleComposite:')
   console.log(scheduleComposite.modelIDs);*/
-  // Schedules relationFrom is now defined directly in innerverseSchedule.graphql via `extend type`,
-  // por lo tanto no necesitamos innerverseScheduleProfile.graphql aquí.
+  const schedProfileSchema = readFileSync(
+    "../composites/innerverseScheduleProfile.graphql",
+    {
+      encoding: "utf-8",
+    }
+  )
+    // innerverseSchedule now has 2 models: loader(InnerverProfile) and Schedule (index 1)
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+  
+  const schedProfileComposite = await Composite.create({
+    ceramic,
+    schema: schedProfileSchema,
+  });
 
   const schedTherapSchema = readFileSync("../composites/innerverseSchedTherapist.graphql", {
     encoding: "utf-8",
@@ -63,7 +75,18 @@ export const writeComposite = async () => {
     schema: schedTherapProfileSchema,
   });
 
-  // therapist_sched relationFrom también vive ahora en innerverseSchedule.graphql; se omite el link auxiliar.
+  // Nueva relación inversa para Schedule -> therapist (sin Huddle01)
+  const schedTherapistLinkSchema = readFileSync(
+    "../composites/innerverseScheduleTherapistLink.graphql",
+    { encoding: "utf-8" }
+  )
+    .replace("$SCHE_ID", scheduleComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const schedTherapistLinkComposite = await Composite.create({
+    ceramic,
+    schema: schedTherapistLinkSchema,
+  });
 
   const workshopSchema = readFileSync(
     "../composites/innerverseWorkshop.graphql",
@@ -126,10 +149,10 @@ export const writeComposite = async () => {
   const composite = Composite.from([
     innerverseProfileComposite,
     scheduleComposite,
-    // schedProfileComposite (omitido)
+    schedProfileComposite,
     schedTherapComposite,
     schedTherapProfileComposite,
-    // schedTherapistLinkComposite (omitido)
+    schedTherapistLinkComposite,
     workshopComposite,
     therapistComposite,
     therapistProfileComposite,

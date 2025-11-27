@@ -16,7 +16,7 @@ interface EditTherapistProfileModalProps {
 }
 
 const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ isOpen, onClose, isForced = false, onSave }) => {
-  const { profile, therapist, upsertTherapistProfile, authenticateForWrite, adminAccount } = useCeramic() as any;
+  const { profile, therapist, upsertTherapistProfile, authenticateForWrite } = useCeramic();
 
   const MAX_DEGREES = 6;
   const MAX_APPROACHES = 9;
@@ -179,11 +179,6 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
         introVideoUrl,
         acceptingNewClients,
         roomId: finalRoomId,
-        // Guardado invisible de AdminAccount (EOA)
-        adminAddress: (() => {
-          const addr = String(adminAccount?.address || "").toLowerCase();
-          return /^0x[a-f0-9]{40}$/.test(addr) ? addr : therapist?.adminAddress;
-        })(),
       });
       
       // Construir el objeto TherapistProfile con los datos guardados para validación

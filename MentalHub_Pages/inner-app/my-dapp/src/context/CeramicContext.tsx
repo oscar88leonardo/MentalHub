@@ -1,5 +1,5 @@
 "use client"
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { CeramicClient } from "@ceramicnetwork/http-client";
 import { ComposeClient } from "@composedb/client";
 import { RuntimeCompositeDefinition } from "@composedb/types";
@@ -10,10 +10,6 @@ import { EIP1193 } from "thirdweb/wallets";
 import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
 import { definition } from "@/__generated__/definition.js";
-import { didPkhFromAddress } from "@/lib/did";
-import { Cacao } from "@didtools/cacao";
-import { buildTherapistSessionWithCacao } from "@/lib/therapistSession";
-
 
 // Types
 export interface InnerverProfile {
@@ -103,7 +99,6 @@ export interface InnerverProfile {
 export interface TherapistProfile {
   id: string;
   profileId: string;
-  adminAddress?: string;
   degrees?: string[];
   licenseNumber?: string;
   licenseJurisdiction?: string;
@@ -168,7 +163,6 @@ interface CeramicContextType {
   account: any; // prefer AA if available
   adminWallet: any;
   adminAccount: any;
-  providerThirdweb: any;
   
   // Methods
   connect: () => Promise<void>;
@@ -178,16 +172,6 @@ interface CeramicContextType {
   authenticateForWrite: (streamId?: string) => Promise<boolean>; // authenticate only when needed; can include stream capability
   upsertTherapistProfile: (input: Partial<TherapistProfile> & { profileId?: string }) => Promise<string | null>;
   upsertConsultantProfile: (input: Partial<ConsultantProfile> & { profileId?: string }) => Promise<string | null>;
-  createSchedule?: (input: {
-    profileId: string;
-    therapistId: string;
-    roomId: string;
-    date_init: string;
-    date_finish: string;
-    NFTContract?: string;
-    TokenID?: number;
-  }) => Promise<string>;
-  updateScheduleState?: (id: string, state: "Pending"|"Confirmed"|"Active"|"Finished"|"Cancelled") => Promise<string>;
 }
 
 const CeramicContext = createContext<CeramicContextType | null>(null);
@@ -221,27 +205,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   const account = aaAccount || (activeWallet ? activeWallet.getAccount() : null);
   const adminWallet = useAdminWallet();
   const adminAccount = adminWallet ? adminWallet.getAccount() : null;
-
-  // Singletons (lazy) to ensure only one client instance
-  const ceramicRef = useRef<CeramicClient | null>(null);
-  const composeRef = useRef<ComposeClient | null>(null);
-
-  const ensureClients = () => {
-    if (composeRef.current && ceramicRef.current) {
-      return { compose: composeRef.current, ceramic: ceramicRef.current };
-    }
-    console.log("🔧 Initializing Ceramic clients (lazy)...");
-    const ceramicClient = new CeramicClient("https://ceramicnode.innerverse.care");
-    const compose = new ComposeClient({
-      ceramic: (ceramicClient as unknown) as any,
-      definition: (definition as unknown) as RuntimeCompositeDefinition,
-    });
-    ceramicRef.current = ceramicClient;
-    composeRef.current = compose;
-    setCeramic(ceramicClient);
-    setComposeClient(compose);
-    return { compose, ceramic: ceramicClient };
-  };
 
   // Debug logging for wallet states and persistence
   useEffect(() => {
@@ -298,18 +261,35 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       })
     : null;
 
-  // (eliminado) Inicialización temprana: ahora usamos ensureClients() en demanda
-
   // Initialize Ceramic clients only when Thirdweb is ready
   useEffect(() => {
     if (!isThirdwebReady) {
       console.log("⏳ Waiting for Thirdweb to be ready...");
       return;
     }
-    // Único camino de creación: lazy
-    const { compose } = ensureClients();
-    try { console.log("📦 ComposeDB resources:", compose.resources); } catch {}
-    console.log("ℹ️ Clients ready. Proceeding to auth when needed.");
+
+    const initClients = () => {
+      try {
+        console.log("🔧 Initializing Ceramic clients...");
+        const ceramicClient = new CeramicClient("https://ceramicnode.innerverse.care");
+        const composeClient = new ComposeClient({
+          ceramic: (ceramicClient as unknown) as any, // ensure same instance is used internally
+          definition: (definition as unknown) as RuntimeCompositeDefinition,
+        });
+
+        setCeramic(ceramicClient);
+        setComposeClient(composeClient);
+        console.log("✅ Ceramic clients initialized");
+        try {
+          console.log("📦 ComposeDB resources:", composeClient.resources);
+        } catch {}
+      } catch (err) {
+        console.error("Error initializing Ceramic clients:", err);
+        setError("Failed to initialize Ceramic clients");
+      }
+    };
+
+    initClients();
   }, [isThirdwebReady]);
 
   // NO auto-conectar - La autenticación se hará SOLO cuando sea necesario
@@ -326,8 +306,9 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       providerThirdweb: !!providerThirdweb
     });
 
-    // Asegurar cliente único (lazy)
-    const { compose, ceramic: ceramicCli } = ensureClients();
+    if (!ceramic || !composeClient) {
+      throw new Error("Ceramic clients not initialized");
+    }
 
     if (isConnected) {
       console.log("Already connected to ComposeDB");
@@ -428,7 +409,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       // Create DID session (THIS IS WHERE METAMASK SHOULD POPUP)
       let session;
       try {
-        if (!compose.resources || compose.resources.length === 0) {
+        if (!composeClient.resources || composeClient.resources.length === 0) {
           throw new Error("ComposeDB resources are empty. Check your generated definition.");
         }
         // Force fresh session to avoid stale CACAO/resources from other apps on same origin
@@ -437,9 +418,9 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
           sessionStorage.removeItem('ceramic:eth_did');
         } catch {}
         console.log("🔐 Authorizing DID session - MetaMask popup should appear NOW...");
-        console.log("Resources to authorize:", compose.resources);
+        console.log("Resources to authorize:", composeClient.resources);
         session = await (DIDSession as any).authorize(authMethod, {
-          resources: compose.resources,
+          resources: composeClient.resources,
           expiresInSecs: 60 * 60 * 24, // 1 day
           domain: window.location.hostname,
         });
@@ -450,13 +431,13 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       }
 
       // Set DID on clients (NO SAVE TO SESSIONSTORAGE)
-      compose.setDID(session.did);
-      ceramicCli.did = session.did;
+      composeClient.setDID(session.did);
+      ceramic.did = session.did;
       setIsConnected(true);
       
       console.log("✅ Ceramic authenticated successfully (session in memory only)");
       console.log("DID:", session.did.id, "(did:key is expected for session DIDs; controller is your did:pkh)");
-      try { console.log("compose.ceramic.did:", (compose as any)?.ceramic?.did?.id); } catch {}
+      try { console.log("compose.ceramic.did:", (composeClient as any)?.ceramic?.did?.id); } catch {}
 
     } catch (err) {
       console.error("❌ Error connecting to Ceramic:", err);
@@ -470,7 +451,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   // Método para autenticar SOLO cuando se necesite escribir
   const authenticateForWrite = async (streamId?: string) => {
     console.log("🔐 Authentication required for write operation...", { streamId });
-    const { compose, ceramic: ceramicCli } = ensureClients();
+    if (!composeClient || !ceramic) throw new Error("Clients not initialized");
 
     // If already connected and no extra resource needed, we're good
     if (isConnected && !streamId) {
@@ -487,7 +468,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       const accountId = await getAccountId(providerThirdweb, adminAccount.address);
       const authMethod = await EthereumWebAuth.getAuthMethod(providerThirdweb, accountId);
 
-      const baseResources = compose.resources || [];
+      const baseResources = composeClient.resources || [];
       const extra = streamId ? [`ceramic://${streamId}`] : [];
       const resources = [...baseResources, ...extra];
       console.log("🔐 Re-authorizing with resources:", resources);
@@ -497,8 +478,8 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         expiresInSecs: 60 * 60 * 24,
         domain: window.location.hostname,
       });
-      compose.setDID(session.did);
-      ceramicCli.did = session.did;
+      composeClient.setDID(session.did);
+      ceramic.did = session.did;
       setIsConnected(true);
       console.log("✅ Re-authorized DID:", session.did.id);
       return true;
@@ -529,7 +510,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   };
 
   const refreshProfile = async () => {
-    const { compose } = ensureClients();
+    if (!composeClient) {
+      console.log("ComposeDB not initialized, skipping profile refresh");
+      return;
+    }
     
     // Para LECTURA no se requiere autenticación
     if (!isConnected) {
@@ -568,7 +552,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         }
       `;
 
-      const simpleResult = await compose.executeQuery(simpleQuery);
+      const simpleResult = await composeClient.executeQuery(simpleQuery);
       console.log("Simple query result:", JSON.stringify(simpleResult, null, 2));
 
       /* Si funciona, probemos con la consulta completa
@@ -674,7 +658,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
                       node {
                         id
                         profileId
-                        adminAddress
                         degrees
                         licenseNumber
                         licenseJurisdiction
@@ -717,7 +700,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
               }
             }
           `;
-          const extRes: any = await compose.executeQuery(extQ);
+          const extRes: any = await composeClient.executeQuery(extQ);
           const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
           const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
           setTherapist(tNode);
@@ -772,7 +755,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
           }
         }
       `;
-      const byAccountRes: any = await compose.executeQuery(byAccountQuery, { did });
+      const byAccountRes: any = await composeClient.executeQuery(byAccountQuery, { did });
       console.log("byAccountRes:", JSON.stringify(byAccountRes, null, 2));
       const accProfile = byAccountRes?.data?.node?.innerverProfile as InnerverProfile | undefined;
       if (accProfile) {
@@ -786,13 +769,13 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
             query {
               node(id: "${pid}") {
                 ... on InnerverProfile {
-                  therapist(first: 1) { edges { node { id profileId adminAddress degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
+                  therapist(first: 1) { edges { node { id profileId degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
                   consultant(first: 1) { edges { node { id profileId presentingProblemShort goals therapistGenderPreference emergencyContactName emergencyContactPhoneE164 consentTerms consentPrivacy consentTelehealthRisks consentedAt priorTherapy priorPsychiatry medicationsUsed medicationsNote diagnoses } } }
                 }
               }
             }
           `;
-          const extRes: any = await compose.executeQuery(extQ);
+          const extRes: any = await composeClient.executeQuery(extQ);
           const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
           const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
           setTherapist(tNode);
@@ -835,7 +818,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
           }
         }
       `;
-      const byIndexRes: any = await compose.executeQuery(byIndexQuery, { did });
+      const byIndexRes: any = await composeClient.executeQuery(byIndexQuery, { did });
       console.log("byIndexRes:", JSON.stringify(byIndexRes, null, 2));
       const idxNode = byIndexRes?.data?.innerverProfileIndex?.edges?.[0]?.node as InnerverProfile | undefined;
       if (idxNode) {
@@ -849,13 +832,13 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         query {
           node(id: "${pid}") {
             ... on InnerverProfile {
-              therapist(first: 1) { edges { node { id profileId adminAddress degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
+              therapist(first: 1) { edges { node { id profileId degrees licenseNumber licenseJurisdiction licenseCountry yearsExperience approaches specialties populations bioShort bioLong introVideoUrl acceptingNewClients roomId } } }
               consultant(first: 1) { edges { node { id profileId presentingProblemShort goals therapistGenderPreference emergencyContactName emergencyContactPhoneE164 consentTerms consentPrivacy consentTelehealthRisks consentedAt priorTherapy priorPsychiatry medicationsUsed medicationsNote diagnoses } } }
             }
           }
         }
       `;
-          const extRes: any = await compose.executeQuery(extQ);
+          const extRes: any = await composeClient.executeQuery(extQ);
           const tNode = extRes?.data?.node?.therapist?.edges?.[0]?.node || null;
           const cNode = extRes?.data?.node?.consultant?.edges?.[0]?.node || null;
           setTherapist(tNode);
@@ -877,13 +860,15 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   };
 
   const executeQuery = async (query: string, variables?: Record<string, any>) => {
-    const { compose } = ensureClients();
+    if (!composeClient) {
+      throw new Error("ComposeDB not initialized");
+    }
     // Pasar variables si se proporcionan
     try {
-      return await compose.executeQuery(query, variables);
+      return await composeClient.executeQuery(query, variables);
     } catch {
       // Fallback por seguridad sin variables
-      return await compose.executeQuery(query);
+      return await composeClient.executeQuery(query);
     }
   };
 
@@ -891,129 +876,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   const gq = (s?: string | null) => {
     if (s === undefined || s === null) return "";
     return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  };
-
-  // Crear Schedule en Ceramic con estado Pending (sin NFT on-chain obligatorio)
-  const createSchedule = async (input: {
-    profileId: string;
-    therapistId: string;
-    roomId: string;
-    date_init: string;
-    date_finish: string;
-    NFTContract?: string;
-    TokenID?: number;
-  }) => {
-    ensureClients();
-    await authenticateForWrite();
-    const now = new Date().toISOString();
-    const mutation = `
-      mutation CreateSchedule($input: CreateScheduleInput!) {
-        createSchedule(input: $input) { document { id state } }
-      }
-    `;
-    const content = {
-      date_init: input.date_init,
-      date_finish: input.date_finish,
-      edited: now,
-      created: now,
-      profileId: input.profileId,
-      therapistId: input.therapistId,
-      roomId: input.roomId,
-      NFTContract: input.NFTContract ?? "",
-      TokenID: input.TokenID ?? 0,
-      state: "Pending",
-    };
-    const res: any = await executeQuery(mutation, { input: { content } });
-    const id = res?.data?.createSchedule?.document?.id as string | undefined;
-    if (!id) throw new Error("No se pudo crear el Schedule");
-    return id;
-  };
-
-  // Actualizar estado de Schedule en Ceramic (Confirm/Active/Finished/Cancelled)
-  const updateScheduleState = async (id: string, state: "Pending"|"Confirmed"|"Active"|"Finished"|"Cancelled") => {
-    const { compose, ceramic: ceramicCli } = ensureClients();
-
-    // 0) Lectura previa para evitar sobrescritura no deseada
-    try {
-      const readQ = `
-        query($id: ID!) {
-          node(id: $id) {
-            ... on Schedule { id state }
-          }
-        }
-      `;
-      const r: any = await compose.executeQuery(readQ, { id });
-      const current = r?.data?.node?.state as string | undefined;
-      if (current) {
-        // Evitar sobreescribir si ya está Cancelled o Finished
-        if (current === "Cancelled" || current === "Finished") {
-          throw new Error(`No se puede actualizar. El Schedule ya está en estado ${current}.`);
-        }
-        // Si ya está en el estado solicitado, retornar
-        if (current === state) {
-          return current;
-        }
-      }
-    } catch (e) {
-      // Si falla la lectura, continuamos pero lo registramos
-      console.warn("Advertencia al leer estado actual previo:", e);
-    }
-
-    // 1) Intentar usar CACAO delegado para este Schedule (terapeuta)
-    let cacaoUsed = false;
-    try {
-      const audAddr = adminAccount?.address || "";
-      if (audAddr) {
-        const audDid = didPkhFromAddress(audAddr);
-        const q = `
-          query($sid: StreamID!, $aud: String!) {
-            scheduleGrantIndex(
-              filters: { where: { scheduleId: { equalTo: $sid }, audDid: { equalTo: $aud } } }
-              first: 1
-            ) { edges { node { id cacao } } }
-          }
-        `;
-        const grantRes: any = await compose.executeQuery(q, { sid: id, aud: audDid });
-        const cacaoStr = grantRes?.data?.scheduleGrantIndex?.edges?.[0]?.node?.cacao;
-        if (cacaoStr && providerThirdweb && adminAccount?.address) {
-          const cacaoObj = JSON.parse(cacaoStr) as unknown as Cacao;
-          const did = await buildTherapistSessionWithCacao({
-            cacao: cacaoObj,
-            scheduleId: id,
-            provider: providerThirdweb,
-            adminAddress: adminAccount.address,
-          });
-          compose.setDID(did);
-          ceramicCli.did = did;
-          cacaoUsed = true;
-        }
-      }
-    } catch (e) {
-      console.warn("No se pudo autorizar con CACAO delegado (se intentará fallback):", e);
-    }
-
-    // 2) Fallback a autenticación normal (controlador del stream)
-    if (!cacaoUsed) {
-      await authenticateForWrite(id);
-    }
-
-    // 3) Ejecutar la mutación con DID activa (por CACAO o controlador)
-    const now = new Date().toISOString();
-    const mutation = `
-      mutation UpdateSchedule($id: ID!, $state: ScheduleState!, $edited: DateTime) {
-        updateSchedule(input: { id: $id, content: { state: $state, edited: $edited } }) {
-          document { id state }
-        }
-      }
-    `;
-    const res: any = await compose.executeQuery(mutation, { id, state, edited: now });
-    if (res?.errors?.length) {
-      console.error("UpdateSchedule errors:", JSON.stringify(res.errors, null, 2));
-      throw new Error(res.errors.map((e: any) => e.message).join(" | "));
-    }
-    const newState = res?.data?.updateSchedule?.document?.state as string | undefined;
-    if (!newState) throw new Error("No se pudo actualizar el estado");
-    return newState;
   };
 
   const upsertTherapistProfile = async (input: Partial<TherapistProfile> & { profileId?: string }) => {
@@ -1025,11 +887,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
 
     const p: Partial<TherapistProfile> = {
       profileId: pid,
-      adminAddress: (() => {
-        const candidate = (input as any)?.adminAddress || (adminAccount?.address || therapist?.adminAddress || "");
-        const addr = String(candidate || "").toLowerCase();
-        return /^0x[a-f0-9]{40}$/.test(addr) ? addr : undefined;
-      })(),
       degrees: input.degrees ?? therapist?.degrees,
       licenseNumber: input.licenseNumber ?? therapist?.licenseNumber,
       licenseJurisdiction: input.licenseJurisdiction ?? therapist?.licenseJurisdiction,
@@ -1067,7 +924,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     pushStr("introVideoUrl", p.introVideoUrl as string | undefined);
     pushBool("acceptingNewClients", p.acceptingNewClients as boolean | undefined);
     pushStr("roomId", p.roomId as string | undefined);
-    pushStr("adminAddress", p.adminAddress as string | undefined);
     if (Array.isArray(p.degrees) && p.degrees.length) parts.push(`degrees: ${listToGql(p.degrees)}`);
     if (Array.isArray(p.approaches) && p.approaches.length) parts.push(`approaches: ${listToGql(p.approaches)}`);
     if (Array.isArray(p.specialties) && p.specialties.length) parts.push(`specialties: ${listToGql(p.specialties)}`);
@@ -1211,7 +1067,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     account,
     adminWallet,
     adminAccount,
-    providerThirdweb,
     // Methods
     connect,
     disconnect,
@@ -1220,8 +1075,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     authenticateForWrite, // NEW
     upsertTherapistProfile,
     upsertConsultantProfile,
-    createSchedule,
-    updateScheduleState,
   };
 
   return (
