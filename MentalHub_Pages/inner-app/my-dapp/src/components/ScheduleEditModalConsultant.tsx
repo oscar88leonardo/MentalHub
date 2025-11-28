@@ -5,11 +5,11 @@ import { openRoomFlowNoCheck } from "@/lib/openRoom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useCeramic } from "@/context/CeramicContext";
-import { getContract, readContract } from "thirdweb";
-import { client } from "@/lib/client";
-import { myChain } from "@/config/chain";
-import { contracts } from "@/config/contracts";
-import { abi } from "@/abicontracts/MembersAirdrop";
+// import { getContract, readContract } from "thirdweb"; // Removed
+// import { client } from "@/lib/client"; // Removed
+// import { myChain } from "@/config/chain"; // Removed
+// import { contracts } from "@/config/contracts"; // Removed
+// import { abi } from "@/abicontracts/MembersAirdrop"; // Removed
 
 interface ScheduleItem {
   id: string;
@@ -33,7 +33,7 @@ interface Props {
 
 const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedule, onSaved, onUpdated }) => {
   const { account, authenticateForWrite, executeQuery } = useCeramic();
-  const [busy, setBusy] = useState<"none" | "open">("none");
+  const [busy, setBusy] = useState<"none" | "open" | "cancel">("none");
   const [toast, setToast] = useState<{ text: string; type: "error" | "success" | "info" } | null>(null);
 
   // Editable fields
@@ -44,17 +44,16 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
   // Usar el estado que viene de la prop o Pending por defecto
   const [status, setStatus] = useState<string>(schedule.state || 'Pending');
   const isEditable = status === 'Pending';
-
-  // NFTs del usuario y sesiones disponibles
-  const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-  // ... userNFTs logic can be simplified/removed as we move to global credits
-
+  
+  // ELIMINADO: const [userTokenId, setUserTokenId] = useState<string>("");
+  // ELIMINADO: const contract = useMemo(...)
+  
   useEffect(() => {
     // Sync status if prop updates
     if (schedule.state) setStatus(schedule.state);
   }, [schedule.state]);
 
-// (Se elimina carga de salas; se usa roomId fijo en la cita)
+  // ELIMINADO: useEffect para buscar el token del usuario
 
   const showToast = (text: string, type: "error" | "success" | "info" = "info") => {
     setToast({ text, type });
@@ -103,10 +102,13 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
 
   const openRoom = async () => {
     if (!schedule) return;
+    
+    // ELIMINADO: Validaciones de tokenToUse ...
+
     try {
       setBusy("open");
       const { txPromise } = await openRoomFlowNoCheck({
-        tokenId,
+        // tokenId removido de los params
         scheduleId: schedule.id,
         start,
         end,
@@ -139,55 +141,16 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
 
   const cancelSession = async () => {
     if (!schedule?.id) return;
+    
+    // CONFIRMACIÓN NATIVA
+    if (!window.confirm("¿Estás seguro de que deseas cancelar tu cita?")) {
+        return;
+    }
+
     try {
-      setBusy("open"); 
+      setBusy("cancel"); 
       
       const now = new Date().toISOString();
-      // Cancelación vía Ceramic (creando respuesta del consultante? No, el consultante NO crea SessionResponse. 
-      // El consultante debería actualizar el Schedule a un estado cancelado, PERO el modelo actual usa SessionResponse.
-      // Si el consultante cancela, ¿Quién escribe?
-      // En la arquitectura actual, SessionResponse es "Respuesta del Terapeuta".
-      // Si queremos que el consultante cancele, necesitamos una forma.
-      // Opción A: El consultante no puede cancelar una vez creada (solo editar fecha).
-      // Opción B: Permitir que el consultante escriba en SessionResponse (pero el nombre implica terapeuta).
-      
-      // Dado el requerimiento: "Cuando el consultante agenda puede cancelarlo antes que el Terapeuta confirme."
-      // Y "Cuando el terapeuta confirma el consultante ya no puede cancelar".
-      
-      // Solución: El consultante no crea SessionResponse. 
-      // El consultante podría, por ejemplo, actualizar el Schedule con un campo "status" si existiera,
-      // o borrarlo. Pero borrar rompe el historial.
-      
-      // Como el backend actual (GraphQL) asocia el estado al SessionResponse del terapeuta,
-      // el consultante técnicamente no puede cambiar el estado "Pending" a "Cancelled" usando ese mismo campo
-      // sin permisos especiales o sin que el campo sea editable por él.
-      
-      // Sin embargo, si asumimos que el frontend gobierna:
-      // El consultante NO TIENE botón de cancelar si ya está Confirmado (eso lo manejamos en el render).
-      // Si está Pending, el consultante quiere cancelar.
-      
-      // Hack temporal válido: El consultante marca la cita como cancelada enviando una actualización
-      // al propio Schedule o usando una mutación especial. Pero no tenemos campo status en Schedule.
-      
-      // Para cumplir con el requisito estrictamente Off-Chain:
-      // Deberíamos agregar un campo "status" en Schedule editable por el creador (Consultante),
-      // o permitir que el consultante cree un SessionResponse (renombrándolo a SessionStatus).
-      
-      // Por ahora, para desbloquear, asumiremos que el consultante solo puede EDITAR para reagendar,
-      // o si cancela, se elimina el Schedule (hard delete) o se usa un flag.
-      // Voy a implementar un "hard delete" (cancelación destructiva) para Pending si no hay otra opción,
-      // o mejor, mostrar un toast de "Contacta al terapeuta".
-      
-      // REVISIÓN: El usuario pidió "completar esta función".
-      // Voy a usar una mutación de createSessionResponse. 
-      // IMPORTANTE: En Ceramic, cualquier DID puede crear un documento SessionResponse
-      // que apunte al Schedule. El problema es cuál toma la UI como válido.
-      // La UI toma `therapistResponse(first:1)`. Si el consultante crea uno, ¿aparece ahí?
-      // La relación es `@relationFrom(model: "SessionResponse", property: "scheduleId")`.
-      // Sí, aparecerá. Pero el nombre del campo es `therapistResponse`.
-      // Si el consultante crea un documento SessionResponse con status CANCELLED,
-      // la UI lo leerá y marcará como cancelado.
-      // Esto cumple el requisito funcional.
       
       const mutation = `
         mutation {
@@ -261,7 +224,6 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
                 />
               </div>
             </div>
-            {/* Inner Key selector removed */}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -281,11 +243,11 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
               disabled={busy !== 'none'} 
               className="px-4 py-2 rounded text-white shadow-lg disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: '1px solid rgba(255,255,255,0.25)' }}>
-              {busy === 'open' ? 'Cancelando…' : 'Cancelar'}
+              {busy === 'cancel' ? 'Cancelando…' : 'Cancelar Cita'}
               </button>
             )}
             
-            {/* Botón Abrir Sala: Solo si Confirmed o Active (y es editable para el usuario si ya pagó/confirmó? No, solo entrar) */}
+            {/* Botón Abrir Sala: Solo si Confirmed o Active */}
             { (status === 'Confirmed' || status === 'Active') && (
             <button 
             onClick={openRoom} 

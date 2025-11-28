@@ -39,7 +39,6 @@ const SessionsTherapist: React.FC = () => {
   const executeQueryRef = useRef(executeQuery);
   useEffect(() => { executeQueryRef.current = executeQuery; }, [executeQuery]);
   const [events, setEvents] = useState<EventItem[]>([]);
-  const allCandidatesRef = useRef<EventItem[]>([]);
   const [availEvents, setAvailEvents] = useState<Array<{ id: string; start: Date; end: Date; state: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -59,32 +58,6 @@ const SessionsTherapist: React.FC = () => {
     defaultDate: new Date(),
     scrollToTime: new Date(1970, 1, 1, 6),
   }), []);
-
-  const validateAndSetVisible = useCallback(async () => {
-    if (!contract) return;
-    const startWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
-    let rangeStart = startWeek;
-    let rangeEnd = addDays(startWeek, 7);
-    if (currentView === Views.DAY) {
-      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59, 999);
-    } else if (currentView === Views.MONTH) {
-      rangeStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
-    }
-    const visible = allCandidatesRef.current.filter(
-      (e) => 
-        e.start < rangeEnd &&
-        e.end > rangeStart
-    );
-    if (!visible.length) {
-      setEvents([]);
-      return;
-    }
-    // Ya no hay validación on-chain, pintamos directamente
-    setEvents(visible);
-  }, [contract, currentDate, currentView]);
 
   useEffect(() => {
     const run = async () => {
@@ -153,7 +126,9 @@ const SessionsTherapist: React.FC = () => {
             profileId: sn.profileId || undefined,
           };
         });
-        allCandidatesRef.current = mapped;
+        
+        setEvents(mapped);
+
         const avail = schedTherap.map((e: any) => ({
           id: e?.node?.id,
           start: new Date(e?.node?.date_init),
@@ -162,9 +137,6 @@ const SessionsTherapist: React.FC = () => {
         }));
         setAvailEvents(avail);
         
-        // Actualizar eventos visibles
-        validateAndSetVisible();
-        
       } catch (e) {
         console.error(e);
       } finally {
@@ -172,9 +144,7 @@ const SessionsTherapist: React.FC = () => {
       }
     };
     run();
-  }, [profile?.id, validateAndSetVisible]);
-
-  useEffect(() => { validateAndSetVisible(); }, [validateAndSetVisible]);
+  }, [profile?.id]);
   
   const messages = useMemo(() => ({
     date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día',

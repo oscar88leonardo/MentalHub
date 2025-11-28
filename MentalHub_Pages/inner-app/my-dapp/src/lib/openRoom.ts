@@ -1,7 +1,7 @@
 export type RoomInfo = { id: string; roomId: string };
 
 export interface OpenRoomParams {
-  tokenId?: string | number | null;
+  // tokenId removido
   scheduleId: string;
   start: Date;
   end: Date;
@@ -22,35 +22,16 @@ function resolveRoomId(defaultRoomId: string, selectedRoomId?: string, rooms?: R
 }
 
 export async function openRoomFlowNoCheck(p: OpenRoomParams): Promise<{ roomId: string; txPromise?: Promise<Response> }> {
-  const { tokenId, scheduleId, start, end, defaultRoomId, selectedRoomId, rooms, openMeet, optimistic = true } = p;
+  const { start, end, defaultRoomId, selectedRoomId, rooms, openMeet } = p;
 
   const now = new Date();
   if (!(now >= start && now <= end)) throw new Error("TIME_WINDOW");
-  if (tokenId == null || tokenId === "") throw new Error("NO_TOKEN");
-
+  
   const roomId = resolveRoomId(defaultRoomId, selectedRoomId, rooms);
 
-  const doCall = () =>
-    fetch("/api/callsetsession", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tokenId: String(tokenId), scheduleId, state: 2 }),
-    });
-
-  if (optimistic) {
-    openMeet(roomId);
-    const txPromise = doCall().catch(() => {});
-    // @ts-expect-error: txPromise puede ser undefined si se suprime por catch
-    return { roomId, txPromise };
-  } else {
-    const res = await doCall();
-    if (!res.ok) throw new Error("API_ERROR");
-    openMeet(roomId);
-    return { roomId };
-  }
+  // Abrimos sala directamente
+  openMeet(roomId);
+  
+  // Retornamos promesa resuelta vacía para compatibilidad
+  return { roomId, txPromise: Promise.resolve(new Response()) };
 }
-
-
-
-
-

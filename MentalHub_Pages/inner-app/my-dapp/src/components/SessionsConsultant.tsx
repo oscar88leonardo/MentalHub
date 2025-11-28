@@ -39,7 +39,8 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
   const [busyTherapEvents, setBusyTherapEvents] = useState<Array<{ id: string; start: Date; end: Date }>>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [plannerOpen, setPlannerOpen] = useState(false);
-  const [mySchedOpen, setMySchedOpen] = useState(false);
+  // Eliminamos mySchedOpen porque ya no será un modal
+  // const [mySchedOpen, setMySchedOpen] = useState(false); 
   const [mySchedDate, setMySchedDate] = useState<Date>(new Date());
   const [mySchedView, setMySchedView] = useState<any>(Views.WEEK);
   const [mySchedLoading, setMySchedLoading] = useState(false);
@@ -340,7 +341,7 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     // Mantener el planner abierto
   }, [events, busyTherapEvents]);
 
-  const openMyConsults = async () => {
+  const loadMyConsults = useCallback(async () => {
     setMySchedLoading(true);
     if (!profile?.id) {
       try { await refreshProfile(); } catch {}
@@ -429,36 +430,37 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
     });
     
     setMySchedEvents(mapped);
-    setMySchedDate(new Date());
-    setMySchedView(Views.WEEK);
-    setMySchedOpen(true);
+    // setMySchedOpen(true); // Ya no es necesario
     setMySchedLoading(false);
-  };
+  }, [profile?.id, executeQuery, refreshProfile]); // Agregamos dependencias para useCallback
+
+  // Efecto para cargar las consultas al iniciar
+  useEffect(() => {
+    if (profile?.id) {
+        loadMyConsults();
+    }
+  }, [profile?.id, loadMyConsults]);
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl p-4 text-white" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-        <h3 className="text-lg font-semibold mb-2">Agendar una sesión</h3>
-        <p className="text-white/80 text-sm">Haz clic en &quot;Agendar&quot; para seleccionar terapeuta y agendar una consulta usando tus Inner Keys.</p>
-        <div className="mt-3 flex items-center gap-3">
-          <button
-            onClick={() => setPlannerOpen(true)}
-            disabled={!hasAvailableKey || isLoadingKeys}
-            className="px-4 py-2 rounded-xl text-white font-medium shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
-          >
-            {isLoadingKeys && (
-              <span className="animate-spin inline-block h-4 w-4 border-b-2 border-white rounded-full"></span>
-            )}
-            <span>{isLoadingKeys ? 'Verificando...' : 'Agendar'}</span>
-          </button>
-          <button
-            onClick={openMyConsults}
-            className="px-4 py-2 rounded-xl text-white font-medium shadow-lg"
-            style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
-          >
-            Mis consultas
-          </button>
+        <div className="flex justify-between items-center">
+            <div>
+                <h3 className="text-lg font-semibold mb-2">Mis Sesiones</h3>
+                <p className="text-white/80 text-sm">Gestiona tus próximas sesiones o agenda una nueva.</p>
+            </div>
+            {/* Botón Agendar (Mantenemos este) */}
+            <button
+                onClick={() => setPlannerOpen(true)}
+                disabled={!hasAvailableKey || isLoadingKeys}
+                className="px-4 py-2 rounded-xl text-white font-medium shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+                style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
+            >
+                {isLoadingKeys && (
+                <span className="animate-spin inline-block h-4 w-4 border-b-2 border-white rounded-full"></span>
+                )}
+                <span>{isLoadingKeys ? 'Verificando...' : 'Nueva Cita +'}</span>
+            </button>
         </div>
       </div>
 
@@ -540,77 +542,67 @@ const SessionsConsultant: React.FC<SessionsConsultantProps> = ({ onLoadingKeysCh
         </div>
       )}
 
-      {mySchedOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(5px)' }}>
-          <div className="w-full max-w-6xl rounded-2xl shadow-2xl" style={{ background: 'linear-gradient(135deg, #6666ff 0%, #7a7aff 50%, #339999 100%)', border: '1px solid rgba(255,255,255,0.16)' }}>
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.18)' }}>
-              <h4 className="text-lg font-semibold text-white">Mis consultas agendadas</h4>
-              <button onClick={() => setMySchedOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
+      {/* Calendario de Mis Consultas (Ahora visible directamente) */}
+      <div style={{ height: 600, background: 'rgba(255,255,255,0.98)', borderRadius: 12, padding: 8, position: 'relative' }}>
+        {mySchedLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.6)' }}>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
             </div>
-            <div className="p-4 space-y-4">
-              <div style={{ height: 600, background: 'rgba(255,255,255,0.98)', borderRadius: 12, padding: 8, position: 'relative' }}>
-                {mySchedLoading && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.6)' }}>
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
-                  </div>
-                )}
-                <Calendar
-                  culture="es"
-                  date={mySchedDate}
-                  view={mySchedView}
-                  events={mySchedEvents}
-                  titleAccessor={(e: any) => (e?.therapistName ? `Terapeuta: ${e.therapistName}` : 'Consulta')}
-                  localizer={localizer}
-                  messages={{
-                    date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día', week: 'Semana', work_week: 'Semana Laboral', day: 'Día', month: 'Mes', previous: 'Anterior', next: 'Siguiente', today: 'Hoy', agenda: 'Agenda', noEventsInRange: 'No hay eventos en este rango', showMore: (total: number) => `+${total} más`,
-                  } as any}
-                  components={{
-                    agenda: {
-                      event: ({ event }: { event: any }) => (
-                        <div className="text-sm">
-                          <p className="font-semibold">{event.therapistName ? `Terapeuta: ${event.therapistName}` : 'Consulta'}</p>
-                          <p className="text-xs text-gray-600">Sala: {event.roomId || '—'}</p>
-                        </div>
-                      ),
-                    },
-                  } as any}
-                  eventPropGetter={eventPropGetter as any}
-                  onSelectEvent={(e: any) => {
-                    setSelectedSched({ id: e.id, start: e.start, end: e.end, roomId: e.roomId, therapistName: e.therapistName, therapistId: e.therapistId, state: e.state });
-                  }}
-                  onNavigate={(d) => { onChainSigRef.current = ''; setMySchedDate(d); }}
-                  onView={(v) => { onChainSigRef.current = ''; setMySchedView(v); }}
-                  scrollToTime={scrollToTime}
-                />
-              </div>
-              {selectedSched && (
-                <ScheduleEditModalConsultant
-                  isOpen={!!selectedSched}
-                  onClose={() => setSelectedSched(null)}
-                  schedule={selectedSched}
-                  onUpdated={async (expected) => {
-                    const cur = selectedSched;
-                    if (!cur) return;
-                    setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: expected || ev.state } : ev));
-                  }}
-                  onSaved={async () => {
-                    setMySchedLoading(true);
-                    await openMyConsults();
-                    setMySchedLoading(false);
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        )}
+        <Calendar
+            culture="es"
+            date={mySchedDate}
+            view={mySchedView}
+            events={mySchedEvents}
+            titleAccessor={(e: any) => (e?.therapistName ? `Terapeuta: ${e.therapistName}` : 'Consulta')}
+            localizer={localizer}
+            messages={{
+            date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día', week: 'Semana', work_week: 'Semana Laboral', day: 'Día', month: 'Mes', previous: 'Anterior', next: 'Siguiente', today: 'Hoy', agenda: 'Agenda', noEventsInRange: 'No hay eventos en este rango', showMore: (total: number) => `+${total} más`,
+            } as any}
+            components={{
+            agenda: {
+                event: ({ event }: { event: any }) => (
+                <div className="text-sm">
+                    <p className="font-semibold">{event.therapistName ? `Terapeuta: ${event.therapistName}` : 'Consulta'}</p>
+                    <p className="text-xs text-gray-600">Sala: {event.roomId || '—'}</p>
+                </div>
+                ),
+            },
+            } as any}
+            eventPropGetter={eventPropGetter as any}
+            onSelectEvent={(e: any) => {
+            setSelectedSched({ id: e.id, start: e.start, end: e.end, roomId: e.roomId, therapistName: e.therapistName, therapistId: e.therapistId, state: e.state });
+            }}
+            onNavigate={(d) => { onChainSigRef.current = ''; setMySchedDate(d); }}
+            onView={(v) => { onChainSigRef.current = ''; setMySchedView(v); }}
+            scrollToTime={scrollToTime}
+        />
+       </div>
+
+      {selectedSched && (
+        <ScheduleEditModalConsultant
+          isOpen={!!selectedSched}
+          onClose={() => setSelectedSched(null)}
+          schedule={selectedSched}
+          onUpdated={async (expected) => {
+            const cur = selectedSched;
+            if (!cur) return;
+            setMySchedEvents(prev => prev.map(ev => ev.id === cur.id ? { ...ev, state: expected || ev.state } : ev));
+          }}
+          onSaved={async () => {
+            await loadMyConsults(); // Recargar al guardar
+          }}
+        />
       )}
 
       <ScheduleCreateModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSaved={async () => { await loadBusySlots(); await refreshKeyAvailability(); }}
+        onSaved={async () => { 
+            await loadBusySlots(); 
+            await refreshKeyAvailability();
+            await loadMyConsults(); // Recargar mis consultas al crear una nueva
+        }}
         therapistName={therapistName}
         therapistId={therapist}
         roomIdString={therapistRoomId}

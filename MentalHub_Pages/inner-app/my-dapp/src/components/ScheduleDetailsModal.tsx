@@ -27,10 +27,11 @@ interface Props {
 }
 
 const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, event }) => {
-  const [busy, setBusy] = useState<'none' | 'open' | 'finalize' | 'confirm'>('none');
+  const [busy, setBusy] = useState<'none' | 'open' | 'finalize' | 'confirm' | 'cancel'>('none');
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
   const { profile, executeQuery, authenticateForWrite, account } = useCeramic();
-  
+  // estado para controlar la confirmación visual
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
 
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
@@ -179,9 +180,20 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
     }
   };
 
+
+  const handleCancelClick = () => {
+    if (!confirmingCancel) {
+      setConfirmingCancel(true);
+      // Resetea el estado si no confirma en 3 segundos
+      setTimeout( () => setConfirmingCancel(false), 3000);
+    } else {
+      cancelSession();
+    }
+  };
+  
   const cancelSession = async () => {
     try {
-      setBusy('confirm'); 
+      setBusy('cancel'); 
       try { await authenticateForWrite(); } catch {
         showToast('Se requiere autenticación para cancelar.', 'error');
         setBusy('none');
@@ -248,11 +260,16 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           {event.state === 'Pending' && (
             <button
               disabled={busy!=='none'}
-              onClick={cancelSession}
-              className="px-4 py-2 rounded text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: '1px solid rgba(255,255,255,0.25)' }}
-            >
-              {busy==='confirm' ? 'Cancelando...' : 'Cancelar'}
+              onClick={handleCancelClick}
+              className={`px-4 py-2 rounded text-white disabled:opacity-50 transition-all ${confirmingCancel ? 'font-bold ring-2 ring-red-400' : ''}`}
+              style={{ 
+                  background: confirmingCancel 
+                    ? 'linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)' // Rojo más oscuro/intenso para confirmar
+                    : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  border: '1px solid rgba(255,255,255,0.25)' 
+              }}
+              >
+              {busy==='cancel' ? 'Cancelando...' : confirmingCancel ? '¿Seguro?' : 'Cancelar Cita'}
             </button>
           )}
           {event.state === 'Pending' && (
