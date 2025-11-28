@@ -35,6 +35,55 @@ export const writeComposite = async () => {
   });
   /*console.log('scheduleComposite:')
   console.log(scheduleComposite.modelIDs);*/
+
+  const sessionResponseSchema = readFileSync(
+    "../composites/innerverseSessionResponse.graphql",
+    { encoding: "utf-8" }
+  ).replace("$SCHEDULE_ID", scheduleComposite.modelIDs[1]);
+
+  const sessionResponseComposite = await Composite.create({
+    ceramic,
+    schema: sessionResponseSchema,
+  });
+
+  // --- NUEVA RELACIÓN INVERSA MEDIANTE ENLACE ---
+  const scheduleResponseLinkSchema = readFileSync(
+    "../composites/innerverseScheduleResponseLink.graphql",
+    { encoding: "utf-8" }
+  )
+    .replace("$SCHEDULE_ID", scheduleComposite.modelIDs[1])
+    .replace("$RESPONSE_ID", sessionResponseComposite.modelIDs[1]);
+
+  const scheduleResponseLinkComposite = await Composite.create({
+    ceramic,
+    schema: scheduleResponseLinkSchema,
+  });
+  // ---------------------------------------------
+
+  // --- SISTEMA DE CRÉDITOS DE SESIONES ---
+  const sessionCreditSchema = readFileSync(
+    "../composites/innerverseSessionCredit.graphql",
+    { encoding: "utf-8" }
+  ).replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const sessionCreditComposite = await Composite.create({
+    ceramic,
+    schema: sessionCreditSchema,
+  });
+
+  const sessionCreditLinkSchema = readFileSync(
+    "../composites/innerverseSessionCreditLink.graphql",
+    { encoding: "utf-8" }
+  )
+    .replace("$CREDIT_ID", sessionCreditComposite.modelIDs[1])
+    .replace("$PROFILE_ID", innerverseProfileComposite.modelIDs[0]);
+
+  const sessionCreditLinkComposite = await Composite.create({
+    ceramic,
+    schema: sessionCreditLinkSchema,
+  });
+  // ---------------------------------------
+
   const schedProfileSchema = readFileSync(
     "../composites/innerverseScheduleProfile.graphql",
     {
@@ -149,6 +198,10 @@ export const writeComposite = async () => {
   const composite = Composite.from([
     innerverseProfileComposite,
     scheduleComposite,
+    sessionResponseComposite,
+    scheduleResponseLinkComposite,
+    sessionCreditComposite, // AGREGADO
+    sessionCreditLinkComposite, // AGREGADO
     schedProfileComposite,
     schedTherapComposite,
     schedTherapProfileComposite,

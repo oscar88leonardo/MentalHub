@@ -1,5 +1,5 @@
 "use client"
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { CeramicClient } from "@ceramicnetwork/http-client";
 import { ComposeClient } from "@composedb/client";
 import { RuntimeCompositeDefinition } from "@composedb/types";
@@ -192,13 +192,27 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ceramic, setCeramic] = useState<CeramicClient | null>(null);
-  const [composeClient, setComposeClient] = useState<ComposeClient | null>(null);
   const [profile, setProfile] = useState<InnerverProfile | null>(null);
   const [therapist, setTherapist] = useState<TherapistProfile | null>(null);
   const [consultant, setConsultant] = useState<ConsultantProfile | null>(null);
   const [isThirdwebReady, setIsThirdwebReady] = useState(false);
   const [hasPersistedSession, setHasPersistedSession] = useState(false);
+
+  // Initialize clients synchronously if possible (lazy-loaded via useMemo)
+  const { ceramic, composeClient } = useMemo(() => {
+    try {
+      // console.log("🔧 Initializing Ceramic clients...");
+      const ceramicClient = new CeramicClient("https://ceramicnode.innerverse.care");
+      const composeClient = new ComposeClient({
+        ceramic: (ceramicClient as unknown) as any,
+        definition: (definition as unknown) as RuntimeCompositeDefinition,
+      });
+      return { ceramic: ceramicClient, composeClient };
+    } catch (err) {
+      console.error("Error initializing Ceramic clients:", err);
+      return { ceramic: null, composeClient: null };
+    }
+  }, []);
 
   const activeWallet = useActiveWallet();
   const aaAccount = useActiveAccount();
@@ -208,22 +222,22 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
 
   // Debug logging for wallet states and persistence
   useEffect(() => {
+    /*
     console.log("🔍 Wallet state debug:", {
       activeWallet: !!activeWallet,
       account: !!account,
       adminWallet: !!adminWallet,
       adminAccount: !!adminAccount,
-      accountAddress: account?.address,
-      adminAddress: adminAccount?.address,
-      activeWalletId: activeWallet?.id,
-      adminWalletId: adminWallet?.id,
       isThirdwebReady
     });
+    */
 
-    // Mark Thirdweb as ready when we have wallet info
+    // Mark Thirdweb as ready when we have wallet info OR determine no wallet is present
+    // However, since hooks are reactive, if they are null initially, we can't distinguish "loading" from "no wallet".
+    // But typically useActiveWallet returns undefined while loading?
+    // For now, we assume if we get here, hooks have run.
     if (activeWallet || adminWallet) {
       setIsThirdwebReady(true);
-      console.log("✅ Thirdweb is ready!");
       
       // Persist wallet state for page reloads
       if (account) {
@@ -237,7 +251,6 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
           }));
         } catch {}
         setHasPersistedSession(true);
-        console.log("💾 Wallet state persisted to sessionStorage");
       }
     }
   }, [activeWallet, account, adminWallet, adminAccount, isThirdwebReady]);
@@ -261,50 +274,20 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       })
     : null;
 
-  // Initialize Ceramic clients only when Thirdweb is ready
+  // React to Wallet + Ceramic Ready state to load profile
   useEffect(() => {
-    if (!isThirdwebReady) {
-      console.log("⏳ Waiting for Thirdweb to be ready...");
-      return;
+    // If we have an account, try to load the profile
+    // isThirdwebReady signals that wallet hooks have stabilized somewhat
+    if (ceramic && composeClient && isThirdwebReady && account?.address) {
+        // console.log("🚀 System Ready: Ceramic + Thirdweb + Account. Checking profile...");
+        refreshProfile();
     }
-
-    const initClients = () => {
-      try {
-        console.log("🔧 Initializing Ceramic clients...");
-        const ceramicClient = new CeramicClient("https://ceramicnode.innerverse.care");
-        const composeClient = new ComposeClient({
-          ceramic: (ceramicClient as unknown) as any, // ensure same instance is used internally
-          definition: (definition as unknown) as RuntimeCompositeDefinition,
-        });
-
-        setCeramic(ceramicClient);
-        setComposeClient(composeClient);
-        console.log("✅ Ceramic clients initialized");
-        try {
-          console.log("📦 ComposeDB resources:", composeClient.resources);
-        } catch {}
-      } catch (err) {
-        console.error("Error initializing Ceramic clients:", err);
-        setError("Failed to initialize Ceramic clients");
-      }
-    };
-
-    initClients();
-  }, [isThirdwebReady]);
+  }, [ceramic, composeClient, isThirdwebReady, account?.address]);
 
   // NO auto-conectar - La autenticación se hará SOLO cuando sea necesario
 
   const connect = async () => {
     console.log("🔌 Starting Ceramic connection...");
-    console.log("Connection state:", {
-      ceramic: !!ceramic,
-      composeClient: !!composeClient,
-      account: !!account,
-      adminAccount: !!adminAccount,
-      accountAddress: account?.address,
-      adminAddress: adminAccount?.address,
-      providerThirdweb: !!providerThirdweb
-    });
 
     if (!ceramic || !composeClient) {
       throw new Error("Ceramic clients not initialized");
@@ -517,12 +500,12 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     
     // Para LECTURA no se requiere autenticación
     if (!isConnected) {
-      console.log("ℹ️ Reading profile without authentication (read-only mode)");
+      // console.log("ℹ️ Reading profile without authentication (read-only mode)");
     }
 
     try {
       // Primero probemos con una consulta simple
-      console.log("🔍 Testing simple query first...");
+      // console.log("🔍 Testing simple query first...");
       const simpleQuery = `
         query {
           viewer {
@@ -553,93 +536,10 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       `;
 
       const simpleResult = await composeClient.executeQuery(simpleQuery);
-      console.log("Simple query result:", JSON.stringify(simpleResult, null, 2));
-
-      /* Si funciona, probemos con la consulta completa
-      const query = `
-        query {
-          viewer {
-            innerverProfile {
-              id
-              name
-              displayName
-              rol
-              pfp
-              hudds(last: 100, filters: {where: {state: {in: Active}}}) {
-                edges {
-                  node {
-                    id
-                    name
-                    roomId
-                    created
-                    state
-                    schedules(filters: {where: {state: {in: [Pending,Active]}}}, last: 100) {
-                      edges {
-                        node {
-                          created
-                          date_finish
-                          date_init
-                          profileId
-                          profile {
-                            id
-                            name
-                            displayName
-                          }
-                          state
-                          id
-                          NFTContract
-                          TokenID
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              sched_therap(last: 100, filters: {where: {state: {in: Active}}}) {
-                edges {
-                  node {
-                    id
-                    date_init
-                    date_finish
-                    created
-                    state
-                  }
-                }
-              }
-              schedules(filters: {where: {state: {in: [Pending,Active]}}}, last: 100) {
-                edges {
-                  node {
-                    created
-                    date_finish
-                    date_init
-                    huddId
-                    hudd {
-                      roomId
-                      profileId
-                    }
-                    profileId
-                    state
-                    id
-                    NFTContract
-                    TokenID
-                  }
-                }
-              }
-            }
-          }
-        }
-      `;*/
+      // console.log("Simple query result:", JSON.stringify(simpleResult, null, 2));
 
       // Usar el resultado simple primero
       const result = simpleResult as ProfileQueryResult;
-      
-      console.log("=== CERAMIC QUERY RESULT ===");
-      console.log("Full result:", JSON.stringify(result, null, 2));
-      console.log("Result data:", result?.data);
-      console.log("Result errors:", result?.errors);
-      console.log("Viewer:", result?.data?.viewer);
-      console.log("InnerverProfile:", result?.data?.viewer?.innerverProfile);
-      console.log("==========================");
       
       if (result?.data?.viewer?.innerverProfile) {
         const base = result.data.viewer.innerverProfile as InnerverProfile;
@@ -716,12 +616,12 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       // Fallback sin firma: resolver por DID de la wallet (did:pkh)
       const walletAddress = (adminAccount?.address || account?.address || "").toLowerCase();
       if (!walletAddress) {
-        console.log("⚠️ No wallet address available to resolve profile by DID (keeping existing profile state)");
+        // console.log("⚠️ No wallet address available to resolve profile by DID");
         return;
       }
 
       const did = `did:pkh:eip155:${myChain.id}:${walletAddress}`;
-      console.log("🔎 Fallback by DID (node->CeramicAccount)", did);
+      // console.log("🔎 Fallback by DID (node->CeramicAccount)", did);
 
       // Intento A: node(id: DID) -> CeramicAccount.innerverProfile
       const byAccountQuery = `
@@ -756,7 +656,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         }
       `;
       const byAccountRes: any = await composeClient.executeQuery(byAccountQuery, { did });
-      console.log("byAccountRes:", JSON.stringify(byAccountRes, null, 2));
+      // console.log("byAccountRes:", JSON.stringify(byAccountRes, null, 2));
       const accProfile = byAccountRes?.data?.node?.innerverProfile as InnerverProfile | undefined;
       if (accProfile) {
         if (accProfile.created && !accProfile.createdAt) (accProfile as any).createdAt = accProfile.created;
@@ -789,7 +689,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
       }
 
       // Intento B: índice del modelo por controller
-      console.log("🔎 Fallback by model index (controller)");
+      // console.log("🔎 Fallback by model index (controller)");
       const byIndexQuery = `
         query($did: ID!) {
           innerverProfileIndex(filters: { where: { controller: { equalTo: $did } } }, first: 1) {
@@ -819,7 +719,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
         }
       `;
       const byIndexRes: any = await composeClient.executeQuery(byIndexQuery, { did });
-      console.log("byIndexRes:", JSON.stringify(byIndexRes, null, 2));
+      // console.log("byIndexRes:", JSON.stringify(byIndexRes, null, 2));
       const idxNode = byIndexRes?.data?.innerverProfileIndex?.edges?.[0]?.node as InnerverProfile | undefined;
       if (idxNode) {
         if (idxNode.created && !idxNode.createdAt) (idxNode as any).createdAt = idxNode.created;

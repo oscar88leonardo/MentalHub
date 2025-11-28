@@ -1,0 +1,8 @@
+type SessionCredit @loadModel(id: "$CREDIT_ID") {
+    id: ID!
+}
+
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    credits: [SessionCredit] @relationFrom(model: "SessionCredit", property: "profileId")
+}
+

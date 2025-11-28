@@ -22,40 +22,130 @@ interface Props {
 
 const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therapistName, therapistId, roomIdString, dateInit, dateFinish }) => {
   const { profile, account, executeQuery, refreshProfile, authenticateForWrite } = useCeramic();
-  const [tokenId, setTokenId] = useState<string>("");
+  
+  // Estado simplificado: ya no gestionamos lista de NFTs, solo saldo global
+  const [availableSessions, setAvailableSessions] = useState<number | null>(null);
+  const [hasNft, setHasNft] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
   const [start, setStart] = useState<Date>(dateInit);
   const [end, setEnd] = useState<Date>(dateFinish);
 
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
 
+  // Lógica principal de cálculo de saldo
   useEffect(() => {
-    // Cargar NFTs y sus sesiones disponibles (on-chain)
-    const run = async () => {
+    const loadBalance = async () => {
+      if (!account?.address || !profile?.id) return;
+      
       try {
-        const addr = account?.address;
-        if (!addr) { setUserNFTs([]); return; }
+        // 1. Verificar NFT (Solo lectura On-Chain)
         const tokenIds = await readContract({
           contract,
           method: "function walletOfOwner(address _owner) view returns (uint256[])",
-          params: [addr],
+          params: [account.address],
         });
-        const list: Array<{ tokenId: number; availableSessions: number }> = [];
-        if (Array.isArray(tokenIds)) {
-          for (const t of tokenIds) {
-            const idNum = Number(t);
-            try {
-              const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(idNum)] });
-              list.push({ tokenId: idNum, availableSessions: Number(avail as any) });
-            } catch {}
+        const userHasNft = Array.isArray(tokenIds) && tokenIds.length > 0;
+        setHasNft(userHasNft);
+
+        // 2. Consultar Último Snapshot de Crédito en Ceramic
+        const creditQuery = `
+          query {
+            node(id: "${profile.id}") {
+              ... on InnerverProfile {
+                credits(last: 1) {
+                  edges { node { balanceSnapshot created } }
+                }
+              }
+            }
           }
+        `;
+        const creditRes: any = await executeQuery(creditQuery);
+        const lastCredit = creditRes?.data?.node?.credits?.edges?.[0]?.node;
+
+        // 3. Lógica de Bono de Bienvenida (Auto-Minteo)
+        if (userHasNft && !lastCredit && !isInitializing) {
+           setIsInitializing(true);
+           // No hay historial pero tiene NFT -> Crear primer crédito
+           try {
+             // Intentamos autenticar. Si falla, el usuario verá saldo 0.
+             await authenticateForWrite();
+             const now = new Date().toISOString();
+             const mutation = `
+               mutation {
+                 createSessionCredit(input: {
+                   content: {
+                     amount: 5,
+                     reason: "NFT Welcome Bonus",
+                     balanceSnapshot: 5, 
+                     created: "${now}",
+                     profileId: "${profile.id}"
+                   }
+                 }) { document { id } }
+               }
+             `;
+             await executeQuery(mutation);
+             // Recargar tras crear
+             setIsInitializing(false);
+             return loadBalance();
+           } catch (e) {
+             console.warn("Auth necesaria para activar bono NFT", e);
+             setIsInitializing(false);
+           }
         }
-        setUserNFTs(list);
-      } catch {}
+
+        let baseBalance = 0;
+        let snapshotDate = new Date(0).toISOString(); // Inicio de los tiempos
+
+        if (lastCredit) {
+            baseBalance = lastCredit.balanceSnapshot;
+            snapshotDate = lastCredit.created;
+        }
+
+        // 4. Consultar consumo POSTERIOR al snapshot
+        // Usamos node(id) para mayor robustez al filtrar por ID específico
+        const consumptionQuery = `
+          query {
+            node(id: "${profile.id}") {
+              ... on InnerverProfile {
+                schedules(last: 1000) { 
+                  edges { 
+                    node { 
+                      created
+                      therapistResponse(first: 1) { edges { node { status } } }
+                    } 
+                  } 
+                }
+              }
+            }
+          }
+        `;
+        const consRes: any = await executeQuery(consumptionQuery);
+        const allSchedules = consRes?.data?.node?.schedules?.edges || [];
+
+        const usedCount = allSchedules.filter((edge: any) => {
+            const s = edge.node;
+            // Filtrar por fecha: Solo contar las creadas DESPUÉS del snapshot
+            if (new Date(s.created) <= new Date(snapshotDate)) return false;
+
+            // Filtrar por estado: Canceladas/Rechazadas no cuentan.
+            // PENDING, CONFIRMED, ACTIVE, COMPLETED, FINISHED SÍ cuentan.
+            // Si status es undefined/null (no hay respuesta aún), es PENDING implícito, por tanto cuenta.
+            const status = s.therapistResponse?.edges?.[0]?.node?.status || 'PENDING';
+            return status !== 'CANCELLED' && status !== 'REJECTED';
+        }).length;
+
+        setAvailableSessions(Math.max(0, baseBalance - usedCount));
+
+      } catch (e) {
+        console.error("Error calculando saldo:", e);
+      }
     };
-    run();
-  }, [account?.address, contract]);
+
+    if (isOpen) {
+      loadBalance();
+    }
+  }, [account?.address, contract, profile?.id, isOpen]); // Se agrega isOpen para recargar al abrir
 
   // Sincronizar fechas si vienen nuevas del slot seleccionado
   useEffect(() => {
@@ -63,11 +153,13 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
     setEnd(dateFinish);
   }, [dateInit, dateFinish]);
 
-  const canSave = useMemo(() => !!roomIdString && !!tokenId && !isSaving && end > start, [roomIdString, tokenId, isSaving, start, end]);
+  const canSave = useMemo(() => 
+    !!roomIdString && !isSaving && end > start && (availableSessions || 0) > 0, 
+  [roomIdString, isSaving, start, end, availableSessions]);
 
   const handleSave = async () => {
     if (!profile?.id) return;
-    if (!therapistId || !roomIdString || !tokenId) return;
+    if (!therapistId || !roomIdString) return;
     setIsSaving(true);
     try {
       // Asegurar autenticación de escritura en Ceramic
@@ -84,7 +176,7 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       const mutation = `
         mutation {
           createSchedule(
-            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId}}}
+            input: {content: {date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", profileId: "${profile.id}", therapistId: "${therapistId}", roomId: "${roomIdString}", created: "${now.toISOString()}"}}
           ) {
             document { id }
           }
@@ -93,20 +185,8 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
       const res: any = await executeQuery(mutation);
       if (!res?.errors) {
         const newId = res?.data?.createSchedule?.document?.id as string;
-        // Escribir estado Pending on-chain para ocupar la franja y consumir disponibilidad
-        try {
-          await fetch('/api/callsetsession', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              tokenId,                 // string seleccionado en el dropdown
-              scheduleId: newId,       // id del Schedule recién creado
-              state: 0                 // Pending
-            })
-          });
-        } catch (e) {
-          console.error('setsession Pending failed:', e);
-        }
+        console.log("Cita creada en Ceramic (Pending):", newId);
+
         await refreshProfile();
         try { await onSaved?.(); } catch {}
         onClose();
@@ -175,15 +255,25 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
           </div>
 
           <div>
-            <label className="block text-white font-medium mb-2">Inner Key</label>
-            <select value={tokenId} onChange={(e) => setTokenId(e.target.value)} className="w-full px-3 py-2 rounded border bg-white text-black">
-              <option value="">Selecciona Inner Key</option>
-              {userNFTs.map((n) => (
-                <option key={n.tokenId} value={n.tokenId} disabled={n.availableSessions === 0}>
-                  Id: {n.tokenId} - # sesiones: {n.availableSessions}{n.availableSessions === 0 ? " (No disponible)" : ""}
-                </option>
-              ))}
-            </select>
+            <label className="block text-white font-medium mb-2">Disponibilidad</label>
+            <div className="w-full px-3 py-2 rounded border bg-white text-black flex justify-between items-center">
+                <span>
+                    {hasNft 
+                        ? `Sesiones Disponibles: ${availableSessions !== null ? availableSessions : 'Calculando...'}` 
+                        : "No se detectó un Inner Key (NFT)"}
+                </span>
+                {hasNft && availableSessions !== null && availableSessions > 0 && (
+                    <span className="text-green-600 font-bold text-lg">✓</span>
+                )}
+            </div>
+            {!hasNft && (
+                <p className="text-red-200 text-xs mt-1">Necesitas un NFT para agendar.</p>
+            )}
+             {hasNft && availableSessions === 0 && (
+                <p className="text-orange-600 text-xs mt-1 bg-white/80 p-1 rounded">
+                   Has usado todas tus sesiones. Adquiere más créditos (Próximamente).
+                </p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-2">
@@ -199,5 +289,3 @@ const ScheduleCreateModal: React.FC<Props> = ({ isOpen, onClose, onSaved, therap
 };
 
 export default ScheduleCreateModal;
-
-

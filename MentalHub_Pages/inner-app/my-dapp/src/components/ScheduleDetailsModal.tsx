@@ -4,7 +4,6 @@ import { client } from "@/lib/client";
 import { myChain } from "@/config/chain";
 import { openMeet } from "@/lib/meet";
 import { useCeramic } from "@/context/CeramicContext";
-import { openRoomFlowNoCheck } from "@/lib/openRoom";
 import { getContract, readContract } from "thirdweb";
 import { contracts } from "@/config/contracts";
 import { abi } from "@/abicontracts/MembersAirdrop";
@@ -16,8 +15,6 @@ interface EventItem {
   state: string;
   roomId: string;
   displayName: string;
-  tokenId?: number;
-  nftContract?: string;
   profileId?: string;
   profileRole?: string;
 }
@@ -32,29 +29,9 @@ interface Props {
 const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, event }) => {
   const [busy, setBusy] = useState<'none' | 'open' | 'finalize' | 'confirm'>('none');
   const [toast, setToast] = useState<{ text: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const [availableSessions, setAvailableSessions] = useState<number | null>(null);
-  const { profile, executeQuery } = useCeramic();
-  // Sin gestión de múltiples salas
-
+  const { profile, executeQuery, authenticateForWrite, account } = useCeramic();
+  
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-
-  // (sin edición): no se cargan salas ni se manejan estados locales de sala/fechas
-
-  // Sesiones disponibles del NFT asociado (Inner Key)
-  useEffect(() => {
-    const run = async () => {
-      try {
-        if (event.tokenId == null) { setAvailableSessions(null); return; }
-        const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(event.tokenId)] });
-        setAvailableSessions(Number(avail as any));
-      } catch {
-        setAvailableSessions(null);
-      }
-    };
-    run();
-  }, [event.tokenId, contract]);
-
-  // Se elimina la carga de salas
 
   const showToast = (text: string, type: 'error' | 'success' | 'info' = 'info') => {
     setToast({ text, type });
@@ -64,31 +41,57 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
   const openRoom = async () => {
     try {
       setBusy('open');
-      const { txPromise } = await openRoomFlowNoCheck({
-        tokenId: event.tokenId,
-        scheduleId: event.id,
-        start: event.start,
-        end: event.end,
-        defaultRoomId: event.roomId,
-        openMeet,
-        optimistic: true,
-      });
-      // Encadenar actualización tras receipt (la API espera receipt y retorna newState)
+      const now = new Date();
+      const start = event.start instanceof Date ? event.start : new Date(event.start);
+      const end = event.end instanceof Date ? event.end : new Date(event.end);
+
+      // 1. Validar ventana de tiempo (opcionalmente con tolerancia de 10 mins antes)
+      const bufferMs = 10 * 60 * 1000; 
+      if (now.getTime() < (start.getTime() - bufferMs) || now.getTime() > end.getTime()) {
+         showToast('La sala solo está disponible en la franja horaria programada.', 'error');
+         setBusy('none');
+         return;
+      }
+
+      // 2. Validar tenencia de NFT (Gatekeeping genérico)
+      if (!account?.address) {
+        showToast('Conecta tu wallet para verificar acceso.', 'error');
+        setBusy('none');
+        return;
+      }
+      
       try {
-        const r = await txPromise;
-        const j = await r?.json();
-        const newStateNum = j?.data?.newState ?? j?.newState;
-        if (newStateNum === 2) onUpdated?.('Active');
-      } catch {}
+        const tokenIds = await readContract({
+          contract,
+          method: "function walletOfOwner(address _owner) view returns (uint256[])",
+          params: [account.address],
+        });
+        
+        if (!Array.isArray(tokenIds) || tokenIds.length === 0) {
+          showToast('Necesitas poseer una Inner Key (NFT) para acceder a la sala.', 'error');
+          setBusy('none');
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Error verificando NFT en blockchain.', 'error');
+        setBusy('none');
+        return;
+      }
+
+      if (!event.roomId) {
+        showToast('No se encontró una sala asignada.', 'error');
+        setBusy('none');
+        return;
+      }
+
+      // 3. Abrir sala
+      openMeet(event.roomId);
+
+      // No es necesario cambiar estado en Ceramic (Active es derivado de Confirmed + Hora)
+      onUpdated?.('Active'); 
     } catch (e: any) {
-      const msg = e?.message === 'TIME_WINDOW'
-        ? 'La sala solo está disponible en la franja horaria programada.'
-        : e?.message === 'NO_TOKEN'
-          ? 'No se encontró una Inner Key asociada a esta consulta.'
-          : e?.message === 'INVALID_ROOM'
-            ? 'La sala seleccionada no pertenece al terapeuta.'
-            : 'Error al abrir la sala';
-      showToast(msg, 'error');
+      showToast('Error al abrir la sala', 'error');
     } finally {
       setBusy('none');
     }
@@ -96,21 +99,33 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
 
   const confirmSession = async () => {
     try {
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
+      setBusy('confirm');
+      try { await authenticateForWrite(); } catch {
+        showToast('Se requiere autenticación para confirmar.', 'error');
+        setBusy('none');
         return;
       }
-      setBusy('confirm');
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 1 })
-      });
-      try {
-        const data = await res.json();
-        const newStateNum = data?.data?.newState ?? data?.newState;
-        if (newStateNum === 1) onUpdated?.('Confirmed');
-      } catch {}
+
+      const now = new Date().toISOString();
+      const mutation = `
+        mutation {
+          createSessionResponse(input: {
+            content: {
+              scheduleId: "${event.id}",
+              status: CONFIRMED,
+              created: "${now}",
+              note: "Confirmado por terapeuta"
+            }
+          }) {
+            document { id }
+          }
+        }
+      `;
+      
+      const res: any = await executeQuery(mutation);
+      if (res?.errors) throw new Error(res.errors[0].message);
+
+      onUpdated?.('Confirmed');
       showToast('Consulta confirmada', 'success');
     } catch {
       showToast('Error al confirmar la consulta.', 'error');
@@ -129,26 +144,34 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
         setBusy('none');
         return;
       }
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
+      
+      try { await authenticateForWrite(); } catch {
+        showToast('Se requiere autenticación para finalizar.', 'error');
         setBusy('none');
         return;
       }
-      try {
-        const res = await fetch('/api/callsetsession', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 3 })
-        });
-        try {
-          const data = await res.json();
-          const newStateNum = data?.data?.newState ?? data?.newState;
-          if (newStateNum === 3) onUpdated?.('Finished');
-        } catch {}
-        showToast('Consulta finalizada', 'success');
-      } catch {
-        showToast('Error al finalizar la consulta.', 'error');
-      }
+
+      const nowIso = now.toISOString();
+      const mutation = `
+        mutation {
+          createSessionResponse(input: {
+            content: {
+              scheduleId: "${event.id}",
+              status: COMPLETED,
+              created: "${nowIso}",
+              note: "Sesión finalizada"
+            }
+          }) {
+            document { id }
+          }
+        }
+      `;
+
+      const res: any = await executeQuery(mutation);
+      if (res?.errors) throw new Error(res.errors[0].message);
+
+      onUpdated?.('Finished');
+      showToast('Consulta finalizada', 'success');
     } catch {
       showToast('Error al finalizar la consulta.', 'error');
     } finally {
@@ -158,45 +181,34 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
 
   const cancelSession = async () => {
     try {
-      if (event.tokenId == null) {
-        showToast('No se encontró una Inner Key asociada a esta consulta.', 'error');
+      setBusy('confirm'); 
+      try { await authenticateForWrite(); } catch {
+        showToast('Se requiere autenticación para cancelar.', 'error');
+        setBusy('none');
         return;
       }
-      setBusy('confirm'); // reutilizamos estado de busy para deshabilitar
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(event.tokenId), scheduleId: event.id, state: 4 })
-      });
-      // Confirmar cancelación con lectura on-chain esperando "Session not found"
-      try {
-        await readContract({
-          contract,
-          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-          params: [BigInt(event.tokenId), event.id]
-        });
-        // Aún existe: reintento único tras pequeña espera
-        setTimeout(async () => {
-          try {
-            await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(event.tokenId!), event.id]
-            });
-            // sigue existiendo; no marcamos como cancelado
-          } catch (e: any) {
-            if (String(e?.message || "").includes("Session not found")) {
-              onUpdated?.('Cancelled');
-              showToast('Consulta cancelada', 'success');
+
+      const now = new Date().toISOString();
+      const mutation = `
+        mutation {
+          createSessionResponse(input: {
+            content: {
+              scheduleId: "${event.id}",
+              status: CANCELLED,
+              created: "${now}",
+              note: "Sesión cancelada"
             }
+          }) {
+            document { id }
           }
-        }, 1200);
-      } catch (e: any) {
-        if (String(e?.message || "").includes("Session not found")) {
-          onUpdated?.('Cancelled');
-          showToast('Consulta cancelada', 'success');
         }
-      }
+      `;
+
+      const res: any = await executeQuery(mutation);
+      if (res?.errors) throw new Error(res.errors[0].message);
+      
+      onUpdated?.('Cancelled');
+      showToast('Consulta cancelada', 'success');
     } catch {
       showToast('Error al cancelar la consulta.', 'error');
     } finally {
@@ -231,8 +243,6 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
           <p><span className="font-semibold">Inicio:</span> {event.start.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Fin:</span> {event.end.toLocaleString('es-ES')}</p>
           <p><span className="font-semibold">Estado:</span> {event.state}</p>
-          <p><span className="font-semibold">Inner Key:</span> Id: {event.tokenId ?? '—'} {availableSessions != null && (<span className="text-white/80">- # sesiones: {availableSessions}</span>)}</p>
-          {/* Sin selección de sala */}
         </div>
         <div className="p-4 flex justify-end gap-3">
           {event.state === 'Pending' && (
@@ -245,7 +255,7 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
               {busy==='confirm' ? 'Cancelando...' : 'Cancelar'}
             </button>
           )}
-          {event.state === 'Pending' && event.tokenId != null && event.profileId && event.profileRole === 'Consultante' && (
+          {event.state === 'Pending' && (
             <button
               disabled={busy!=='none'}
               onClick={confirmSession}
@@ -282,5 +292,3 @@ const ScheduleDetailsModal: React.FC<Props> = ({ isOpen, onClose, onUpdated, eve
 };
 
 export default ScheduleDetailsModal;
-
-

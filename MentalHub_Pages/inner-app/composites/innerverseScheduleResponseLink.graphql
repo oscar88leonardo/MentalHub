@@ -1,0 +1,8 @@
+type SessionResponse @loadModel(id: "$RESPONSE_ID") {
+    id: ID!
+}
+
+type Schedule @loadModel(id: "$SCHEDULE_ID") {
+    therapistResponse: [SessionResponse] @relationFrom(model: "SessionResponse", property: "scheduleId")
+}
+

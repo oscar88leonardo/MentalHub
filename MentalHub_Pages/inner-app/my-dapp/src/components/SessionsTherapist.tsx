@@ -22,8 +22,7 @@ interface EventItem {
   roomId: string;
   displayName: string;
   profileRole?: string;
-  tokenId?: number;
-  nftContract?: string;
+  // tokenId y nftContract eliminados
   profileId?: string;
 }
 
@@ -75,8 +74,7 @@ const SessionsTherapist: React.FC = () => {
       rangeEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
     const visible = allCandidatesRef.current.filter(
-      (e) => typeof e.tokenId === 'number' &&
-        (e.tokenId as number) > 0 &&
+      (e) => 
         e.start < rangeEnd &&
         e.end > rangeStart
     );
@@ -84,30 +82,8 @@ const SessionsTherapist: React.FC = () => {
       setEvents([]);
       return;
     }
-    setIsLoading(true);
-    try {
-      const validated = await Promise.all(visible.map(async (e: EventItem) => {
-        try {
-          const n = await readContract({
-            contract,
-            method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-            params: [BigInt(e.tokenId as number), e.id]
-          });
-          const mapped = mapState(Number(n));
-          if (mapped === 'Cancelled') return null;
-          return { ...e, state: mapped };
-        } catch (err: any) {
-          const msg = String(err?.message ?? err);
-          if (msg.includes('Session not found')) {
-            return null; // no pintar cancelados/liberados
-          }
-          return null;
-        }
-      }));
-      setEvents(validated.filter(Boolean) as EventItem[]);
-    } finally {
-      setIsLoading(false);
-    }
+    // Ya no hay validación on-chain, pintamos directamente
+    setEvents(visible);
   }, [contract, currentDate, currentView]);
 
   useEffect(() => {
@@ -132,8 +108,9 @@ const SessionsTherapist: React.FC = () => {
                       roomId
                       profileId
                       profile { displayName rol }
-                      NFTContract
-                      TokenID
+                      therapistResponse(first: 1) {
+                        edges { node { status } }
+                      }
                     }
                   }
                 }
@@ -147,16 +124,32 @@ const SessionsTherapist: React.FC = () => {
         const sEdges = node?.therapist_sched?.edges || [];
         const mapped: EventItem[] = sEdges.map((e: any) => {
           const sn = e?.node;
+          const statusEdge = sn.therapistResponse?.edges?.[0]?.node;
+          const ceramicStatus = statusEdge ? statusEdge.status : 'Pending';
+
+          let uiState = 'Pending';
+          const now = new Date();
+          const start = new Date(sn.date_init);
+          const end = new Date(sn.date_finish);
+          
+          if (ceramicStatus === 'CONFIRMED') {
+             if (now >= start && now <= end) uiState = 'Active';
+             else if (now > end) uiState = 'Finished'; // Opcional, si no se marcó completed
+             else uiState = 'Confirmed';
+          } else if (ceramicStatus === 'COMPLETED') {
+             uiState = 'Finished';
+          } else if (ceramicStatus === 'CANCELLED' || ceramicStatus === 'REJECTED') {
+             uiState = 'Cancelled';
+          }
+
           return {
             id: sn.id,
-            start: new Date(sn.date_init),
-            end: new Date(sn.date_finish),
-            state: 'Pending',
+            start: start,
+            end: end,
+            state: uiState,
             roomId: sn.roomId,
             displayName: sn.profile?.displayName || "",
             profileRole: sn.profile?.rol || undefined,
-            tokenId: typeof sn.TokenID === 'number' ? sn.TokenID : (sn.TokenID ? Number(sn.TokenID) : undefined),
-            nftContract: sn.NFTContract || undefined,
             profileId: sn.profileId || undefined,
           };
         });
@@ -168,8 +161,10 @@ const SessionsTherapist: React.FC = () => {
           state: 'Pending'
         }));
         setAvailEvents(avail);
-        // Validar on-chain y pintar inmediatamente
-        try { await validateAndSetVisible(); } catch {}
+        
+        // Actualizar eventos visibles
+        validateAndSetVisible();
+        
       } catch (e) {
         console.error(e);
       } finally {
@@ -179,35 +174,8 @@ const SessionsTherapist: React.FC = () => {
     run();
   }, [profile?.id, validateAndSetVisible]);
 
-  // Validar y pintar sólo tras confirmar on-chain
   useEffect(() => { validateAndSetVisible(); }, [validateAndSetVisible]);
-  // watchContractEvents opcional para estados de la consulta (controlado por ENV + delay + visibilidad)
-  useEffect(() => {
-    const ENABLE_WATCHERS = process.env.NEXT_PUBLIC_ENABLE_WATCHERS === 'true';
-    const WATCHERS_DELAY_MS = Number(process.env.NEXT_PUBLIC_WATCHERS_DELAY_MS || '12000');
-    if (!ENABLE_WATCHERS || !contract) return;
-    let unwatch: any | undefined;
-    let timeout: any;
-    const start = () => {
-      if (unwatch) return;
-      unwatch = watchSessionState(contract, (scheduleId, newState) => {
-        setEvents(prev => prev.map(e => e.id === scheduleId ? { ...e, state: mapState(newState) } : e));
-      });
-    };
-    const stop = () => { try { unwatch?.(); } catch {} ; unwatch = undefined; };
-    const onVis = () => {
-      stop(); clearTimeout(timeout);
-      if (typeof document !== 'undefined' && document.hidden) return;
-      timeout = setTimeout(start, WATCHERS_DELAY_MS);
-    };
-    onVis();
-    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
-    return () => {
-      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVis);
-      stop(); clearTimeout(timeout);
-    };
-  }, [contract]);
-
+  
   const messages = useMemo(() => ({
     date: 'Fecha', time: 'Hora', event: 'Consulta', allDay: 'Todo el día',
     week: 'Semana', day: 'Día', month: 'Mes', previous: 'Anterior', next: 'Siguiente', today: 'Hoy', agenda: 'Agenda',
@@ -246,7 +214,6 @@ const SessionsTherapist: React.FC = () => {
   }, []);
 
   const onSelectEvent = useCallback((e: any) => {
-    // Ignorar eventos de fondo (disponibilidad)
     if ((e as any)?.isBackgroundEvent) return;
     setSelected(e as EventItem);
     setDetailOpen(true);
@@ -337,36 +304,8 @@ const SessionsTherapist: React.FC = () => {
               setEvents(prev => prev.filter(ev => ev.id !== selected.id));
               return;
             }
-            // 1) Actualización inmediata del evento seleccionado vía on-chain (sin esperar GraphQL)
-            (async () => {
-              try {
-                if (selected?.tokenId != null) {
-                  const stateNum = await readContract({
-                    contract,
-                    method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-                    params: [BigInt(selected.tokenId), selected.id]
-                  });
-                  const n = Number(stateNum as any);
-                  const newState = mapState(n);
-                  setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState } : ev));
-                  // 2) Relectura diferida solo si no coincide con el esperado
-                  if (expected && newState !== expected) {
-                    setTimeout(async () => {
-                      try {
-                        const stateNum2 = await readContract({
-                          contract,
-                          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-                          params: [BigInt(selected.tokenId!), selected.id]
-                        });
-                        const n2 = Number(stateNum2 as any);
-                        const newState2 = mapState(n2);
-                        setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: newState2 } : ev));
-                      } catch {}
-                    }, 1200);
-                  }
-                }
-              } catch {}
-            })();
+            // Actualización inmediata del evento seleccionado (solo cambio de estado en UI)
+            setEvents(prev => prev.map(ev => ev.id === selected.id ? { ...ev, state: expected || 'Pending' } : ev));
           }}
         />
       )}
@@ -375,5 +314,3 @@ const SessionsTherapist: React.FC = () => {
 };
 
 export default SessionsTherapist;
-
-

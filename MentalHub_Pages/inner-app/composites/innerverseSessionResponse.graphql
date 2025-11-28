@@ -1,0 +1,21 @@
+enum SessionStatus {
+  CONFIRMED
+  REJECTED
+  RESCHEDULE_REQUESTED
+  COMPLETED
+  CANCELLED
+}
+
+type SessionResponse @createModel(accountRelation: LIST, description: "Therapist Response to Schedule") {
+    scheduleId: StreamID! @documentReference(model: "Schedule")
+    schedule: Schedule! @relationDocument(property: "scheduleId")
+    
+    status: SessionStatus! 
+    note: String @string(maxLength: 500)
+    
+    created: DateTime!
+}
+
+type Schedule @loadModel(id: "$SCHEDULE_ID") {
+    id: ID!
+}

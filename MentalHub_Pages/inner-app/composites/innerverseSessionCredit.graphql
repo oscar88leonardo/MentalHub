@@ -1,0 +1,14 @@
+type InnerverProfile @loadModel(id: "$PROFILE_ID") {
+    id: ID!
+}
+
+type SessionCredit @createModel(accountRelation: LIST, description: "Ledger of Session Credits") {
+    amount: Int! @int(min: 1)
+    reason: String! @string(maxLength: 100)
+    balanceSnapshot: Int! @int(min: 0)
+    created: DateTime!
+    
+    profileId: StreamID! @documentReference(model: "InnerverProfile")
+    profile: InnerverProfile! @relationDocument(property: "profileId")
+}
+

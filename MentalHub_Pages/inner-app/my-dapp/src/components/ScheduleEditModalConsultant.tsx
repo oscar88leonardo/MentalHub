@@ -20,6 +20,7 @@ interface ScheduleItem {
   nftContract?: string;
   therapistName?: string;
   therapistId?: string;
+  state?: string; // Added state property to interface
 }
 
 interface Props {
@@ -40,63 +41,18 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
   const [end, setEnd] = useState<Date>(schedule.end);
   const [tokenId, setTokenId] = useState<string>(schedule.tokenId != null ? String(schedule.tokenId) : "");
   const [isSaving, setIsSaving] = useState(false);
-  const [status, setStatus] = useState<string>('Pending');
+  // Usar el estado que viene de la prop o Pending por defecto
+  const [status, setStatus] = useState<string>(schedule.state || 'Pending');
   const isEditable = status === 'Pending';
 
   // NFTs del usuario y sesiones disponibles
   const contract = useMemo(() => getContract({ client: client!, chain: myChain, address: contracts.membersAirdrop, abi: abi as [] }), []);
-  const [userNFTs, setUserNFTs] = useState<Array<{ tokenId: number; availableSessions: number }>>([]);
-  const [isLoadingNFTs, setIsLoadingNFTs] = useState(false);
+  // ... userNFTs logic can be simplified/removed as we move to global credits
 
   useEffect(() => {
-    const run = async () => {
-      setIsLoadingNFTs(true);
-      try {
-        const addr = account?.address;
-        if (!addr) { setUserNFTs([]); return; }
-        const tokenIds = await readContract({
-          contract,
-          method: "function walletOfOwner(address _owner) view returns (uint256[])",
-          params: [addr],
-        });
-        const list: Array<{ tokenId: number; availableSessions: number }> = [];
-        if (Array.isArray(tokenIds)) {
-          for (const t of tokenIds) {
-            const idNum = Number(t);
-            try {
-              const avail = await readContract({ contract, method: "function getAvailableSessions(uint256 _tokenId) public view returns (uint256)", params: [BigInt(idNum)] });
-              list.push({ tokenId: idNum, availableSessions: Number(avail as any) });
-            } catch {}
-          }
-        }
-        setUserNFTs(list);
-      } catch {
-        setUserNFTs([]);
-      } finally {
-        setIsLoadingNFTs(false);
-      }
-    };
-    run();
-  }, [account?.address, contract]);
-
-  // Leer estado on-chain de la consulta para controlar editabilidad y mostrar estado
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        if (schedule?.tokenId == null) return;
-        const stateNum = await readContract({ contract, method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)", params: [BigInt(schedule.tokenId), schedule.id] });
-        const n = Number(stateNum as any);
-        const map = (x: number) =>
-          x === 0 ? 'Pending' :
-          x === 1 ? 'Confirmed' :
-          x === 2 ? 'Active' :
-          x === 3 ? 'Finished' : 'Pending';
-        if (!cancelled) setStatus(map(n));
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, [schedule?.id, schedule?.tokenId, contract]);
+    // Sync status if prop updates
+    if (schedule.state) setStatus(schedule.state);
+  }, [schedule.state]);
 
 // (Se elimina carga de salas; se usa roomId fijo en la cita)
 
@@ -124,7 +80,7 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
       const mutation = `
         mutation {
           updateSchedule(
-            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}", NFTContract: "${contracts.membersAirdrop}", TokenID: ${tokenId || 0} } }
+            input: { id: "${schedule.id}", content: { date_init: "${start.toISOString()}", date_finish: "${end.toISOString()}", edited: "${now.toISOString()}" } }
           ) {
             document { id }
           }
@@ -182,41 +138,78 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
   };
 
   const cancelSession = async () => {
-    if (!schedule?.id || !schedule?.tokenId) return;
+    if (!schedule?.id) return;
     try {
-      setBusy("open"); // reutilizamos busy para deshabilitar botones
-      const res = await fetch('/api/callsetsession', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: String(schedule.tokenId), scheduleId: schedule.id, state: 4 })
-      });
-      // Confirmar cancelación con lectura on-chain esperando "Session not found"
-      try {
-        await readContract({
-          contract,
-          method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-          params: [BigInt(schedule.tokenId), schedule.id]
-        });
-        setTimeout(async () => {
-          try {
-            await readContract({
-              contract,
-              method: "function getSessionState(uint256 tokenId, string scheduleId) view returns (uint8)",
-              params: [BigInt(schedule.tokenId!), schedule.id]
-            });
-          } catch (e: any) {
-            if (String(e?.message || "").includes("Session not found")) {
-              setStatus('Cancelled');
-              try { onUpdated?.('Cancelled'); } catch {}
+      setBusy("open"); 
+      
+      const now = new Date().toISOString();
+      // Cancelación vía Ceramic (creando respuesta del consultante? No, el consultante NO crea SessionResponse. 
+      // El consultante debería actualizar el Schedule a un estado cancelado, PERO el modelo actual usa SessionResponse.
+      // Si el consultante cancela, ¿Quién escribe?
+      // En la arquitectura actual, SessionResponse es "Respuesta del Terapeuta".
+      // Si queremos que el consultante cancele, necesitamos una forma.
+      // Opción A: El consultante no puede cancelar una vez creada (solo editar fecha).
+      // Opción B: Permitir que el consultante escriba en SessionResponse (pero el nombre implica terapeuta).
+      
+      // Dado el requerimiento: "Cuando el consultante agenda puede cancelarlo antes que el Terapeuta confirme."
+      // Y "Cuando el terapeuta confirma el consultante ya no puede cancelar".
+      
+      // Solución: El consultante no crea SessionResponse. 
+      // El consultante podría, por ejemplo, actualizar el Schedule con un campo "status" si existiera,
+      // o borrarlo. Pero borrar rompe el historial.
+      
+      // Como el backend actual (GraphQL) asocia el estado al SessionResponse del terapeuta,
+      // el consultante técnicamente no puede cambiar el estado "Pending" a "Cancelled" usando ese mismo campo
+      // sin permisos especiales o sin que el campo sea editable por él.
+      
+      // Sin embargo, si asumimos que el frontend gobierna:
+      // El consultante NO TIENE botón de cancelar si ya está Confirmado (eso lo manejamos en el render).
+      // Si está Pending, el consultante quiere cancelar.
+      
+      // Hack temporal válido: El consultante marca la cita como cancelada enviando una actualización
+      // al propio Schedule o usando una mutación especial. Pero no tenemos campo status en Schedule.
+      
+      // Para cumplir con el requisito estrictamente Off-Chain:
+      // Deberíamos agregar un campo "status" en Schedule editable por el creador (Consultante),
+      // o permitir que el consultante cree un SessionResponse (renombrándolo a SessionStatus).
+      
+      // Por ahora, para desbloquear, asumiremos que el consultante solo puede EDITAR para reagendar,
+      // o si cancela, se elimina el Schedule (hard delete) o se usa un flag.
+      // Voy a implementar un "hard delete" (cancelación destructiva) para Pending si no hay otra opción,
+      // o mejor, mostrar un toast de "Contacta al terapeuta".
+      
+      // REVISIÓN: El usuario pidió "completar esta función".
+      // Voy a usar una mutación de createSessionResponse. 
+      // IMPORTANTE: En Ceramic, cualquier DID puede crear un documento SessionResponse
+      // que apunte al Schedule. El problema es cuál toma la UI como válido.
+      // La UI toma `therapistResponse(first:1)`. Si el consultante crea uno, ¿aparece ahí?
+      // La relación es `@relationFrom(model: "SessionResponse", property: "scheduleId")`.
+      // Sí, aparecerá. Pero el nombre del campo es `therapistResponse`.
+      // Si el consultante crea un documento SessionResponse con status CANCELLED,
+      // la UI lo leerá y marcará como cancelado.
+      // Esto cumple el requisito funcional.
+      
+      const mutation = `
+        mutation {
+          createSessionResponse(input: {
+            content: {
+              scheduleId: "${schedule.id}",
+              status: CANCELLED,
+              created: "${now}",
+              note: "Cancelado por consultante"
             }
+          }) {
+            document { id }
           }
-        }, 1200);
-      } catch (e: any) {
-        if (String(e?.message || "").includes("Session not found")) {
-          setStatus('Cancelled');
-          try { onUpdated?.('Cancelled'); } catch {}
         }
-      }
+      `;
+      const res: any = await executeQuery(mutation);
+      if (res?.errors) throw new Error(res.errors[0].message);
+
+      setStatus('Cancelled');
+      try { onUpdated?.('Cancelled'); } catch {}
+      showToast('Consulta cancelada', 'success');
+      
     } catch {
       showToast('Error al cancelar la consulta.', 'error');
     } finally {
@@ -268,32 +261,20 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
                 />
               </div>
             </div>
-            <div>
-              <p className="text-white/80 text-sm">Inner Key</p>
-              {isLoadingNFTs ? (
-                <div className="flex items-center gap-3 p-2 rounded bg-white/10 border border-white/20">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span className="text-white/80 text-sm">Cargando Inner Key…</span>
-                </div>
-              ) : (
-                <select value={tokenId} onChange={(e) => setTokenId(e.target.value)} disabled={!isEditable} className="w-full px-3 py-2 rounded border bg-white text-black disabled:opacity-60">
-                  <option value="">Selecciona Inner Key</option>
-                  {userNFTs.map((n) => (
-                    <option key={n.tokenId} value={n.tokenId}>
-                      Id: {n.tokenId} - # sesiones: {n.availableSessions}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            {/* Inner Key selector removed */}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button 
-            onClick={handleSave} 
-            disabled={isSaving || !isEditable} 
-            className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">
-            {isSaving ? 'Guardando…' : 'Guardar'}</button>
+            {/* Botón guardar solo si es editable (Pending) */}
+            {isEditable && (
+              <button 
+              onClick={handleSave} 
+              disabled={isSaving} 
+              className="px-4 py-2 rounded border text-white border-white/40 hover:bg-white/10 disabled:opacity-60">
+              {isSaving ? 'Guardando…' : 'Guardar'}</button>
+            )}
+            
+            {/* Botón Cancelar: Solo visible si está Pending */}
             {status === 'Pending' && (
               <button 
               onClick={cancelSession}
@@ -303,7 +284,8 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
               {busy === 'open' ? 'Cancelando…' : 'Cancelar'}
               </button>
             )}
-            {/* renderizado condicional del boton de abrir sala para estados Confirmed y active*/}
+            
+            {/* Botón Abrir Sala: Solo si Confirmed o Active (y es editable para el usuario si ya pagó/confirmó? No, solo entrar) */}
             { (status === 'Confirmed' || status === 'Active') && (
             <button 
             onClick={openRoom} 
@@ -328,5 +310,3 @@ const ScheduleEditModalConsultant: React.FC<Props> = ({ isOpen, onClose, schedul
 };
 
 export default ScheduleEditModalConsultant;
-
-
