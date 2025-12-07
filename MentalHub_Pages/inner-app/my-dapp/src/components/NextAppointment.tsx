@@ -11,7 +11,7 @@ type NextSched = {
   start: Date;
   end: Date;
   roomId: string;
-  tokenId?: number;
+  // tokenId removido
   counterpartName?: string; // terapeuta (para consultante) o consultante (para terapeuta)
 };
 
@@ -44,8 +44,7 @@ const NextAppointment: React.FC = () => {
                         date_finish
                         roomId
                         profile { displayName name }  # consultante
-                        NFTContract
-                        TokenID
+                        # NFTContract y TokenID ya no se usan para abrir sala
                       }
                     }
                   }
@@ -60,7 +59,6 @@ const NextAppointment: React.FC = () => {
             start: new Date(e.node.date_init),
             end: new Date(e.node.date_finish),
             roomId: e.node.roomId,
-            tokenId: typeof e.node.TokenID === "number" ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
             counterpartName: e.node.profile?.displayName || e.node.profile?.name || undefined, // consultante
           }));
 
@@ -82,8 +80,7 @@ const NextAppointment: React.FC = () => {
                       date_finish
                       roomId
                       therapist { id name displayName }
-                      NFTContract
-                      TokenID
+                      # NFTContract y TokenID ya no se usan para abrir sala
                     }
                   }
                 }
@@ -97,7 +94,6 @@ const NextAppointment: React.FC = () => {
             start: new Date(e.node.date_init),
             end: new Date(e.node.date_finish),
             roomId: e.node.roomId,
-            tokenId: typeof e.node.TokenID === "number" ? e.node.TokenID : (e.node.TokenID ? Number(e.node.TokenID) : undefined),
             counterpartName: e.node.therapist?.displayName || e.node.therapist?.name || undefined, // terapeuta
           }));
 
@@ -126,7 +122,7 @@ const NextAppointment: React.FC = () => {
     if (!nextSched) return;
     try {
       await openRoomFlowNoCheck({
-        tokenId: nextSched.tokenId,
+        // tokenId removido
         scheduleId: nextSched.id,
         start: nextSched.start,
         end: nextSched.end,
@@ -135,7 +131,7 @@ const NextAppointment: React.FC = () => {
         optimistic: true,
       });
     } catch (e: any) {
-      alert("No se pudo abrir la sala. Verifica el horario y tu Inner Key.");
+      alert("No se pudo abrir la sala. Verifica el horario.");
     }
   };
 
@@ -173,7 +169,7 @@ const NextAppointment: React.FC = () => {
           </div>
           <button
             onClick={onOpen}
-            disabled={!withinWindow || !nextSched.tokenId}
+            disabled={!withinWindow}
             className="px-4 py-2 rounded-xl text-white font-medium shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
             title={!withinWindow ? "La sala se habilita dentro del horario de la consulta" : undefined}
