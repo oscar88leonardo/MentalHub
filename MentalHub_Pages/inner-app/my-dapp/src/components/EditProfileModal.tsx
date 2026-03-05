@@ -21,7 +21,7 @@ interface IpfsResponse {
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, isForced = false, onSave }) => {
-  const { profile, executeQuery, refreshProfile, authenticateForWrite } = useCeramic();
+  const { profile, upsertProfile, refreshProfile, authenticateForWrite } = useCeramic();
   
   // Estados del formulario
   const [name, setName] = useState("");
@@ -127,98 +127,41 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
     }
   };
 
-  // Función para crear/actualizar perfil en Ceramic (omite campos vacíos)
+  // Función para crear/actualizar perfil en Ceramic (usa upsertProfile del contexto)
   const updateProfileInCeramic = async (username: string, rol: string, pfp: string) => {
-    const esc = (value: string) => value.replace(/"/g, '\\"');
-    const safeName = esc(username);
-    const safePfp = pfp ? esc(pfp) : "";
-    const safeEmail = email ? esc(email) : "";
-
-    // Construir contenido dinámicamente, omitiendo campos opcionales vacíos
-    const contentParts: string[] = [
-      `name: "${safeName}"`,
-      `displayName: "${safeName}"`,
-      `rol: ${rol}`,
-    ];
-    if (safePfp) contentParts.push(`pfp: "${safePfp}"`);
-    if (safeEmail) contentParts.push(`email: "${safeEmail}"`);
-    if (gender) contentParts.push(`gender: "${esc(gender)}"`);
-    if (birthDate) contentParts.push(`birthDate: "${new Date(birthDate).toISOString()}"`);
-    if (country) contentParts.push(`country: "${esc(country)}"`);
-    if (city) contentParts.push(`city: "${esc(city)}"`);
-    if (timezone) contentParts.push(`timezone: "${esc(timezone)}"`);
+    const trimmedName = username.trim();
+    const content: Parameters<typeof upsertProfile>[0] = {
+      name: trimmedName,
+      displayName: trimmedName,
+      rol: rol as "Terapeuta" | "Consultante",
+    };
+    if (pfp) content.pfp = pfp;
+    if (email?.trim()) content.email = email.trim();
+    if (gender) content.gender = gender;
+    if (birthDate) content.birthDate = new Date(birthDate).toISOString();
+    if (country) content.country = country;
+    if (city) content.city = city;
+    if (timezone) content.timezone = timezone;
     const langs = languages.split(",").map((x) => x.trim()).filter(Boolean);
-    if (langs.length) {
-      contentParts.push(`languages: [${langs.map((lang) => `"${esc(lang)}"`).join(", ")}]`);
-    }
-    if (primaryLanguage) contentParts.push(`primaryLanguage: "${esc(primaryLanguage)}"`);
-    if (selectedCurrencies.length) {
-      contentParts.push(`currencies: [${selectedCurrencies.map(c => `"${c}"`).join(", ")}]`);
-    }
-    if (socialInstagram) contentParts.push(`socialInstagram: "${esc(socialInstagram)}"`);
-    if (socialLinkedin) contentParts.push(`socialLinkedin: "${esc(socialLinkedin)}"`);
-    if (socialFacebook) contentParts.push(`socialFacebook: "${esc(socialFacebook)}"`);
-    if (socialX) contentParts.push(`socialX: "${esc(socialX)}"`);
+    if (langs.length) content.languages = langs;
+    if (primaryLanguage) content.primaryLanguage = primaryLanguage;
+    if (selectedCurrencies.length) content.currencies = selectedCurrencies;
     const ratesByCurrency = selectedCurrencies
-      .map(cur => {
+      .map((cur) => {
         const v = currencyPrices[cur] || {};
-        const min = (typeof v.min === "number" && Number.isFinite(v.min)) ? String(v.min) : "";
-        const max = (typeof v.max === "number" && Number.isFinite(v.max)) ? String(v.max) : "";
+        const min = typeof v.min === "number" && Number.isFinite(v.min) ? String(v.min) : "";
+        const max = typeof v.max === "number" && Number.isFinite(v.max) ? String(v.max) : "";
         if (!min && !max) return null;
         return max ? `${cur}:${min}-${max}` : `${cur}:${min}`;
       })
       .filter(Boolean) as string[];
-    if (ratesByCurrency.length) {
-      contentParts.push(`ratesByCurrency: [${ratesByCurrency.map(s => `"${s.replace(/"/g, '\\"')}"`).join(", ")}]`);
-    }
-    if (!profile?.id) {
-      contentParts.push(`created: "${new Date().toISOString()}"`);
-    }
-    const contentBlock = contentParts.join("\n            ");
+    if (ratesByCurrency.length) content.ratesByCurrency = ratesByCurrency;
+    if (socialInstagram) content.socialInstagram = socialInstagram;
+    if (socialLinkedin) content.socialLinkedin = socialLinkedin;
+    if (socialFacebook) content.socialFacebook = socialFacebook;
+    if (socialX) content.socialX = socialX;
 
-    const mutation = profile?.id
-      ? `
-      mutation UpdateProfile {
-        updateInnerverProfile(input: {
-          id: "${profile.id}"
-          content: {
-            ${contentBlock}
-          }
-        }) {
-          document {
-            id
-            name
-            displayName
-            rol
-            pfp
-            email
-          }
-        }
-      }`
-      : `
-      mutation CreateProfile {
-        createInnerverProfile(input: {
-          content: {
-            ${contentBlock}
-          }
-        }) {
-          document {
-            id
-            name
-            displayName
-            rol
-            pfp
-            email
-          }
-        }
-      }`;
-
-    console.log("Executing mutation:", mutation);
-    const res = await executeQuery(mutation);
-    if (res?.errors?.length) {
-      console.error("GraphQL errors:", res.errors);
-      throw new Error(res.errors.map((e: any) => e.message).join(" | "));
-    }
+    await upsertProfile(content);
   };
 
   // Función principal para guardar
@@ -275,23 +218,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose, is
       console.log("Updating profile in Ceramic...");
       await updateProfileInCeramic(trimmedName, rol, finalPfp);
       
-      // Refrescar el perfil
-      await refreshProfile();
-      
-      // Verificar si el perfil está completo después de guardar
-      const updatedProfile = await executeQuery(`
-        query {
-          viewer {
-            innerverseProfile {
-              id
-              name
-              rol
-            }
-          }
-        }
-      `);
-      
-      const profileData = updatedProfile?.data?.viewer?.innerverseProfile;
+      // Refrescar el perfil (actualiza el estado del contexto)
+      const profileData = await refreshProfile();
       const profileComplete = isBasicProfileComplete(profileData);
       
       setSuccess(true);

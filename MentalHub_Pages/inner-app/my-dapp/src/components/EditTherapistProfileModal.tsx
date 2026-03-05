@@ -684,13 +684,25 @@ const EditTherapistProfileModal: React.FC<EditTherapistProfileModalProps> = ({ i
           {error && <div className="p-3 rounded border border-red-400 bg-red-50/20 text-red-200">{error}</div>}
           {success && <div className="p-3 rounded border border-green-400 bg-green-50/20 text-green-200">Guardado</div>}
         </div>
-        <div className="p-6 border-t flex justify-end space-x-3" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
-          {!isForced && (
-            <button onClick={handleClose} className="px-6 py-3 rounded-xl border border-white/30 text-white hover:bg-white/10">Cancelar</button>
+        <div className="p-6 border-t flex flex-col gap-2" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
+          {!bioShort?.trim() && (
+            <p className="text-amber-200/90 text-sm">Completa la <strong>Bio corta</strong> (campo obligatorio) para habilitar Guardar.</p>
           )}
-          <button onClick={handleSave} disabled={isLoading || !bioShort} className="px-6 py-3 rounded-xl text-white" style={{ background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.3)' }}>
+          <div className="flex justify-end space-x-3">
+          {!isForced && (
+            <button type="button" onClick={handleClose} className="px-6 py-3 rounded-xl border border-white/30 text-white hover:bg-white/10">Cancelar</button>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isLoading || !bioShort?.trim()}
+            title={!bioShort?.trim() ? "Completa la bio corta (requerida) para poder guardar" : undefined}
+            className="px-6 py-3 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            style={{ background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.3)' }}
+          >
             {isLoading ? "Guardando..." : "Guardar"}
           </button>
+          </div>
         </div>
       </div>
     </div>
