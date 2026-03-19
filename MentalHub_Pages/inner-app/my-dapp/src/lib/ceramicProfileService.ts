@@ -183,6 +183,40 @@ export async function loadProfile(
   }
 }
 
+/** Carga InnerverProfile por stream ID (para node(id) queries). */
+export async function loadProfileById(
+  ceramic: CeramicClient,
+  streamId: string
+): Promise<InnerverProfile | null> {
+  const result = await loadProfileByIdWithController(ceramic, streamId);
+  return result?.profile ?? null;
+}
+
+/** Carga perfil y controller (para cargar TherapistProfile asociado). */
+export async function loadProfileByIdWithController(
+  ceramic: CeramicClient,
+  streamId: string
+): Promise<{ profile: InnerverProfile; controllerDid: string } | null> {
+  try {
+    const client = new ModelInstanceClient({ ceramic });
+    const state = await client.getDocumentState(streamId);
+    const profile = toInnerverProfile(state.commitID.baseID.toString(), state.content);
+    if (!profile) return null;
+    const controllerDid = (state.metadata as { controller?: string })?.controller;
+    if (!controllerDid) return { profile, controllerDid: "" };
+    return { profile, controllerDid };
+  } catch (err) {
+    const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    if (
+      msg.includes("404") ||
+      msg.includes("not found") ||
+      msg.includes("failed to fetch stream state")
+    )
+      return null;
+    throw err;
+  }
+}
+
 async function getProfileStreamIDInBrowser(controllerDid: string): Promise<string> {
   const base = typeof window !== "undefined" ? window.location.origin : "";
   const res = await fetch(
@@ -383,8 +417,8 @@ export async function saveTherapistProfile(
       : getStreamIDForModel(streamDid, THERAPIST_MODEL).toString();
 
   const payload = {
-    profileId,
     ...content,
+    profileId,
     bioShort: content.bioShort || "",
   };
 
@@ -462,9 +496,9 @@ export async function saveConsultantProfile(
       : getStreamIDForModel(streamDid, CONSULTANT_MODEL).toString();
 
   const payload = {
+    ...content,
     profileId,
     presentingProblemShort: content.presentingProblemShort || "",
-    ...content,
   };
 
   try {

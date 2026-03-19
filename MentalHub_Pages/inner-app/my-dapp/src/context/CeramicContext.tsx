@@ -241,9 +241,14 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
     [account?.address, adminAccount?.address]
   );
 
+  const getSessionDid = useMemo(
+    () => () => sessionRef.current?.did ?? null,
+    []
+  );
+
   const executeQuery = useMemo(
-    () => createCeramicQueryAdapter(ceramic, getDid),
-    [ceramic, getDid]
+    () => createCeramicQueryAdapter(ceramic, getDid, getSessionDid),
+    [ceramic, getDid, getSessionDid]
   );
 
   useEffect(() => {
@@ -355,7 +360,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
 
       sessionRef.current = session;
       if (ceramic && session.did) {
-        ceramic.did = session.did;
+        (ceramic as { did?: unknown }).did = session.did;
       }
       setIsConnected(true);
       console.log("✅ Ceramic authenticated (Ceramic SDK)");
@@ -397,7 +402,7 @@ export const CeramicProvider: React.FC<CeramicProviderProps> = ({ children }) =>
 
       sessionRef.current = session;
       if (ceramic && session.did) {
-        ceramic.did = session.did;
+        (ceramic as { did?: unknown }).did = session.did;
       }
       setIsConnected(true);
       return true;

@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['@ceramic-sdk/flight-sql-client'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'ipfs.io' },
